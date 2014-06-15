@@ -1,0 +1,16 @@
+/////
+vim:set ts=4 sw=4 tw=82 noet:
+/////
+sass (1)
+==========
+
+Name
+----
+sass - SirCmpwn's Assembler
+
+Authors
+-------
+
+Maintained by Drew DeVault <sir@cmpwn.com>, who is assisted by other open
+source contributors. For more information about sass development, see
+<https://github.com/KnightOS/genkfs>.
