@@ -1,0 +1,170 @@
+sass Object Files
+=================
+
+sass produces object files that contain machine code, assembly code, and symbols.
+Unlike ELF files, "sobj" files are not linked at runtime, but instead are linked
+ahead-of-time. The object files are useful for linking large parts of a codebase
+seperately, as well as for debugging purposes.
+
+This document takes a similar format to the gzip specification. That is:
+
+In the diagrams below, a box like this:
+
++---+
+|   | <-- the vertical bars might be missing
++---+
+
+represents one byte; a box like this:
+
++==============+
+|              |
++==============+
+
+represents a variable number of bytes. 
+
+Data Formats
+------------
+
+A few common data formats are in use. Strings are generally encoded as UTF-8
+strings, and integers are always unsigned. Signed integers are converted to
+unsigned, two's compliment, unless otherwise specified.
+
+Header
+------
+
++=========+---------+--------------+
+| SASSOBJ | Version | Architecture |
++=========+---------+--------------+
+
+"SASSOBJ" is the literal ASCII string "SASSOBJ". The version is an unsigned 8-bit
+integer that specifies what version of the SASSOBJ specification is in use. The
+current version is 0. The architecture is the the instruction set used to assemble
+this file, often set to "z80". The following architectures are supported:
+
+* 0x00: z80
+* 0x01: LR35902
+
+Symbols
+-------
+
+What follows is a list of symbols. These are only symbols whose address can be
+determined at assembly time, those that require linking to resolve are not
+supported.
+
++==============+============+
+| Symbol count | Symbols... |
++==============+============+
+
+The number of symbols is encoded as an unsigned 32-bit integer.
+
+Each symbol takes the following format:
+
++----------+=============+======+=======+
+| Exported | Name length | Name | Value |
++----------+=============+======+=======+
+
+The length and value are both 32-bit unsigned integers. The name itself is a UTF-8
+string with no null delimiter. Exported is 1 if the symbol has been exported, or 0
+if it's an internal symbol.
+
+Machine Code
+------------
+
+The next section is unlinked machine code. It is preceeded by its length as an
+unsigned 32-bit integer.
+
+Any expression that would demand a symbol, as in the following example, uses zero
+instead of the actual value.
+
+    .org 10
+    symbol:
+        LD HL, symbol
+        LD HL, symbol + 10
+        LD HL, symbol * 2
+        LD HL, 0xBEEF
+        JR symbol
+
+This example would be assembled to the following machine code:
+
+    21 00 00
+    21 00 00
+    21 00 00
+    21 EF BE
+    18 00
+
+Required Symbols
+----------------
+
+The next section is a list of expressions and the address their value should be
+assigned to.
+
++==================+================+
+| Expression count | Expressions... |
++==================+================+
+
+The length here is an unsigned 32-bit integer. Each expression takes the following
+format:
+
++------+=========+===================+============+
+| Type | Address | Expression length | Expression |
++------+=========+===================+============+
+
+The "type" specifies the output type, and can be one of the following values:
+
+* 0x00: Unsigned 16-bit integer
+* 0x01: Unsigned 8-bit integer
+* 0x02: Signed 8-bit integer, relative to PC
+
+The address is the address, relative to the start of the machine code section,
+that the resulting value should be written to. The length of the expression is the
+length of the string following it, which has no null delimiter. In the example
+given above, we might see this expression list:
+
+    00 0001 00000006 "symbol"
+    00 0004 0000000A "symbol + 10"
+    00 0007 00000009 "symbol * 2"
+    02 0009 00000006 "symbol"
+
+When the linker assembles the final binary, it appears as follows:
+
+    21 0A 00
+    21 14 00
+    21 14 00
+    18 F5
+
+Assembly Code
+-------------
+
+Following the expression list is the assembly code that produced the machine code.
+It contains each line of code, minus whitespace. For example, with the following
+code segment:
+
+    ; This is an example
+
+    symbol:
+        call symbol ; Stack overflow
+
+Only this code would be preserved:
+
+    ; This is an example
+    symbol:
+    call symbol ; Stack overflow
+
+This section of the object file is a list of lines of code and affected addresses.
+It takes the following format:
+
++=================+==========+
+| Number of lines | Lines... |
++=================+==========+
+
+Number of lines is an unsigned 32-bit integer. Each line appears as:
+
++=========+===============+=============+======+
+| Address | Output length | Code length | Code |
++=========+===============+=============+======+
+
+The address is relative to the start of the machine code, and the "output length"
+is the total number of bytes of machine code produced by this line of assembly
+code. The code length is the length of the following string of assembly code,
+which has no null delimiter. Each length and the address are 32-bit unsigned
+integers.

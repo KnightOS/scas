@@ -8,6 +8,347 @@ Name
 ----
 sass - SirCmpwn's Assembler
 
+Synopsis
+--------
+'sass' [options] _FILE(s)_
+
+Description
+-----------
+
+Assembles and links assembly code for various architectures. Assembles the input
+_FILE_ and writes the output to _FILE_.bin if no output file is specified. You may
+specify "-" in place of an input or output file to use _stdin_ and _stdout_.
+
+Options
+-------
+
+*-a, --architecture* <arch>::
+	Specifies an architecture or instruction set file. The default is z80. If you
+	specify a file name, that file will be used as an instruction set. Otherwise,
+	it will be matched against sass's internal list of instruction sets. See
+	_Architectures_ below for additional information.
+
+*-D <MACRO>, -D<MACRO>, \--define* <MACRO>::
+	Defines _MACRO_ as 1. You may also use *-D MACRO=STRING* to set a macro to a
+	specific value, as if writing *#define MACRO STRING* into your code.
+
+*-e, --export-explicit*::
+	By default, sass exports all global symbols in symbol files. This option
+	instead requires the source code to export symbols explicitly via the
+	*export* directive.
+
+*-i, --input* <file>::
+	Uses the specified file, or - for stdin, as input.
+
+*-I, --include* <directories>::
+	Adds the specified directories to the include path, delimited by commas. By
+	default, the include path is the working directory plus anything in the
+	*SASS_INCLUDE_PATH* enviornment variable.
+
+*-o, --output* <file>::
+	Uses the specified file, or - for stdout, as the output.
+
+*-O, --object*::
+	Instructs sass to produce an unlinked object file instead of directly
+	producing machine code.
+
+*-l, --link*::
+	Instructs sass to operate as a linker. The input file(s) should be object
+	files and the output will be machine code.
+
+*-L, --listing* <file>::
+	Outputs a listing file to _file_, or - for stdout. This is a human-readable
+	plaintext file that can help you find out more about how the file was
+	assembled. Its format is described in _Listings_ below.
+
+*-n, --no-implicit-symbols*::
+	By default, sass does not require you to use the *import* directive to use
+	external symbols, and instead resolves them when linking. If you do not desire
+	this behavior, specify *-n* to raise errors when using undefined symbols.
+
+*-s, --script* <script>::
+	Uses a linker script to perform linking. The default is to assemble files one
+	after the other in the order they are given on the command line. See _Linker
+	Scripts_ below for details on these scripts.
+
+*-S, --symbols* <file>::
+	Outputs symbols as assembly source to the specified file, or - for stdout. See
+	_Symbol Files_ below for additional information.
+
+*-v[vv...]*::
+	Specifies different levels of log verbosity.
+
+Preprocessor Directives
+-----------------------
+
+To use a preprocessor directive, place it alone on a line preceeded by a . or #.
+For example, you might use #include <foo.asm>.
+
+If you use a directive that takes several inputs, such as *db*, you may seperate
+them with spaces. If your input would use a space, instead seperate inputs with
+commas. For example:
+
+	.db 0 1 2 3 4 ; Spaces OK
+	.db 2 + 2, 4 + 4, 6 + 6 ; Spaces not OK
+
+For compatability reasons, *equ* and *define* use the first input as the first
+input, and the second to final inputs as one input (when specified with spaces).
+That is, the following:
+
+	.equ symbol 2 + 2
+
+This equates *symbol* with the expression *2 + 2*, and considers *2 + 2* a single
+input.
+
+*ascii* "<text>"::
+	Converts _text_ to the global string encoding (*not ASCII*) and inserts it
+	into the output.
+
+*asciiz* "<text>"::
+	Converts _text_ to the global string encoding (*not ASCII*) and inserts it
+	into the output, postfixed with a zero.
+
+*asciip* "<text>"::
+	Converts _text_ to the global string encoding (*not ASCII*) and inserts it
+	into the output, prefixed with the string length as an 8-bit unsigned integer.
+
+*block* <size>::
+	Inserts _size_ number of zeros into the output.
+
+*db* <values>::
+	Inserts _values_ as bytes into the output, delimtited by commas. Each value
+	may be an expression that evaluates to an 8-bit value, or a string that will
+	evaluate to several 8-bit values based on the global string encoding.
+
+*dw* <values>::
+	Inserts _values_ as words into the output, delimtited by commas. Each value
+	may be an expression, which evaluates to an unsigned integer whose width is
+	architecture-specific.
+
+*define* <key> <value>::
+	Defines a new macro named _key_ (with optional parameters specified in
+	parenthesis) and with substitution _value_.
+
+*echo* <format>, <values>::
+	Echos a line to stdout during assembly. The format is a printf format string
+	and each value is an expression that evaluates to something passed to the
+	format string.
+
+*equ, equate* <key> <value>::
+	Creates a symbol named _key_ with value of _value_. The expression _value_ is
+	evaluated at the time this directive is parsed, rather than when the symbol is
+	used.
+
+*fill* <size> <value>::
+	Inserts _size_ number of bytes into the output, whose value is _value_. If
+	omitted, _value_ defaults to zero.
+
+*if, ifdef, ifndef, else, elif, endif*::
+	See _Conditionals_.
+
+*include* "<path>"::
+	Inserts the specified file's contents into the assembly source directly.
+	_path_ is a file in the include path, which is specified from the command
+	line. See _--include_ for details. You may specify a file in quotes or
+	brackets, each will be treated the same way.
+
+*incbin* <path>::
+	Inserts the specified file's contents directly into the output.
+
+*list*::
+	Resumes listing. See also *nolist*.
+
+*macro* <definition>::
+	See _Macros_.
+
+*nolist*::
+	Pauses listing until the next *list* directive. All preprocessor directives
+	are processed but no assembly is performed and no text is written to listing
+	files.
+
+*org* <expression>::
+	Evaluates _expression_ and sets PC to the resulting value. All labels beyond
+	this point will be relative to _expression_.
+
+*!*::
+	! directives are ignored.
+
+The *equate* directive has additional syntaxes for compatabiltiy. The following
+lines are all equivalent:
+
+	.equ foo 10
+	foo .equ 10
+	foo=10
+
+Macros versus Equates
+---------------------
+
+The difference between the *define* directive and *equate* directive is that
+*define* creates a macro. Equates are evaluated and assigned when the directive is
+parsed; macros are evaluated when used. You are encouraged to use equates for most
+constants, except for string constants.
+
+Conditionals
+------------
+
+You may use conditionals as preprocessor directives to control what gets assembled
+and what doesn't. *if*, *ifdef*, *ifndef*, *else*, *elif*, and *endif* are
+available. In the case of *if* and *elif*, provide an expression that will be
+considered true if nonzero. In the case of *ifdef*, provide a symbol or macro
+name, which will be considered true if it exists. *ifndef* evaluates to the
+opposite of *ifdef*.
+
+*elseif* and *end* are synonomous with *elif* and *endif*, respectively.
+
+Assembly Syntax
+---------------
+
+sass aims to be as flexible as possible with its assembly syntax. It supports many
+syntaxes so that you might be able to easily drop in arbituary snippets, but
+encourages a single format. The encouraged format looks something like this:
+
+	; Comments begin with a ; and extend to the end of the line
+	label_name:
+		ld hl, 0x1234
+		ld a, 0b11011
+		call foobar
+	.local:
+		jp label_name
+	string:
+		.asciiz "This is a string"
+
+sass also supports a number of other syntaxes for compatability reasons. You may
+use either # or . to precede a preprocessor directive. You may also declare
+hexadecimal literals with the 0xHEX, $HEX, or HEXh syntaxes. Binary literals may
+be defined with 0bBINARY, %BINARY, or BINARYb. Octal is supported only via
+0oOCTAL.
+
+Labels should be placed alone on a line (whitespace and comments are OK) and end
+with a colon. Valid labels begin with a letter or an underscore and contain only
+letters, numbers, and underscores.
+
+Expressions
+-----------
+
+Expressions are evaluated with respect to C precedence. The following operators
+are available:
+
+	+ - * / % << >> < <= > >= == != & ^ | && ||
+
+Boolean operators evaluate to zero when false, and nonzero when true.
+
+You may use a few special values in your expressions. $ refers to the address of
+the current line of code. "true" and "false" evaluate to one and zero,
+respectively. You may also use character constants between \'single-quotes'.
+
+Signed integers are converted to unsigned integers, two's compliment.
+
+Local Labels
+------------
+
+You may scope labels to the most recent global label by way of local labels.
+
+	global_label:
+		call .local_label
+	.local_label:
+		nop
+	another_global:
+		call .local_label ; undefined
+
+Local labels cannot be exported.
+
+Relative Labels
+---------------
+
+You may use the special label "_" as many times as you wish without getting
+duplicate symbol errors. Referring to these labels uses a special syntax,
+inherited from spasm.
+
+	_:		; A
+		jp _	; Refers to B
+		jp -_	; Refers to A
+		jp ++_	; Refers to C
+	_:		; B
+		nop
+	_:		; C
+
+Relative labels cannot be exported.
+
+Macros
+------
+
+Macros are defined through the *macro* directive and perform simple string
+replacement. To define a macro, use something like this:
+
+	.macro example
+		ld a, b
+	.endmacro
+
+This defines a parameterless macro called "example". You needn't indent the
+macro's contents, this is just an example. You can also define macros that take
+parameters:
+
+	.macro example(foo, bar)
+		ld a, foo
+		ld b, bar
+	.endmacro
+
+The contents of the macro will have the parameters substituted for the values
+provided wherever they appear. You can use these macros like so:
+
+	example(1, 2) ; Expands to ld a, 1 \ ld b, 2
+
+
+Linker Scripts
+--------------
+
+TODO
+
+Architectures
+-------------
+
+Out of the box, sass only supports z80. You may specify an alternate instruction
+set by means of _--architecture_. The instruction set format is documented in
+_/usr/share/sass/instruction-sets_ or somewhere similar.
+
+Listings
+--------
+
+Listing files take a format similar to this:
+
+	[0x0000] 21 EF BE        LD HL, 0xBEEF          test.asm:1
+	[0x0003] C9              RET                    test.asm:2
+	[0x0004]                label:                  test.asm:3
+	[0x0004] CD 04 00        CALL label             test.asm:4
+
+It simply shows the address and machine code for each line of code assembled.
+
+Symbol Files
+------------
+
+The -S option produces symbol files that are meant to be included directly as
+assembly source in other files. You may accomplish your goals more easily with
+linking.
+
+	; This file was generated by a tool
+	.equ SYMBOL1 0x0001
+	.equ SYMBOL2 0x0002
+	.equ SYMBOL3 0x0003
+
+This includes all global labels specified in the code.
+
+String Escape Codes
+-------------------
+
+In string or character constants, you may use \ to indicate an escape code. C
+escape codes are supported.
+
+String Encodings
+----------------
+
+sass assembles strings as UTF-8. UTF-8 is compatible with ASCII. All input files
+should be either ASCII or UTF-8.
+
 Authors
 -------
 
