@@ -6,6 +6,11 @@ add_definitions("-Wall")
 
 add_executable(sass
     main.c
+    meta/log.c
+)
+
+include_directories(
+    meta/
 )
 
 ADD_CUSTOM_TARGET(man ALL)

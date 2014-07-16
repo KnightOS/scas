@@ -78,6 +78,22 @@ Options
 *-v[vv...]*::
 	Specifies different levels of log verbosity.
 
+Examples
+--------
+
+sass input.asm output.bin::
+	Assembles and links input.asm and produces output.bin as machine code.
+
+sass input1.asm input2.asm input3.asm output.bin::
+	Assembles and links three input files and produces output.bin as machine code.
+	The default behavior with several files is to arrange their output in order.
+
+sass -O screen.asm screen.obj::
+	Assembles input1.asm and produces an unlinked object file.
+
+sass -l -i screen.obj -i keyboard.obj -i main.obj game.bin::
+	Links three object files together and produces game.bin as machine code.
+
 Preprocessor Directives
 -----------------------
 
