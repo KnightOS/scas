@@ -12,6 +12,7 @@ add_executable(sass
 
 include_directories(
     meta/
+    assemble/
 )
 
 ADD_CUSTOM_TARGET(man ALL)
