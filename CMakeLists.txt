@@ -7,6 +7,7 @@ add_definitions("-Wall")
 add_executable(sass
     main.c
     meta/log.c
+    meta/runtime.c
 )
 
 include_directories(

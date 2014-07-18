@@ -10,37 +10,8 @@
 #include <strings.h>
 #endif
 #include "enums.h"
+#include "runtime.h"
 #include "log.h"
-
-struct {
-	char *arch;
-	jobs_t jobs;
-	int explicit_export;
-	int explicit_import;
-	output_type_t output_type;
-	int input_files_len;
-	char **input_files;
-	char *output_file;
-	char *listing_file;
-	char *symbol_file;
-	char *include_path;
-	char *linker_script;
-	int verbosity;
-} runtime;
-
-void init_runtime() {
-	runtime.arch = "z80";
-	runtime.jobs = LINK | ASSEMBLE;
-	runtime.explicit_import = runtime.explicit_export = 0;
-	runtime.output_type = EXECUTABLE;
-	runtime.input_files = NULL;
-	runtime.output_file = NULL;
-	runtime.listing_file = NULL;
-	runtime.symbol_file = NULL;
-	runtime.include_path = getenv("SASS_PATH");
-	runtime.linker_script = NULL;
-	runtime.verbosity = 0;
-}
 
 #define match(short, long) strcmp(short, argv[i]) == 0 || strcmp(long, argv[i]) == 0
 
@@ -55,7 +26,14 @@ void parse_arguments(int argc, char** argv) {
 			} else if (match("-e", "--export-explicit")) {
 				runtime.explicit_export = 1;
 			} else if (match("-i", "--input")) {
-				// TODO
+				if (runtime.input_files_capacity == runtime.input_files_len) {
+					runtime.input_files_capacity += 10;
+					runtime.input_files = realloc(runtime.input_files, sizeof(char*) * runtime.input_files_capacity);
+					if (runtime.input_files == NULL) {
+						sass_abort("Couldn't resize input file buffer!");
+					}
+				}
+				runtime.input_files[runtime.input_files_len++] = argv[++i];
 			} else if (match("-I", "--include")) {
 				// TODO
 			} else if (match("-o", "--output")) {
@@ -88,10 +66,6 @@ void parse_arguments(int argc, char** argv) {
 			// TODO
 		}
 	}
-}
-
-void validate_runtime() {
-	// TODO: Check for illegal states
 }
 
 int main(int argc, char** argv) {
