@@ -17,7 +17,7 @@
 
 void parse_arguments(int argc, char** argv) {
 	int i;
-	for (i = 0; i < argc; ++i) {
+	for (i = 1; i < argc; ++i) {
 		if (argv[i][0] == '-' && argv[i][1] != '\0') {
 			if (match("-a", "--architecture")) {
 				runtime.arch = argv[++i];
@@ -26,14 +26,7 @@ void parse_arguments(int argc, char** argv) {
 			} else if (match("-e", "--export-explicit")) {
 				runtime.explicit_export = 1;
 			} else if (match("-i", "--input")) {
-				if (runtime.input_files_capacity == runtime.input_files_len) {
-					runtime.input_files_capacity += 10;
-					runtime.input_files = realloc(runtime.input_files, sizeof(char*) * runtime.input_files_capacity);
-					if (runtime.input_files == NULL) {
-						sass_abort("Couldn't resize input file buffer!");
-					}
-				}
-				runtime.input_files[runtime.input_files_len++] = argv[++i];
+				runtime_add_input_file(argv[++i]);
 			} else if (match("-I", "--include")) {
 				// TODO
 			} else if (match("-o", "--output")) {
@@ -63,7 +56,7 @@ void parse_arguments(int argc, char** argv) {
 				sass_abort("Unrecognized option %s", argv[i]);
 			}
 		} else {
-			// TODO
+			runtime_add_input_file(argv[i]);
 		}
 	}
 }

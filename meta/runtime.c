@@ -29,3 +29,14 @@ void validate_runtime() {
 	}
 	// TODO: Check for illegal states
 }
+
+void runtime_add_input_file(char *file) {
+	if (runtime.input_files_capacity == runtime.input_files_len) {
+		runtime.input_files_capacity += 10;
+		runtime.input_files = realloc(runtime.input_files, sizeof(char*) * runtime.input_files_capacity);
+		if (runtime.input_files == NULL) {
+			sass_abort("Couldn't resize input file buffer!");
+		}
+	}
+	runtime.input_files[runtime.input_files_len++] = file;
+}

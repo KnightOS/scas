@@ -24,4 +24,6 @@ extern struct runtime runtime;
 
 void init_runtime();
 void validate_runtime();
+void runtime_add_input_file(char *file);
+
 #endif
