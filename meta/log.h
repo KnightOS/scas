@@ -10,5 +10,6 @@ typedef enum {
 
 void init_log(int verbosity);
 void sass_log(int verbosity, char* format, ...);
+void sass_abort(char* format, ...);
 
 #endif

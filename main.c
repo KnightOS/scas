@@ -42,15 +42,6 @@ void init_runtime() {
 	runtime.verbosity = 0;
 }
 
-void sass_abort(char *format, ...) {
-	va_list args;
-	va_start(args, format);
-	vfprintf(stderr, format, args);
-	va_end(args);
-	fprintf(stderr, "\n");
-	exit(1);
-}
-
 #define match(short, long) strcmp(short, argv[i]) == 0 || strcmp(long, argv[i]) == 0
 
 void parse_arguments(int argc, char** argv) {
