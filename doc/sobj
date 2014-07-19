@@ -117,13 +117,39 @@ The "type" specifies the output type, and can be one of the following values:
 
 The address is the address, relative to the start of the machine code section,
 that the resulting value should be written to. The length of the expression is the
-length of the string following it, which has no null delimiter. In the example
-given above, we might see this expression list:
+length of the string following it. The expression is saved in a token stream, like forth.
+Each token is in this format:
 
-    00 0001 00000006 "symbol"
-    00 0004 0000000A "symbol + 10"
-    00 0007 00000009 "symbol * 2"
-    02 0009 00000006 "symbol"
++------+============+
+| Type | Token Data |
++------+============+
+
+The type is one of these values:
+
+* 0x00: Label
+   If the token is a label, the token data is of this format:
+   
+   +--------+============+
+   | Length | Label name |
+   +--------+============+
+
+   Where length is a 16-bits unsigned int and the label is a non-null-terminated string.
+
+* 0x01: Integer
+   This token is just a 32-bit signed integer.
+
+* 0x02: Operator
+   Operators are saved as an 8-byte character, like +, -, *, or /.
+
+These tokens are interpreted by either pushing the label or integer, or popping one or more values from the stack and running the operator on those. This is done until the token stream has been completely followed.
+Then the top of the stack is taken, and bounded to the maximum value the output can handle. If the value is outside these bounds, a warning will be thrown too. (123123 will become 65535, and a warning will be given)
+
+In the example given above, we might see this expression list:
+
+    00 0001 00000009 00 0006 "symbol"
+    00 0004 00000010 00 0006 "symbol" 01 0A000000 02 "+"
+    00 0007 00000010 00 0006 "symbol" 01 0C000000 02 "+"
+    02 0009 00000009 00 0006 "symbol"
 
 When the linker assembles the final binary, it appears as follows:
 
