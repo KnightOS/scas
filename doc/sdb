@@ -25,7 +25,8 @@ Data Formats
 
 A few common data formats are in use. Strings are generally encoded as UTF-8
 strings, and integers are always unsigned. Signed integers are converted to
-unsigned, two's compliment, unless otherwise specified.
+unsigned, two's compliment, unless otherwise specified. All multi-octet values
+are little-endian unless specified otherwise.
 
 Header
 ------

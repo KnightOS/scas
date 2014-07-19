@@ -27,7 +27,8 @@ Data Formats
 
 A few common data formats are in use. Strings are generally encoded as UTF-8
 strings, and integers are always unsigned. Signed integers are converted to
-unsigned, two's compliment, unless otherwise specified.
+unsigned, two's compliment, unless otherwise specified. All multi-octet values
+are little-endian unless specified otherwise.
 
 Header
 ------
@@ -141,8 +142,11 @@ The type is one of these values:
 * 0x02: Operator
    Operators are saved as an 8-byte character, like +, -, *, or /.
 
-These tokens are interpreted by either pushing the label or integer, or popping one or more values from the stack and running the operator on those. This is done until the token stream has been completely followed.
-Then the top of the stack is taken, and bounded to the maximum value the output can handle. If the value is outside these bounds, a warning will be thrown too. (123123 will become 65535, and a warning will be given)
+These tokens are interpreted by either pushing the label or integer,
+or popping one or more values from the stack and running the operator on those.
+This is done until the token stream has been completely read.
+Then the top of the stack is taken, and bounded to the maximum value the output can handle.
+If the value is outside these bounds, a warning will be thrown too. (123123 will become 65535, and a warning will be given)
 
 In the example given above, we might see this expression list:
 
