@@ -19,12 +19,25 @@ enum {
 	SIGNED_8_BIT = 2
 };
 
+enum {
+	LABEL = 0,
+	INTEGER = 1,
+	OPERATOR = 2
+};
+
 typedef struct {
 	uint8_t type;
-	uint32_t address;
-	uint32_t expression_length;
-	char *expression;
-} sass_expression_t;
+	union {
+		struct {
+			uint16_t label_length;
+			char *label;
+		};
+
+		int32_t integer;
+
+		char operator;
+	};
+} sass_expression_token_t;
 
 typedef struct {
 	uint32_t address;
@@ -43,8 +56,8 @@ typedef struct {
 	uint32_t machine_code_length;
 	uint8_t *machine_code;
 
-	uint32_t expression_count;
-	sass_expression_t *expressions;
+	uint32_t expression_token_count;
+	sass_expression_token_t *expression_tokens;
 
 	uint32_t line_count;
 	sass_line_t *lines;
