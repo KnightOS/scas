@@ -15,9 +15,11 @@ Synopsis
 Description
 -----------
 
-Assembles and links assembly code for various architectures. Assembles the input
-_FILE_ and writes the output to _FILE_.bin if no output file is specified. You may
-specify "-" in place of an input or output file to use _stdin_ and _stdout_.
+Assembles and/or links assembly code for various architectures. Specifying a
+single input file _FILE.asm_ will guess the output as _FILE.bin_ unless -o is
+specified. Specifying several files will treat all but the last file as input, and
+the final file as output, unless -o is specified, in which case all files are
+input and the file given at -o is output.
 
 Options
 -------
@@ -100,7 +102,7 @@ scass input1.asm input2.asm input3.asm output.bin::
 scass -O screen.asm screen.obj::
 	Assembles input1.asm and produces an unlinked object file.
 
-scass -l -i screen.obj -i keyboard.obj -i main.obj game.bin::
+scass -l screen.obj keyboard.obj main.obj game.bin::
 	Links three object files together and produces game.bin as machine code.
 
 Preprocessor Directives
