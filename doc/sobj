@@ -1,7 +1,7 @@
-sass Object Files
+scass Object Files
 =================
 
-sass produces object files that contain machine code, assembly code, and symbols.
+scass produces object files that contain machine code, assembly code, and symbols.
 Unlike ELF files, "sobj" files are not linked at runtime, but instead are linked
 ahead-of-time. The object files are useful for linking large parts of a codebase
 seperately, as well as for debugging purposes.
@@ -33,12 +33,12 @@ are little-endian unless specified otherwise.
 Header
 ------
 
-+=========+---------+--------------+
-| SASSOBJ | Version | Architecture |
-+=========+---------+--------------+
++==========+---------+--------------+
+| SCASSOBJ | Version | Architecture |
++==========+---------+--------------+
 
-"SASSOBJ" is the literal ASCII string "SASSOBJ". The version is an unsigned 8-bit
-integer that specifies what version of the SASSOBJ specification is in use. The
+"SCASSOBJ" is the literal ASCII string "SCASSOBJ". The version is an unsigned 8-bit
+integer that specifies what version of the SCASSOBJ specification is in use. The
 current version is 0. The architecture is the the instruction set used to assemble
 this file, often set to "z80". The following architectures are supported:
 

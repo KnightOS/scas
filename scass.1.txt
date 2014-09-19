@@ -1,16 +1,16 @@
 /////
 vim:set ts=4 sw=4 tw=82 noet:
 /////
-sass (1)
+scass (1)
 ==========
 
 Name
 ----
-sass - SirCmpwn's Assembler
+scass - SirCmpwn's Assembler
 
 Synopsis
 --------
-'sass' [options] _FILE(s)_
+'scass' [options] _FILE(s)_
 
 Description
 -----------
@@ -25,7 +25,7 @@ Options
 *-a, --architecture* <arch>::
 	Specifies an architecture or instruction set file. The default is z80. If you
 	specify a file name, that file will be used as an instruction set. Otherwise,
-	it will be matched against sass's internal list of instruction sets. See
+	it will be matched against scass's internal list of instruction sets. See
 	_Architectures_ below for additional information.
 
 *-D <MACRO>, -D<MACRO>, \--define* <MACRO>::
@@ -33,7 +33,7 @@ Options
 	specific value, as if writing *#define MACRO STRING* into your code.
 
 *-e, --export-explicit*::
-	By default, sass exports all global symbols in symbol files. This option
+	By default, scass exports all global symbols in symbol files. This option
 	instead requires the source code to export symbols explicitly via the
 	*export* directive.
 
@@ -43,17 +43,17 @@ Options
 *-I, --include* <directories>::
 	Adds the specified directories to the include path, delimited by commas. By
 	default, the include path is the working directory plus anything in the
-	*SASS_INCLUDE_PATH* enviornment variable.
+	*SCASS_INCLUDE_PATH* enviornment variable.
 
 *-o, --output* <file>::
 	Uses the specified file, or - for stdout, as the output.
 
 *-O, --object*::
-	Instructs sass to produce an unlinked object file instead of directly
+	Instructs scass to produce an unlinked object file instead of directly
 	producing machine code.
 
 *-l, --link*::
-	Instructs sass to operate as a linker. The input file(s) should be object
+	Instructs scass to operate as a linker. The input file(s) should be object
 	files and the output will be machine code.
 
 *-L, --listing* <file>::
@@ -62,9 +62,13 @@ Options
 	assembled. Its format is described in _Listings_ below.
 
 *-n, --no-implicit-symbols*::
-	By default, sass does not require you to use the *import* directive to use
+	By default, scass does not require you to use the *import* directive to use
 	external symbols, and instead resolves them when linking. If you do not desire
 	this behavior, specify *-n* to raise errors when using undefined symbols.
+
+*-sdcc, --sdcc-compatible*::
+	Rather than using scass's own object format, instead use one compatible with
+	SDCC's sdld format.
 
 *-s, --script* <script>::
 	Uses a linker script to perform linking. The default is to assemble files one
@@ -81,17 +85,17 @@ Options
 Examples
 --------
 
-sass input.asm output.bin::
+scass input.asm output.bin::
 	Assembles and links input.asm and produces output.bin as machine code.
 
-sass input1.asm input2.asm input3.asm output.bin::
+scass input1.asm input2.asm input3.asm output.bin::
 	Assembles and links three input files and produces output.bin as machine code.
 	The default behavior with several files is to arrange their output in order.
 
-sass -O screen.asm screen.obj::
+scass -O screen.asm screen.obj::
 	Assembles input1.asm and produces an unlinked object file.
 
-sass -l -i screen.obj -i keyboard.obj -i main.obj game.bin::
+scass -l -i screen.obj -i keyboard.obj -i main.obj game.bin::
 	Links three object files together and produces game.bin as machine code.
 
 Preprocessor Directives
@@ -219,7 +223,7 @@ opposite of *ifdef*.
 Assembly Syntax
 ---------------
 
-sass aims to be as flexible as possible with its assembly syntax. It supports many
+scass aims to be as flexible as possible with its assembly syntax. It supports many
 syntaxes so that you might be able to easily drop in arbituary snippets, but
 encourages a single format. The encouraged format looks something like this:
 
@@ -233,7 +237,7 @@ encourages a single format. The encouraged format looks something like this:
 	string:
 		.asciiz "This is a string"
 
-sass also supports a number of other syntaxes for compatability reasons. You may
+scass also supports a number of other syntaxes for compatability reasons. You may
 use either # or . to precede a preprocessor directive. You may also declare
 hexadecimal literals with the 0xHEX, $HEX, or HEXh syntaxes. Binary literals may
 be defined with 0bBINARY, %BINARY, or BINARYb. Octal is supported only via
@@ -323,9 +327,9 @@ TODO
 Architectures
 -------------
 
-Out of the box, sass only supports z80. You may specify an alternate instruction
+Out of the box, scass only supports z80. You may specify an alternate instruction
 set by means of _--architecture_. The instruction set format is documented in
-_/usr/share/sass/instruction-sets_ or somewhere similar.
+_/usr/share/scass/instruction-sets_ or somewhere similar.
 
 Listings
 --------
@@ -362,12 +366,12 @@ escape codes are supported.
 String Encodings
 ----------------
 
-sass assembles strings as UTF-8. UTF-8 is compatible with ASCII. All input files
+scass assembles strings as UTF-8. UTF-8 is compatible with ASCII. All input files
 should be either ASCII or UTF-8.
 
 Authors
 -------
 
 Maintained by Drew DeVault <sir@cmpwn.com>, who is assisted by other open
-source contributors. For more information about sass development, see
+source contributors. For more information about scass development, see
 <https://github.com/KnightOS/genkfs>.

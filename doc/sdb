@@ -1,7 +1,7 @@
-sass Debug Files
+scass Debug Files
 ================
 
-The sass linker can produce files that may be loaded into debuggers to help match
+The scass linker can produce files that may be loaded into debuggers to help match
 assembly code with machine code. It's similar to the SOBJ format.
 
 This document takes a similar format to the gzip specification. That is:
@@ -31,19 +31,19 @@ are little-endian unless specified otherwise.
 Header
 ------
 
-+===========+---------+
-| SASSDEBUG | Version |
-+===========+---------+
++============+---------+
+| SCASSDEBUG | Version |
++============+---------+
 
-"SASSDEBUG" is the literal ASCII string "SASSDEBUG". The version is an unsigned
-8-bit integer that specifies what version of the SASSDEBUG specification is in
+"SCASSDEBUG" is the literal ASCII string "SCASSDEBUG". The version is an unsigned
+8-bit integer that specifies what version of the SCASSDEBUG specification is in
 use. The current version is 0.
 
 Symbols
 -------
 
 What follows is a list of symbols. This takes the same format as symbols in the
-SASSOBJ format, but these are the final addresses of each symbol after linking.
+SCASSOBJ format, but these are the final addresses of each symbol after linking.
 
 +==============+============+
 | Symbol count | Symbols... |
