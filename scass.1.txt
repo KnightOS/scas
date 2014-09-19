@@ -66,9 +66,14 @@ Options
 	external symbols, and instead resolves them when linking. If you do not desire
 	this behavior, specify *-n* to raise errors when using undefined symbols.
 
-*-sdcc, --sdcc-compatible*::
+*-r, --relocatable*::
+	Instructs scass to automatically detect internal references and make them
+	relocatable in accordance with the KnightOS kernel's relocation mechanism (see
+	_Relocation_ below).
+
+*--sdcc-compatible*::
 	Rather than using scass's own object format, instead use one compatible with
-	SDCC's sdld format.
+	SDCC's sdld format. This implies *--relocatable*.
 
 *-s, --script* <script>::
 	Uses a linker script to perform linking. The default is to assemble files one
@@ -323,6 +328,23 @@ Linker Scripts
 --------------
 
 TODO
+
+Relocation
+----------
+
+scass supports automatic relocation for the KnightOS kernel. KnightOS will load
+your executable in an undefined place in memory and absolute internal references
+will not work. This is addressed via the "kcall" mechanic, which would replace
+
+	call internal_call
+
+With:
+
+	rst 0x08
+	call internal_call
+
+scass can automatically detect internal references during linking and modify them
+to fit the KnightOS format, if you desire.
 
 Architectures
 -------------
