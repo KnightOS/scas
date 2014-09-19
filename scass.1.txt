@@ -398,4 +398,4 @@ Authors
 
 Maintained by Drew DeVault <sir@cmpwn.com>, who is assisted by other open
 source contributors. For more information about scass development, see
-<https://github.com/KnightOS/genkfs>.
+<https://github.com/KnightOS/scass>.
