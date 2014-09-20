@@ -1,7 +1,7 @@
-scass Debug Files
+scas Debug Files
 ================
 
-The scass linker can produce files that may be loaded into debuggers to help match
+The scas linker can produce files that may be loaded into debuggers to help match
 assembly code with machine code. It's similar to the SOBJ format.
 
 This document takes a similar format to the gzip specification. That is:
@@ -32,18 +32,18 @@ Header
 ------
 
 +============+---------+
-| SCASSDEBUG | Version |
+| scasDEBUG | Version |
 +============+---------+
 
-"SCASSDEBUG" is the literal ASCII string "SCASSDEBUG". The version is an unsigned
-8-bit integer that specifies what version of the SCASSDEBUG specification is in
+"scasDEBUG" is the literal ASCII string "scasDEBUG". The version is an unsigned
+8-bit integer that specifies what version of the scasDEBUG specification is in
 use. The current version is 0.
 
 Symbols
 -------
 
 What follows is a list of symbols. This takes the same format as symbols in the
-SCASSOBJ format, but these are the final addresses of each symbol after linking.
+scasOBJ format, but these are the final addresses of each symbol after linking.
 
 +==============+============+
 | Symbol count | Symbols... |

@@ -9,7 +9,7 @@ void init_log(int verbosity) {
 	v = verbosity;
 }
 
-void scass_abort(char *format, ...) {
+void scas_abort(char *format, ...) {
 	fprintf(stderr, "ERROR: ");
 	va_list args;
 	va_start(args, format);
@@ -19,7 +19,7 @@ void scass_abort(char *format, ...) {
 	exit(1);
 }
 
-void scass_log(int verbosity, char* format, ...) {
+void scas_log(int verbosity, char* format, ...) {
 	if (verbosity <= v) {
 		va_list args;
 		va_start(args, format);

@@ -31,14 +31,14 @@ void init_runtime() {
 	runtime.output_file = NULL;
 	runtime.listing_file = NULL;
 	runtime.symbol_file = NULL;
-	runtime.include_path = getenv("SCASS_PATH");
+	runtime.include_path = getenv("SCAS_PATH");
 	runtime.linker_script = NULL;
 	runtime.verbosity = L_WARNING;
 }
 
 void validate_runtime() {
 	if (runtime.input_files->length == 0) {
-		scass_abort("No input files given");
+		scas_abort("No input files given");
 	}
 	if (runtime.output_file == NULL) {
 		/* Auto-assign an output file name */
@@ -79,11 +79,11 @@ void parse_arguments(int argc, char **argv) {
 					if (argv[i][j] == 'v') {
 						runtime.verbosity++;
 					} else {
-						scass_abort("Invalid option %s", argv[i]);
+						scas_abort("Invalid option %s", argv[i]);
 					}
 				}
 			} else {
-				scass_abort("Invalid option %s", argv[i]);
+				scas_abort("Invalid option %s", argv[i]);
 			}
 		} else {
 			if (runtime.output_file != NULL || i != argc - 1 || runtime.input_files->length == 0) {

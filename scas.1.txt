@@ -1,16 +1,16 @@
 /////
 vim:set ts=4 sw=4 tw=82 noet:
 /////
-scass (1)
+scas (1)
 ==========
 
 Name
 ----
-scass - SirCmpwn's Assembler
+scas - SirCmpwn's Assembler
 
 Synopsis
 --------
-'scass' [options] _FILE(s)_
+'scas' [options] _FILE(s)_
 
 Description
 -----------
@@ -27,7 +27,7 @@ Options
 *-a, --architecture* <arch>::
 	Specifies an architecture or instruction set file. The default is z80. If you
 	specify a file name, that file will be used as an instruction set. Otherwise,
-	it will be matched against scass's internal list of instruction sets. See
+	it will be matched against scas's internal list of instruction sets. See
 	_Architectures_ below for additional information.
 
 *-D <MACRO>, -D<MACRO>, \--define* <MACRO>::
@@ -35,7 +35,7 @@ Options
 	specific value, as if writing *#define MACRO STRING* into your code.
 
 *-e, --export-explicit*::
-	By default, scass exports all global symbols in symbol files. This option
+	By default, scas exports all global symbols in symbol files. This option
 	instead requires the source code to export symbols explicitly via the
 	*export* directive.
 
@@ -45,17 +45,17 @@ Options
 *-I, --include* <directories>::
 	Adds the specified directories to the include path, delimited by commas. By
 	default, the include path is the working directory plus anything in the
-	*SCASS_INCLUDE_PATH* enviornment variable.
+	*scas_INCLUDE_PATH* enviornment variable.
 
 *-o, --output* <file>::
 	Uses the specified file, or - for stdout, as the output.
 
 *-O, --object*::
-	Instructs scass to produce an unlinked object file instead of directly
+	Instructs scas to produce an unlinked object file instead of directly
 	producing machine code.
 
 *-l, --link*::
-	Instructs scass to operate as a linker. The input file(s) should be object
+	Instructs scas to operate as a linker. The input file(s) should be object
 	files and the output will be machine code.
 
 *-L, --listing* <file>::
@@ -64,17 +64,17 @@ Options
 	assembled. Its format is described in _Listings_ below.
 
 *-n, --no-implicit-symbols*::
-	By default, scass does not require you to use the *import* directive to use
+	By default, scas does not require you to use the *import* directive to use
 	external symbols, and instead resolves them when linking. If you do not desire
 	this behavior, specify *-n* to raise errors when using undefined symbols.
 
 *-r, --relocatable*::
-	Instructs scass to automatically detect internal references and make them
+	Instructs scas to automatically detect internal references and make them
 	relocatable in accordance with the KnightOS kernel's relocation mechanism (see
 	_Relocation_ below).
 
 *--sdcc-compatible*::
-	Rather than using scass's own object format, instead use one compatible with
+	Rather than using scas's own object format, instead use one compatible with
 	SDCC's sdld format. This implies *--relocatable*.
 
 *-s, --script* <script>::
@@ -92,17 +92,17 @@ Options
 Examples
 --------
 
-scass input.asm output.bin::
+scas input.asm output.bin::
 	Assembles and links input.asm and produces output.bin as machine code.
 
-scass input1.asm input2.asm input3.asm output.bin::
+scas input1.asm input2.asm input3.asm output.bin::
 	Assembles and links three input files and produces output.bin as machine code.
 	The default behavior with several files is to arrange their output in order.
 
-scass -O screen.asm screen.obj::
+scas -O screen.asm screen.obj::
 	Assembles input1.asm and produces an unlinked object file.
 
-scass -l screen.obj keyboard.obj main.obj game.bin::
+scas -l screen.obj keyboard.obj main.obj game.bin::
 	Links three object files together and produces game.bin as machine code.
 
 Preprocessor Directives
@@ -230,7 +230,7 @@ opposite of *ifdef*.
 Assembly Syntax
 ---------------
 
-scass aims to be as flexible as possible with its assembly syntax. It supports many
+scas aims to be as flexible as possible with its assembly syntax. It supports many
 syntaxes so that you might be able to easily drop in arbituary snippets, but
 encourages a single format. The encouraged format looks something like this:
 
@@ -244,7 +244,7 @@ encourages a single format. The encouraged format looks something like this:
 	string:
 		.asciiz "This is a string"
 
-scass also supports a number of other syntaxes for compatability reasons. You may
+scas also supports a number of other syntaxes for compatability reasons. You may
 use either # or . to precede a preprocessor directive. You may also declare
 hexadecimal literals with the 0xHEX, $HEX, or HEXh syntaxes. Binary literals may
 be defined with 0bBINARY, %BINARY, or BINARYb. Octal is supported only via
@@ -334,7 +334,7 @@ TODO
 Relocation
 ----------
 
-scass supports automatic relocation for the KnightOS kernel. KnightOS will load
+scas supports automatic relocation for the KnightOS kernel. KnightOS will load
 your executable in an undefined place in memory and absolute internal references
 will not work. This is addressed via the "kcall" mechanic, which would replace
 
@@ -345,15 +345,15 @@ With:
 	rst 0x08
 	call internal_call
 
-scass can automatically detect internal references during linking and modify them
+scas can automatically detect internal references during linking and modify them
 to fit the KnightOS format, if you desire.
 
 Architectures
 -------------
 
-Out of the box, scass only supports z80. You may specify an alternate instruction
+Out of the box, scas only supports z80. You may specify an alternate instruction
 set by means of _--architecture_. The instruction set format is documented in
-_/usr/share/scass/instruction-sets_ or somewhere similar.
+_/usr/share/scas/instruction-sets_ or somewhere similar.
 
 Listings
 --------
@@ -390,12 +390,12 @@ escape codes are supported.
 String Encodings
 ----------------
 
-scass assembles strings as UTF-8. UTF-8 is compatible with ASCII. All input files
+scas assembles strings as UTF-8. UTF-8 is compatible with ASCII. All input files
 should be either ASCII or UTF-8.
 
 Authors
 -------
 
 Maintained by Drew DeVault <sir@cmpwn.com>, who is assisted by other open
-source contributors. For more information about scass development, see
-<https://github.com/KnightOS/scass>.
+source contributors. For more information about scas development, see
+<https://github.com/KnightOS/scas>.

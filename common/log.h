@@ -9,7 +9,7 @@ typedef enum {
 } log_importance_t;
 
 void init_log(int verbosity);
-void scass_log(int verbosity, char* format, ...);
-void scass_abort(char* format, ...);
+void scas_log(int verbosity, char* format, ...);
+void scas_abort(char* format, ...);
 
 #endif
