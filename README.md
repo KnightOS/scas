@@ -1,6 +1,3 @@
-# sass
+# scas
 
-This should eventually be a rewrite of [sass](https://github.com/KnightOS/sass) in C, and also
-without sucking so much.
-
-Feel free to work on this, SirCmpwn is too busy with the kernel and such to do this.
+Assembler and linker for z80. Work in progress.
