@@ -3,6 +3,7 @@
 #include <string.h>
 #include <strings.h>
 #include "log.h"
+#include "list.h"
 #include "enums.h"
 
 struct {
@@ -11,9 +12,7 @@ struct {
 	int explicit_export;
 	int explicit_import;
 	output_type_t output_type;
-	int input_files_len;
-	int input_files_capacity;
-	char **input_files;
+	list_t *input_files;
 	char *output_file;
 	char *listing_file;
 	char *symbol_file;
@@ -28,9 +27,7 @@ void init_runtime() {
 	runtime.explicit_import = 1;
 	runtime.explicit_export = 0;
 	runtime.output_type = EXECUTABLE;
-	runtime.input_files = malloc(sizeof(char*) * 10);
-	runtime.input_files_len = 0;
-	runtime.input_files_capacity = 10;
+	runtime.input_files = create_list();
 	runtime.output_file = NULL;
 	runtime.listing_file = NULL;
 	runtime.symbol_file = NULL;
@@ -40,14 +37,14 @@ void init_runtime() {
 }
 
 void validate_runtime() {
-	if (runtime.input_files_len == 0) {
+	if (runtime.input_files->length == 0) {
 		scass_abort("No input files given");
 	}
 	if (runtime.output_file == NULL) {
 		/* Auto-assign an output file name */
 		const char *bin = ".bin";
-		runtime.output_file = malloc(strlen(runtime.input_files[0]) + sizeof(bin));
-		memcpy(runtime.output_file, runtime.input_files[0], strlen(runtime.input_files[0]));
+		runtime.output_file = malloc(strlen(runtime.input_files->items[0]) + sizeof(bin));
+		memcpy(runtime.output_file, runtime.input_files->items[0], strlen(runtime.input_files->items[0]));
 		int i = strlen(runtime.output_file);
 		while (runtime.output_file[--i] != '.' && i != 0);
 		if (i == 0) {
@@ -60,17 +57,6 @@ void validate_runtime() {
 	}
 }
 
-void runtime_add_input_file(char *file) {
-	if (runtime.input_files_capacity == runtime.input_files_len) {
-		runtime.input_files_capacity += 10;
-		runtime.input_files = realloc(runtime.input_files, sizeof(char*) * runtime.input_files_capacity);
-		if (runtime.input_files == NULL) {
-			scass_abort("Couldn't resize input file buffer");
-		}
-	}
-	runtime.input_files[runtime.input_files_len++] = file;
-}
-
 void parse_arguments(int argc, char **argv) {
 	int i;
 	for (i = 1; i < argc; ++i) {
@@ -78,7 +64,7 @@ void parse_arguments(int argc, char **argv) {
 			if (strcasecmp("-o", argv[i]) == 0 || strcasecmp("--output", argv[i]) == 0) {
 				runtime.output_file = argv[++i];
 			} else if (strcasecmp("-i", argv[i]) == 0 || strcasecmp("--input", argv[i]) == 0) {
-				runtime_add_input_file(argv[++i]);
+				list_add(runtime.input_files, argv[++i]);
 			} else if (strcasecmp("-l", argv[i]) == 0 || strcasecmp("--link", argv[i]) == 0) {
 				runtime.jobs = LINK;
 			} else if (strcasecmp("-O", argv[i]) == 0 || strcasecmp("--object", argv[i]) == 0) {
@@ -100,8 +86,8 @@ void parse_arguments(int argc, char **argv) {
 				scass_abort("Invalid option %s", argv[i]);
 			}
 		} else {
-			if (runtime.output_file != NULL || i != argc - 1 || runtime.input_files_len == 0) {
-				runtime_add_input_file(argv[i]);
+			if (runtime.output_file != NULL || i != argc - 1 || runtime.input_files->length == 0) {
+				list_add(runtime.input_files, argv[i]);
 			} else if (runtime.output_file == NULL && i == argc - 1) {
 				runtime.output_file = argv[i];
 			}
@@ -115,8 +101,8 @@ int main(int argc, char **argv) {
 	init_log(runtime.verbosity);
 	validate_runtime();
 	int i;
-	for (i = 0; i < runtime.input_files_len; ++i) {
-		printf("Input: %s\n", runtime.input_files[i]);
+	for (i = 0; i < runtime.input_files->length; ++i) {
+		printf("Input: %s\n", (char*)runtime.input_files->items[i]);
 	}
 	printf("Output: %s\n", runtime.output_file);
 	return 0;
