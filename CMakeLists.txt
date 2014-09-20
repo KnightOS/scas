@@ -24,13 +24,13 @@ add_executable(scass
 
 ADD_CUSTOM_TARGET(
     man ALL
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/scass.1
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/bin/scass.1
 )
 
 ADD_CUSTOM_COMMAND(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/scass.1.txt
     COMMAND a2x --no-xmllint --doctype manpage --format manpage ${CMAKE_CURRENT_SOURCE_DIR}/scass.1.txt
-    COMMAND test "${CMAKE_CURRENT_SOURCE_DIR}" != "${CMAKE_CURRENT_BINARY_DIR}" && mv -f ${CMAKE_CURRENT_SOURCE_DIR}/scass.1 ${CMAKE_CURRENT_BINARY_DIR} || true
+    COMMAND test "${CMAKE_CURRENT_SOURCE_DIR}" != "${CMAKE_CURRENT_BINARY_DIR}/bin" && mv -f ${CMAKE_CURRENT_SOURCE_DIR}/scass.1 ${CMAKE_CURRENT_BINARY_DIR}/bin || true
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/scass.1
     VERBATIM
 )

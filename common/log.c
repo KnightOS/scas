@@ -1,5 +1,4 @@
 #include "log.h"
-
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,7 +9,8 @@ void init_log(int verbosity) {
 	v = verbosity;
 }
 
-void sass_abort(char *format, ...) {
+void scass_abort(char *format, ...) {
+	fprintf(stderr, "ERROR: ");
 	va_list args;
 	va_start(args, format);
 	vfprintf(stderr, format, args);
@@ -19,7 +19,7 @@ void sass_abort(char *format, ...) {
 	exit(1);
 }
 
-void sass_log(int verbosity, char* format, ...) {
+void scass_log(int verbosity, char* format, ...) {
 	if (verbosity <= v) {
 		va_list args;
 		va_start(args, format);
