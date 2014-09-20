@@ -20,6 +20,7 @@ char *read_line(FILE *file) {
 			}
 		}
 		string[i++] = (char)c;
+		length++;
 	}
 	if (i + 1 != size) {
 		string = realloc(string, length + 1);
