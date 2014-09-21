@@ -34,6 +34,9 @@ typedef struct {
 	void (*function)(expression_list_t *);
 } operator_item_t;
 
+
+// NOTE: when passing operators, pass them sorted by length, largest first.
+// Otherwise the parser may parse e.g. '>>' as '>' '>'.
 expression_list_t *parse_expression(const char *str, operator_item_t *operators, int operator_count);
 
 #endif
