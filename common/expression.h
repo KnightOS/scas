@@ -3,10 +3,13 @@
 
 #include "list.h"
 
+#include <stdint.h>
+
 enum {
 	SYMBOL,
 	NUMBER,
-	OPERATOR
+	OPERATOR,
+	OPEN_PARENTHESIS,
 };
 
 typedef struct expression_list expression_list_t;
@@ -14,19 +17,24 @@ typedef struct expression_list expression_list_t;
 typedef struct {
 	int type;
 	union {
-		struct {
-			char *symbol;
-		} symbol;
-
+		char *symbol;
 		int32_t number;
-		void (*operator)(expression_list_t);
+		int operator;
 	};
-} expresion_t;
+} expression_t;
 
 struct expression_list {
 	list_t *expression_string;
 };
 
-expression_list_t *parse_expression(const char *str);
+typedef struct {
+	char *operator;
+	int precedence;
+	int right_assocative;
+	void (*function)(expression_list_t *);
+} operator_item_t;
+
+expression_list_t *parse_expression(const char *str, operator_item_t *operators, int operator_count);
+void print_expression(expression_t *, operator_item_t *, int);
 
 #endif
