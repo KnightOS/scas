@@ -35,6 +35,5 @@ typedef struct {
 } operator_item_t;
 
 expression_list_t *parse_expression(const char *str, operator_item_t *operators, int operator_count);
-void print_expression(expression_t *, operator_item_t *, int);
 
 #endif

@@ -6,20 +6,6 @@
 
 #include "log.h"
 
-void print_expression(expression_t *expr, operator_item_t *operators, int operator_count) {
-	switch (expr->type) {
-	case OPERATOR:
-		printf(" {OP '%s'}", operators[expr->operator].operator);
-		break;
-	case NUMBER:
-		printf(" {NUM %X}", expr->number);
-		break;
-	case SYMBOL:
-		printf(" {SYM '%s'}", expr->symbol);
-		break;
-	}
-}
-
 expression_t *parse_digit(const char **string) {
 	if ((*string)[1] == 'b') {
 		// TODO: binary string
