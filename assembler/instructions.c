@@ -21,6 +21,12 @@ instruction_set_t *load_instruction_set(FILE *file) {
 			result->arch = malloc(strlen(line) - 4);
 			strcpy(result->arch, line + 5);
 		}
+		if (strstr(line, "OPERAND ") == line) {
+			/* TODO */
+		}
+		if (strstr(line, "INS ") == line) {
+			/* TODO */
+		}
 		free(line);
 	}
 	return result;
@@ -38,4 +44,9 @@ void instruction_set_free(instruction_set_t *set) {
 		free(set->arch);
 	}
 	free(set);
+}
+
+instruction_t *match_instruction(char *text) {
+	/* TODO */
+	return NULL;
 }
