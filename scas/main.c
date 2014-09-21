@@ -5,6 +5,7 @@
 #include "log.h"
 #include "list.h"
 #include "enums.h"
+#include "assembler.h"
 
 struct {
 	char *arch;
@@ -60,7 +61,7 @@ void validate_runtime() {
 void parse_arguments(int argc, char **argv) {
 	int i;
 	for (i = 1; i < argc; ++i) {
-		if (argv[i][0] == '-') {
+		if (argv[i][0] == '-' && argv[i][1] != '\0') {
 			if (strcasecmp("-o", argv[i]) == 0 || strcasecmp("--output", argv[i]) == 0) {
 				runtime.output_file = argv[++i];
 			} else if (strcasecmp("-i", argv[i]) == 0 || strcasecmp("--input", argv[i]) == 0) {
@@ -100,10 +101,25 @@ int main(int argc, char **argv) {
 	parse_arguments(argc, argv);
 	init_log(runtime.verbosity);
 	validate_runtime();
-	int i;
-	for (i = 0; i < runtime.input_files->length; ++i) {
-		printf("Input: %s\n", (char*)runtime.input_files->items[i]);
+	list_t *objects = create_list();
+	if ((runtime.jobs & ASSEMBLE) == ASSEMBLE) {
+		int i;
+		for (i = 0; i < runtime.input_files->length; ++i) {
+			FILE *f;
+			if (strcasecmp(runtime.input_files->items[i], "-") == 0) {
+				f = stdin;
+			} else {
+				f = fopen(runtime.input_files->items[i], "r");
+			}
+			if (!f) {
+				scas_abort("Unable to open '%s' for assembly.", runtime.input_files->items[i]);
+			}
+			object_t *o = assemble(f);
+			fclose(f);
+			list_add(objects, o);
+		}
 	}
-	printf("Output: %s\n", runtime.output_file);
+	list_free(runtime.input_files);
+	list_free(objects);
 	return 0;
 }
