@@ -7,8 +7,9 @@
 #include "objects.h"
 #include "readline.h"
 #include "stringop.h"
+#include "instructions.h"
 
-object_t *assemble(FILE *file) {
+object_t *assemble(FILE *file, instruction_set_t *set) {
 	object_t *object = create_object();
 	while (!feof(file)) {
 		char *line = read_line(file);

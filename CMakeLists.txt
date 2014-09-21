@@ -3,6 +3,14 @@ project(scas C)
 set(CMAKE_C_FLAGS "-g")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "bin/")
 add_definitions("-Wall")
+set(CMAKE_BUILD_TYPE Debug)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(INSTRUCTION_SET_PATH "${PROJECT_SOURCE_DIR}/tables/" CACHE PATH "Location to install instruction set tables.")
+else()
+    set(INSTRUCTION_SET_PATH "/usr/share/scas/instruction_sets/" CACHE PATH "Location to install instruction set tables.")
+endif()
+add_definitions(-DINSTRUCTION_SET_PATH="${INSTRUCTION_SET_PATH}/")
 
 include_directories(
     assembler/
@@ -14,6 +22,7 @@ FILE(GLOB common ${PROJECT_SOURCE_DIR}/common/*.c)
 FILE(GLOB assembler ${PROJECT_SOURCE_DIR}/assembler/*.c)
 FILE(GLOB linker ${PROJECT_SOURCE_DIR}/linker/*.c)
 FILE(GLOB scas ${PROJECT_SOURCE_DIR}/scas/*.c)
+FILE(GLOB tables ${PROJECT_SOURCE_DIR}/tables/*)
 
 add_executable(scas
     ${common}
@@ -42,8 +51,11 @@ INSTALL(
 )
 
 INSTALL(
+    FILES ${tables}
+    DESTINATION share/scas/instruction_sets/
+)
+
+INSTALL(
     TARGETS scas
     RUNTIME DESTINATION bin
 )
-
-set(CMAKE_BUILD_TYPE Release)

@@ -96,11 +96,32 @@ void parse_arguments(int argc, char **argv) {
 	}
 }
 
+instruction_set_t *find_inst() {
+	const char *sets_dir = INSTRUCTION_SET_PATH;
+	const char *ext = ".tab";
+	FILE *f = fopen(runtime.arch, "r");
+	if (!f) {
+		char *path = malloc(strlen(runtime.arch) + strlen(sets_dir) + strlen(ext) + 1);
+		strcpy(path, sets_dir);
+		strcat(path, runtime.arch);
+		strcat(path, ext);
+		f = fopen(path, "r");
+		free(path);
+		if (!f) {
+			scas_abort("Unknown architecture: %s", runtime.arch);
+		}
+	}
+	instruction_set_t *set = load_instruction_set(f);
+	fclose(f);
+	return set;
+}
+
 int main(int argc, char **argv) {
 	init_runtime();
 	parse_arguments(argc, argv);
 	init_log(runtime.verbosity);
 	validate_runtime();
+	instruction_set_t *instruction_set = find_inst();
 	list_t *objects = create_list();
 	if ((runtime.jobs & ASSEMBLE) == ASSEMBLE) {
 		int i;
@@ -114,7 +135,7 @@ int main(int argc, char **argv) {
 			if (!f) {
 				scas_abort("Unable to open '%s' for assembly.", runtime.input_files->items[i]);
 			}
-			object_t *o = assemble(f);
+			object_t *o = assemble(f, instruction_set);
 			fclose(f);
 			list_add(objects, o);
 		}
