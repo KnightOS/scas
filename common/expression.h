@@ -6,13 +6,11 @@
 #include <stdint.h>
 
 enum {
-	SYMBOL,
-	NUMBER,
-	OPERATOR,
+	SYMBOL = 0x00,
+	NUMBER = 0x01,
+	OPERATOR = 0x02,
 	OPEN_PARENTHESIS,
 };
-
-typedef struct expression_list expression_list_t;
 
 typedef struct {
 	int type;
@@ -23,9 +21,10 @@ typedef struct {
 	};
 } expression_t;
 
-struct expression_list {
+typedef struct {
 	list_t *expression_string;
-};
+	list_t *used_symbols;
+} expression_list_t;
 
 typedef struct {
 	char *operator;

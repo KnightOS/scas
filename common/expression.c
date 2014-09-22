@@ -61,6 +61,7 @@ expression_list_t *parse_expression(const char *str, operator_item_t *operators,
 
 	expression_list_t *list = malloc(sizeof(expression_list_t));
 	list->expression_string = create_list();
+	list->used_symbols = create_list();
 	list_t *stack = create_list();
 
 	const char *current = str;
@@ -108,6 +109,7 @@ expression_list_t *parse_expression(const char *str, operator_item_t *operators,
 			expr = parse_operator(&current, operators, operator_count);
 		} else {
 			expr = parse_symbol(&current);
+			list_add(list->used_symbols, expr->symbol);
 		}
 
 		if (expr->type == OPERATOR) {
