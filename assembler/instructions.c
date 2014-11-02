@@ -74,7 +74,21 @@ instruction_set_t *load_instruction_set(FILE *file) {
 			list_free(parts);
 		}
 		if (strstr(line, "INS ") == line) {
-			/* TODO */
+			list_t *parts = split_string(line, " \t");
+			if (parts->length != 2) {
+				fprintf(stderr, "Warning: Skipping invalid definition from instruction set: %s\n", line);
+				list_free(parts);
+				continue;
+			}
+			/* 
+			 * TODO: We need to split up and parse that instruction, it'll be a bit complicated
+			 * We need to parse the match to figure out the bit width of the various substitutions
+			 * We don't want to keep the value strings around, it'll make assembly faster that way
+			 * So, we need to first iterate over the match and identify the width of each match string
+			 * Then do a substitution in the value string for `000...` with the appropriate width
+			 * And then it's easy, just strtol the value and store it with the match in the instruction set
+			 */
+			list_free(parts);
 		}
 		free(line);
 	}
