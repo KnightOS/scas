@@ -44,6 +44,6 @@ typedef struct {
 
 instruction_set_t *load_instruction_set(FILE *file);
 void instruction_set_free(instruction_set_t *set);
-instruction_t *match_instruction(char *text);
+instruction_t *match_instruction(const char *text);
 
 #endif
