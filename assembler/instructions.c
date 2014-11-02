@@ -34,6 +34,48 @@ operand_t *create_operand(const char *match, uint64_t val, size_t len) {
 	return op;
 }
 
+void parse_operand_line(const char *line, instruction_set_t *set) {
+	list_t *parts = split_string(line, " \t");
+	if (parts->length != 4) {
+		fprintf(stderr, "Warning: Skipping invalid definition from instruction set: %s\n", line);
+		list_free(parts);
+		return;
+	}
+	operand_group_t *g = find_operand_group(set, (char *)parts->items[1]);
+	if (g == NULL) {
+		g = create_operand_group((char *)parts->items[1]);
+		list_add(set->operand_groups, g);
+	}
+	char *end;
+	uint64_t val = (uint64_t)strtol((char *)parts->items[3], &end, 2);
+	if (*end != '\0') {
+		fprintf(stderr, "Warning: Skipping invalid definition from instruction set: %s\n", line);
+		list_free(parts);
+		return;
+	}
+	operand_t *op = create_operand((char *)parts->items[2], val, strlen((char *)parts->items[3]));
+	list_add(g->operands, op);
+	list_free(parts);
+}
+
+void parse_instruction_line(const char *line, instruction_set_t *set) {
+	list_t *parts = split_string(line, " \t");
+	if (parts->length != 2) {
+		fprintf(stderr, "Warning: Skipping invalid definition from instruction set: %s\n", line);
+		list_free(parts);
+		return;
+	}
+	/* 
+	 * TODO: We need to split up and parse that instruction, it'll be a bit complicated
+	 * We need to parse the match to figure out the bit width of the various substitutions
+	 * We don't want to keep the value strings around, it'll make assembly faster that way
+	 * So, we need to first iterate over the match and identify the width of each match string
+	 * Then do a substitution in the value string for `000...` with the appropriate width
+	 * And then it's easy, just strtol the value and store it with the match in the instruction set
+	 */
+	list_free(parts);
+}
+
 instruction_set_t *load_instruction_set(FILE *file) {
 	instruction_set_t *result = malloc(sizeof(instruction_set_t));
 	result->instructions = create_list();
@@ -51,44 +93,10 @@ instruction_set_t *load_instruction_set(FILE *file) {
 			strcpy(result->arch, line + 5);
 		}
 		if (strstr(line, "OPERAND ") == line) {
-			list_t *parts = split_string(line, " \t");
-			if (parts->length != 4) {
-				fprintf(stderr, "Warning: Skipping invalid definition from instruction set: %s\n", line);
-				list_free(parts);
-				continue;
-			}
-			operand_group_t *g = find_operand_group(result, (char *)parts->items[1]);
-			if (g == NULL) {
-				g = create_operand_group((char *)parts->items[1]);
-				list_add(result->operand_groups, g);
-			}
-			char *end;
-			uint64_t val = (uint64_t)strtol((char *)parts->items[3], &end, 2);
-			if (*end != '\0') {
-				fprintf(stderr, "Warning: Skipping invalid definition from instruction set: %s\n", line);
-				list_free(parts);
-				continue;
-			}
-			operand_t *op = create_operand((char *)parts->items[2], val, strlen((char *)parts->items[3]));
-			list_add(g->operands, op);
-			list_free(parts);
+			parse_operand_line(line, result);
 		}
 		if (strstr(line, "INS ") == line) {
-			list_t *parts = split_string(line, " \t");
-			if (parts->length != 2) {
-				fprintf(stderr, "Warning: Skipping invalid definition from instruction set: %s\n", line);
-				list_free(parts);
-				continue;
-			}
-			/* 
-			 * TODO: We need to split up and parse that instruction, it'll be a bit complicated
-			 * We need to parse the match to figure out the bit width of the various substitutions
-			 * We don't want to keep the value strings around, it'll make assembly faster that way
-			 * So, we need to first iterate over the match and identify the width of each match string
-			 * Then do a substitution in the value string for `000...` with the appropriate width
-			 * And then it's easy, just strtol the value and store it with the match in the instruction set
-			 */
-			list_free(parts);
+			parse_instruction_line(line, result);
 		}
 		free(line);
 	}
