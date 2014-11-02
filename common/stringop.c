@@ -65,10 +65,15 @@ list_t *split_string(const char *str, const char *delims) {
 	return res;
 }
 
-void free_string_list(list_t *list) {
+void free_flat_list(list_t *list) {
 	int i;
 	for (i = 0; i < list->length; ++i) {
 		free(list->items[i]);
 	}
 	list_free(list);
+}
+
+char *code_strchr(const char *string, char delimiter) {
+	/* TODO: strchr, but respecting strings in code */
+	return strchr(string, delimiter);
 }

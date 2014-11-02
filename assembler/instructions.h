@@ -5,6 +5,12 @@
 #include <stdint.h>
 #include "list.h"
 
+enum {
+    IMM_TYPE_ABSOLUTE,
+    IMM_TYPE_RELATIVE,
+    IMM_TYPE_RESTART
+};
+
 typedef struct {
     char *arch;
     list_t *instructions;
@@ -23,6 +29,7 @@ typedef struct {
     char ref;
     int width;
     int shift;
+    int type;
 } immediate_t;
 
 typedef struct {
@@ -45,6 +52,9 @@ typedef struct {
 
 instruction_set_t *load_instruction_set(FILE *file);
 void instruction_set_free(instruction_set_t *set);
-instruction_t *match_instruction(const char *text);
+instruction_operand_t *find_instruction_operand(instruction_t *inst, char key);
+immediate_t *find_instruction_immediate(instruction_t *inst, char key);
+operand_group_t *find_operand_group(instruction_set_t *set, const char *name);
+operand_t *find_operand(operand_group_t *group, const char *match);
 
 #endif

@@ -24,24 +24,23 @@ uint64_t bitreverse(uint64_t n) {
 	return n;
 }
 
-void print_binary(uint64_t val) {
-	int i;
-	for (i = 0; i < 64; ++i) {
-		if (val & 0x8000000000000000LLU) {
-			putchar('1');
-		} else {
-			putchar('0');
-		}
-		val <<= 1;
-	}
-}
-
 operand_group_t *find_operand_group(instruction_set_t *set, const char *name) {
 	int i;
 	for (i = 0; i < set->operand_groups->length; ++i) {
 		operand_group_t *g = set->operand_groups->items[i];
 		if (strcmp(g->name, name) == 0) {
 			return g;
+		}
+	}
+	return NULL;
+}
+
+operand_t *find_operand(operand_group_t *group, const char *match) {
+	int i;
+	for (i = 0; i < group->operands->length; ++i) {
+		operand_t *o = group->operands->items[i];
+		if (strcasecmp(o->match, match) == 0) {
+			return o;
 		}
 	}
 	return NULL;
@@ -90,7 +89,7 @@ void parse_operand_line(const char *line, instruction_set_t *set) {
 	list_t *parts = split_string(line, " \t");
 	if (parts->length != 4) {
 		fprintf(stderr, "Warning: Skipping invalid definition from instruction set: %s\n", line);
-		free_string_list(parts);
+		free_flat_list(parts);
 		return;
 	}
 	operand_group_t *g = find_operand_group(set, (char *)parts->items[1]);
@@ -102,19 +101,19 @@ void parse_operand_line(const char *line, instruction_set_t *set) {
 	uint64_t val = (uint64_t)strtol((char *)parts->items[3], &end, 2);
 	if (*end != '\0') {
 		fprintf(stderr, "Warning: Skipping invalid definition from instruction set: %s\n", line);
-		free_string_list(parts);
+		free_flat_list(parts);
 		return;
 	}
 	operand_t *op = create_operand((char *)parts->items[2], val, strlen((char *)parts->items[3]));
 	list_add(g->operands, op);
-	free_string_list(parts);
+	free_flat_list(parts);
 }
 
 void parse_instruction_line(const char *line, instruction_set_t *set) {
 	list_t *parts = split_string(line, " \t");
 	if (parts->length <= 2) {
 		fprintf(stderr, "Warning: Skipping invalid definition from instruction set: %s\n", line);
-		free_string_list(parts);
+		free_flat_list(parts);
 		return;
 	}
 	/* Initialize an empty instruction */
@@ -144,21 +143,28 @@ void parse_instruction_line(const char *line, instruction_set_t *set) {
 			op->width = ((operand_t *)group->operands->items[0])->width;
 			/* Note: operand shift is not populated yet */
 			list_add(inst->operands, op);
-		} else if (inst->match[i] == '%') /* Immediate value */ {
+		} else if (inst->match[i] == '%' || inst->match[i] == '^' || inst->match[i] == '&') /* Immediate value */ {
+			char type = inst->match[i];
 			char key = inst->match[++i];
 			i += 2; /* Skip key, < */
-			int g_len = strchr(inst->match + i, '>') - (inst->match + i);
-			char *g = malloc(g_len + 1);
-			int j;
-			for (j = 0; inst->match[i] != '>'; ++j) {
-				g[j] = inst->match[i++];
+			size_t width;
+			if (type != '&') {
+				int g_len = strchr(inst->match + i, '>') - (inst->match + i);
+				char *g = malloc(g_len + 1);
+				int j;
+				for (j = 0; inst->match[i] != '>'; ++j) {
+					g[j] = inst->match[i++];
+				}
+				g[j] = '\0';
+				width = atoi(g);
+				free(g);
+			} else {
+				width = 3;
 			}
-			g[j] = '\0';
-			size_t width = atoi(g);
-			free(g);
 			immediate_t *imm = malloc(sizeof(immediate_t));
 			imm->ref = key;
 			imm->width = width;
+			imm->type = type == '%' ? IMM_TYPE_ABSOLUTE : type == '&' ? IMM_TYPE_RESTART : IMM_TYPE_RELATIVE;
 			/* Note: immediate value shift is not populated yet */
 			list_add(inst->immediate, imm);
 		}
@@ -188,7 +194,7 @@ void parse_instruction_line(const char *line, instruction_set_t *set) {
 			if (op == NULL) {
 				fprintf(stderr, "Warning: Skipping invalid definition from instruction set (unknown operand group): %s\n", line);
 				free(_value);
-				free_string_list(parts);
+				free_flat_list(parts);
 				return;
 			}
 			op->shift = shift;
@@ -200,7 +206,7 @@ void parse_instruction_line(const char *line, instruction_set_t *set) {
 			if (imm == NULL) {
 				fprintf(stderr, "Warning: Skipping invalid definition from instruction set (unknown immediate value): %s\n", line);
 				free(_value);
-				free_string_list(parts);
+				free_flat_list(parts);
 				return;
 			}
 			imm->shift = shift;
@@ -209,8 +215,9 @@ void parse_instruction_line(const char *line, instruction_set_t *set) {
 		}
 	}
 	inst->value = bitreverse(inst->value) >> (64 - inst->width);
+	list_add(set->instructions, inst);
 	free(_value);
-	free_string_list(parts);
+	free_flat_list(parts);
 }
 
 instruction_set_t *load_instruction_set(FILE *file) {
@@ -266,9 +273,4 @@ void instruction_set_free(instruction_set_t *set) {
 		free(set->arch);
 	}
 	free(set);
-}
-
-instruction_t *match_instruction(const char *text) {
-	/* TODO */
-	return NULL;
 }
