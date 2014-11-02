@@ -14,16 +14,15 @@ typedef struct {
 typedef struct {
     char *match;
     uint64_t value;
-    int length;
+    size_t width;
     list_t *immediate;
     list_t *operands;
 } instruction_t;
 
 typedef struct {
     char ref;
-    int length;
+    int width;
     int shift;
-    char *value;
 } immediate_t;
 
 typedef struct {
@@ -38,9 +37,11 @@ typedef struct {
 } operand_t;
 
 typedef struct {
-    char ref;
-    operand_t operand;
-} operand_ref_t;
+    char key;
+    char *group;
+    size_t width;
+    size_t shift;
+} instruction_operand_t;
 
 instruction_set_t *load_instruction_set(FILE *file);
 void instruction_set_free(instruction_set_t *set);
