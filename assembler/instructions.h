@@ -34,7 +34,6 @@ typedef struct {
 typedef struct {
     char *match;
     uint64_t value;
-    int shift;
 } operand_t;
 
 typedef struct {

@@ -9,6 +9,7 @@
 instruction_set_t *load_instruction_set(FILE *file) {
 	instruction_set_t *result = malloc(sizeof(instruction_set_t));
 	result->instructions = create_list();
+	result->operand_groups = create_list();
 	result->arch = NULL;
 	while (!feof(file)) {
 		char *line = read_line(file);
@@ -33,13 +34,26 @@ instruction_set_t *load_instruction_set(FILE *file) {
 }
 
 void instruction_set_free(instruction_set_t *set) {
-	int i;
+	int i, n;
 	for (i = 0; i < set->instructions->length; ++i) {
 		instruction_t *inst = set->instructions->items[i];
 		free(inst->match);
 		free(inst);
 	}
 	list_free(set->instructions);
+
+	for (i = 0; i < set->operand_groups->length; ++i) {
+		operand_group_t *group = set->operand_groups->items[i];
+		for (n = 0; n < group->operands->length; ++n) {
+			operand_t *op = group->operands->items[n];
+			free(op->match);
+			free(op);
+		}
+		free(group->name);
+		free(group);
+	}
+	list_free(set->operand_groups);
+
 	if (set->arch != NULL) {
 		free(set->arch);
 	}

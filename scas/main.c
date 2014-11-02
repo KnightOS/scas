@@ -142,5 +142,6 @@ int main(int argc, char **argv) {
 	}
 	list_free(runtime.input_files);
 	list_free(objects);
+	instruction_set_free(instruction_set);
 	return 0;
 }

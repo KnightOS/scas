@@ -15,6 +15,9 @@ object_t *assemble(FILE *file, instruction_set_t *set) {
 		char *line = read_line(file);
 		line = strip_whitespace(line);
 		line = strip_comments(line);
+		if (strlen(line) == 0) {
+			continue;
+		}
 
 		free(line);
 	}

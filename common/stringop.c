@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "string.h"
 #include "strings.h"
+#include "list.h"
 
 char *strip_whitespace(char *_str) {
 	if (*_str == '\0')
@@ -39,4 +40,27 @@ char *strip_comments(char *str) {
 		++i;
 	}
 	return str;
+}
+
+list_t *split_string(const char *str, const char *delims) {
+	list_t *res = create_list();
+	int i, j;
+	for (i = 0, j = 0; i < strlen(str) + 1; ++i) {
+		if (strchr(delims, str[i]) || i == strlen(str)) {
+			if (i - j == 0) {
+				j = i;
+				continue;
+			}
+			char *left = malloc(i - j + 1);
+			memcpy(left, str + j, i - j);
+			left[i - j] = 0;
+			list_add(res, left);
+			j = i + 1;
+			while (strchr(delims, str[j]) && str[j]) {
+				j++;
+				i++;
+			}
+		}
+	}
+	return res;
 }
