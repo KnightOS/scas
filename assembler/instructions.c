@@ -6,6 +6,34 @@
 #include "readline.h"
 #include "stringop.h"
 
+operand_group_t *find_operand_group(instruction_set_t *set, const char *name) {
+	int i;
+	for (i = 0; i < set->operand_groups->length; ++i) {
+		operand_group_t *g = set->operand_groups->items[i];
+		if (strcmp(g->name, name) == 0) {
+			return g;
+		}
+	}
+	return NULL;
+}
+
+operand_group_t *create_operand_group(const char *name) {
+	operand_group_t *g = malloc(sizeof(operand_group_t));
+	g->name = malloc(strlen(name) + 1);
+	strcpy(g->name, name);
+	g->operands = create_list();
+	return g;
+}
+
+operand_t *create_operand(const char *match, uint64_t val, size_t len) {
+	operand_t *op = malloc(sizeof(operand_t));
+	op->match = malloc(strlen(match) + 1);
+	strcpy(op->match, match);
+	op->value = val;
+	op->width = len;
+	return op;
+}
+
 instruction_set_t *load_instruction_set(FILE *file) {
 	instruction_set_t *result = malloc(sizeof(instruction_set_t));
 	result->instructions = create_list();
@@ -23,7 +51,27 @@ instruction_set_t *load_instruction_set(FILE *file) {
 			strcpy(result->arch, line + 5);
 		}
 		if (strstr(line, "OPERAND ") == line) {
-			/* TODO */
+			list_t *parts = split_string(line, " \t");
+			if (parts->length != 4) {
+				fprintf(stderr, "Warning: Skipping invalid definition from instruction set: %s\n", line);
+				list_free(parts);
+				continue;
+			}
+			operand_group_t *g = find_operand_group(result, (char *)parts->items[1]);
+			if (g == NULL) {
+				g = create_operand_group((char *)parts->items[1]);
+				list_add(result->operand_groups, g);
+			}
+			char *end;
+			uint64_t val = (uint64_t)strtol((char *)parts->items[3], &end, 2);
+			if (*end != '\0') {
+				fprintf(stderr, "Warning: Skipping invalid definition from instruction set: %s\n", line);
+				list_free(parts);
+				continue;
+			}
+			operand_t *op = create_operand((char *)parts->items[2], val, strlen((char *)parts->items[3]));
+			list_add(g->operands, op);
+			list_free(parts);
 		}
 		if (strstr(line, "INS ") == line) {
 			/* TODO */

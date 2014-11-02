@@ -122,6 +122,7 @@ int main(int argc, char **argv) {
 	init_log(runtime.verbosity);
 	validate_runtime();
 	instruction_set_t *instruction_set = find_inst();
+
 	list_t *objects = create_list();
 	if ((runtime.jobs & ASSEMBLE) == ASSEMBLE) {
 		int i;

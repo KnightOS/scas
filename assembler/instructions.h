@@ -33,6 +33,7 @@ typedef struct {
 
 typedef struct {
     char *match;
+    size_t width;
     uint64_t value;
 } operand_t;
 
