@@ -45,7 +45,7 @@ Options
 *-I, --include* <directories>::
 	Adds the specified directories to the include path, delimited by commas. By
 	default, the include path is the working directory plus anything in the
-	*scas_INCLUDE_PATH* enviornment variable.
+	*SCAS_INCLUDE_PATH* enviornment variable.
 
 *-o, --output* <file>::
 	Uses the specified file, or - for stdout, as the output.
