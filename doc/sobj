@@ -1,5 +1,4 @@
-scas Object Files
-=================
+# scas Object Files
 
 scas produces object files that contain machine code, assembly code, and symbols.
 Unlike ELF files, "sobj" files are not linked at runtime, but instead are linked
@@ -22,35 +21,51 @@ represents one byte; a box like this:
 
 represents a variable number of bytes. 
 
-Data Formats
-------------
+## Data Formats
 
 A few common data formats are in use. Strings are generally encoded as UTF-8
-strings, and integers are always unsigned. Signed integers are converted to
-unsigned, two's compliment, unless otherwise specified. All multi-octet values
-are little-endian unless specified otherwise.
+strings and delimited with a zero, and integers are always unsigned. Signed
+integers are converted to unsigned, two's compliment, unless otherwise
+specified. All multi-octet values are little-endian unless specified otherwise.
 
-Header
-------
+## Header
 
 +==========+---------+--------------+
-| scasOBJ | Version | Architecture |
+| SCASOBJ  | Version | Architecture |
 +==========+---------+--------------+
 
-"scasOBJ" is the literal ASCII string "scasOBJ". The version is an unsigned 8-bit
-integer that specifies what version of the scasOBJ specification is in use. The
-current version is 0. The architecture is the the instruction set used to assemble
-this file, often set to "z80". The following architectures are supported:
+"SCASOBJ" is the literal ASCII string "SCASOBJ", without a length prefix. The
+version is an unsigned 8-bit integer that specifies what version of the SCASOBJ
+specification is in use. The current version is 0. The architecture is the the
+instruction set used to assemble this file, often set to "z80". The following
+architectures are supported:
 
 * 0x00: z80
 * 0x01: LR35902
 
-Symbols
--------
+## Areas
 
-What follows is a list of symbols. These are only symbols whose address can be
-determined at assembly time, those that require linking to resolve are not
-supported.
+An SOBJ file is composed of one or more areas. Each area has symbols, machine
+code, late immediate values, imports, etc.
+
++============+==========+
+| Area count | Areas... |
++============+==========+
+
+The area count is a 32-bit unsigned integer that refers to the total number of
+areas in this object file. Each area takes the following form:
+
++===========+============+============+================+=================+
+| Area name | Symbols... | Imports... | Expressions... | Machine code... | ->
++===========+============+============+================+=================+
++============+
+| Source Map |
++============+
+
+## Symbols
+
+What follows is a list of symbols. These are only symbols that need a linker to
+resolve.
 
 +==============+============+
 | Symbol count | Symbols... |
@@ -68,14 +83,75 @@ The length and value are both 32-bit unsigned integers. The name itself is a UTF
 string with no null delimiter. Exported is 1 if the symbol has been exported, or 0
 if it's an internal symbol.
 
-Machine Code
-------------
+## Immediate Value Expressions
+
+The next section is a list of expressions and the address their value should be
+assigned to.
+
++==================+================+
+| Expression count | Expressions... |
++==================+================+
+
+The length here is an unsigned 32-bit integer. Each expression takes the following
+format:
+
++------+-------+=============+=========+=========+============+
+| Type | Width | Instruction | Address | Address | Expression |
++------+-------+=============+=========+=========+============+
+
+The type specifies the type of immediate value, and can be one of the following:
+
+* 0x00: Absolute
+* 0x01: Relative
+
+Absolute values are calculated from the global address space, and relative
+values are calculated relative to the address of the instruction.
+
+"Instruction" indicates the address of the instruction this immediate value
+belongs to. This may be the same as the address of the immediate value.
+
+"Address" is the address of the immediate value, relative to the start of the
+area.
+
+The "Expression" takes this format:
+
++=============+===========+
+| Token count | Tokens... |
++=============+===========+
+
+The token count is an unsigned 32 bit integer. Expressions are stored in reverse
+polish notation. That is, the expression "2 + 2 * 10" would be stored as:
+
+    + 2 * 2 10
+
+You can evaluate these expressions by treating it like a stack. Pop off the "+"
+and add to it "2" and "* 2 10". Of course, you'll have to evaluate "* 2 10" to
+do that. Each token takes this format:
+
++------+============+
+| Type | Token Data |
++------+============+
+
+The type is one of these values:
+
+* 0x00: Symbol
+   This token is a string.
+
+* 0x01: Integer
+   This token is an 64-bit unsigned integer.
+
+* 0x02: Operator
+
+   This token is an 8-bit ASCII character with the upper bit reset.
+
+## Machine Code
 
 The next section is unlinked machine code. It is preceeded by its length as an
 unsigned 32-bit integer.
 
-Any expression that would demand a symbol, as in the following example, uses zero
-instead of the actual value.
+Any expression that would demand a symbol, as in the following example, uses
+zero instead of the actual value. The expression list can be used to resolve
+these at the linker step.
 
     .org 10
     symbol:
@@ -93,77 +169,7 @@ This example would be assembled to the following machine code:
     21 EF BE
     18 00
 
-Required Symbols
-----------------
-
-The next section is a list of expressions and the address their value should be
-assigned to.
-
-+==================+================+
-| Expression count | Expressions... |
-+==================+================+
-
-The length here is an unsigned 32-bit integer. Each expression takes the following
-format:
-
-+------+=========+===================+============+
-| Type | Address | Expression length | Expression |
-+------+=========+===================+============+
-
-The "type" specifies the output type, and can be one of the following values:
-
-* 0x00: Unsigned 16-bit integer
-* 0x01: Unsigned 8-bit integer
-* 0x02: Signed 8-bit integer, relative to PC
-
-The address is the address, relative to the start of the machine code section,
-that the resulting value should be written to. The length of the expression is the
-length of the string following it. The expression is saved in a token stream, like forth.
-Each token is in this format:
-
-+------+============+
-| Type | Token Data |
-+------+============+
-
-The type is one of these values:
-
-* 0x00: Label
-   If the token is a label, the token data is of this format:
-   
-   +--------+============+
-   | Length | Label name |
-   +--------+============+
-
-   Where length is a 16-bits unsigned int and the label is a non-null-terminated string.
-
-* 0x01: Integer
-   This token is just a 32-bit signed integer.
-
-* 0x02: Operator
-   Operators are saved as an 8-byte character, like +, -, *, or /.
-
-These tokens are interpreted by either pushing the label or integer,
-or popping one or more values from the stack and running the operator on those.
-This is done until the token stream has been completely read.
-Then the top of the stack is taken, and bounded to the maximum value the output can handle.
-If the value is outside these bounds, a warning will be thrown too. (123123 will become 65535, and a warning will be given)
-
-In the example given above, we might see this expression list:
-
-    00 0001 00000009 00 0006 "symbol"
-    00 0004 00000010 00 0006 "symbol" 01 0A000000 02 "+"
-    00 0007 00000010 00 0006 "symbol" 01 0C000000 02 "+"
-    02 0009 00000009 00 0006 "symbol"
-
-When the linker assembles the final binary, it appears as follows:
-
-    21 0A 00
-    21 14 00
-    21 14 00
-    18 F5
-
-Assembly Code
--------------
+## Source Map
 
 Following the expression list is the assembly code that produced the machine code.
 It contains each line of code, minus whitespace. For example, with the following
@@ -183,18 +189,20 @@ Only this code would be preserved:
 This section of the object file is a list of lines of code and affected addresses.
 It takes the following format:
 
-+=================+==========+
-| Number of lines | Lines... |
-+=================+==========+
++============+==========+
+| File count | Files... |
++============+==========+
 
-Number of lines is an unsigned 32-bit integer. Each line appears as:
+The file count is an unsigned 32-bit integer. Each file uses this format:
 
-+=========+===============+=============+======+
-| Address | Output length | Code length | Code |
-+=========+===============+=============+======+
++===========+============+==========+
+| File name | Line count | Lines... |
++===========+============+==========+
 
-The address is relative to the start of the machine code, and the "output length"
-is the total number of bytes of machine code produced by this line of assembly
-code. The code length is the length of the following string of assembly code,
-which has no null delimiter. Each length and the address are 32-bit unsigned
-integers.
++=========+===============+======+
+| Address | Output length | Code |
++=========+===============+======+
+
+The address is relative to the start of this area, and the output length refers
+to the length of the machine code output by this line of code. The code is the
+assembly code itself that was is used to represent this machine code.
