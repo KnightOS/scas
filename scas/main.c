@@ -152,6 +152,11 @@ int main(int argc, char **argv) {
 				}
 				printf("\n");
 			}
+			printf("Immediate values:\n");
+			for (j = 0; j < area->late_immediates->length; ++j) {
+				late_immediate_t *imm = area->late_immediates->items[j];
+				printf("0x%04X: '%s' (width: %d)\n", (uint16_t)imm->address, imm->expression, (int)imm->width);
+			}
 		}
 	}
 	if (errors->length != 0) {

@@ -118,6 +118,7 @@ instruction_match_t *try_match(instruction_set_t *set, instruction_t *inst, cons
 			ref->shift = inst_op->shift;
 			ref->op = op;
 			list_add(result->operands, ref);
+			free(value);
 		} else {
 			if (toupper(inst->match[i]) != toupper(str[j])) {
 				match = 0;

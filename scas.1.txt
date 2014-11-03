@@ -218,6 +218,9 @@ input.
 	Evaluates _expression_ and sets PC to the resulting value. All labels beyond
 	this point will be relative to _expression_.
 
+*section* <name>::
+	Alias for *area*.
+
 *!*::
 	! directives are ignored.
 

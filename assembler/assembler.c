@@ -43,8 +43,8 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		char *line = read_line(file);
 		char *_line = malloc(strlen(line) + 1);
 		strcpy(_line, line);
-		line = strip_whitespace(line, &state.column);
 		line = strip_comments(line);
+		line = strip_whitespace(line, &state.column);
 		if (strlen(line) == 0) {
 			continue;
 		}
@@ -57,6 +57,21 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 			for (i = 0; i < match->operands->length; ++i) {
 				operand_ref_t *ref = match->operands->items[i];
 				instruction |= ref->op->value << (match->instruction->width - ref->shift - ref->op->width);
+			}
+			for (i = 0; i < match->immediate_values->length; ++i) {
+				immediate_ref_t *ref = match->immediate_values->items[i];
+				immediate_t *imm = find_instruction_immediate(match->instruction, ref->key);
+				/* 
+				 * TODO: Attempt to evaluate this right here and now, and add it if it fails
+				 * Do NOT include symbols when evaluating here, that'll make it so we can't relocate this.
+				 * Until then, we just assume it failed and add it to the list of late immediate values
+				 */
+				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
+				late_imm->address = state.current_area->data_length + (imm->shift / 8);
+				late_imm->width = imm->width;
+				late_imm->type = imm->type;
+				late_imm->expression = ref->value_provided;
+				list_add(state.current_area->late_immediates, late_imm);
 			}
 			int bytes_width = match->instruction->width / 8;
 			for (i = 0; i < bytes_width; ++i) {

@@ -6,7 +6,9 @@
 
 typedef struct {
     char *expression;
+    uint64_t width;
     uint64_t address;
+    int type;
 } late_immediate_t;
 
 typedef struct {
@@ -19,8 +21,7 @@ typedef struct {
 
 typedef struct {
     list_t *areas;
-    list_t *defined_symbols;
-    list_t *required_symbols;
+    /* TODO: Add source map */
 } object_t;
 
 object_t *create_object();
