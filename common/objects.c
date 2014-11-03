@@ -1,4 +1,5 @@
 #include "objects.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -22,7 +23,18 @@ area_t *create_area(const char *name) {
 	a->name = malloc(sizeof(name) + 1);
 	strcpy(a->name, name);
 	a->late_immediates = create_list();
-	a->data_length = 1024;
-	a->data = malloc(a->data_length);
+	a->data_length = 0;
+	a->data_capacity = 1024;
+	a->data = malloc(a->data_capacity);
 	return a;
+}
+
+void append_to_area(area_t *area, uint8_t *data, size_t length) {
+	if ((area->data_capacity - area->data_length) < length) {
+		/* Expand capacity */
+		area->data = realloc(area->data, area->data_capacity + 1024);
+		area->data_capacity += 1024;
+	}
+	memcpy(area->data + area->data_length, data, length);
+	area->data_length += length;
 }

@@ -13,7 +13,8 @@ typedef struct {
     char *name;
     list_t *late_immediates;
     uint8_t *data;
-    uint64_t data_length;
+    int data_length;
+    int data_capacity;
 } area_t;
 
 typedef struct {
@@ -25,5 +26,6 @@ typedef struct {
 object_t *create_object();
 void object_free(object_t *object);
 area_t *create_area(const char *name);
+void append_to_area(area_t *area, uint8_t *data, size_t length);
 
 #endif

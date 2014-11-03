@@ -142,6 +142,16 @@ int main(int argc, char **argv) {
 			object_t *o = assemble(f, runtime.input_files->items[i], instruction_set, errors, warnings);
 			fclose(f);
 			list_add(objects, o);
+			/* Temporary test code */
+			area_t *area = o->areas->items[0];
+			int j;
+			for (j = 0; j < area->data_length; j += 16) {
+				int k;
+				for (k = 0; k < 16 && j + k < area->data_length; ++k) {
+					printf("%02X ", area->data[j + k]);
+				}
+				printf("\n");
+			}
 		}
 	}
 	if (errors->length != 0) {
