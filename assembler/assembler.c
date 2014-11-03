@@ -9,38 +9,33 @@
 #include "stringop.h"
 #include "instructions.h"
 #include "match.h"
+#include "errors.h"
 
-object_t *assemble(FILE *file, instruction_set_t *set) {
+#define ERROR(ERROR_CODE, COLUMN) add_error(errors, ERROR_CODE, line_number, _line, COLUMN, file_name);
+
+object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, list_t *errors, list_t *warnings) {
 	object_t *object = create_object();
+	area_t *current_area = create_area("CODE");
+	int line_number = 0;
 	while (!feof(file)) {
+		++line_number;
 		char *line = read_line(file);
-		line = strip_whitespace(line);
+		char *_line = malloc(strlen(line) + 1);
+		strcpy(_line, line);
+		int trimmed_start;
+		line = strip_whitespace(line, &trimmed_start);
 		line = strip_comments(line);
 		if (strlen(line) == 0) {
 			continue;
 		}
 		instruction_match_t *match = match_instruction(set, line);
 		if (match == NULL) {
-			printf("No match found for %s\n", line);
+			ERROR(ERROR_INVALID_INSTRUCTION, trimmed_start);
 		} else {
-			printf(	"Match found for %s:\n"
-					"\t%s (%08X)\n"
-					, line, match->instruction->match, (unsigned int)match->instruction->value);
-			int i;
-			for (i = 0; i < match->immediate_values->length; ++i) {
-				immediate_ref_t *ref = match->immediate_values->items[i];
-				immediate_t *imm = find_instruction_immediate(match->instruction, ref->key);
-				printf("\timm: key='%c', value='%s'"
-						" (shift='%d', width='%d')\n"
-						, ref->key, ref->value_provided, imm->shift, imm->width);
-			}
-			for (i = 0; i < match->operands->length; ++i) {
-				operand_ref_t *op = match->operands->items[i];
-				printf("\top: name='%s', value='%04X' (shift='%d', width='%d')\n"
-						, op->op->match, (unsigned int)op->op->value, (int)op->shift, (int)op->op->width);
-			}
+			/* TODO */
 		}
 
+		free(_line);
 		free(line);
 	}
 	return object;

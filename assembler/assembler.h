@@ -5,6 +5,6 @@
 #include "objects.h"
 #include "instructions.h"
 
-object_t *assemble(FILE *file, instruction_set_t *set);
+object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, list_t *errors, list_t *warnings);
 
 #endif

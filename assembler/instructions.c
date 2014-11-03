@@ -172,7 +172,8 @@ void parse_instruction_line(const char *line, instruction_set_t *set) {
 	/* Parse value */
 	char *_value = malloc(strlen(line) + 1);
 	strcpy(_value, line);
-	_value = strip_whitespace(_value);
+	int trimmed_start;
+	_value = strip_whitespace(_value, &trimmed_start);
 	char *value = _value;
 	while (*value++ != ' '); while (*value++ != ' ');
 	inst->width = 0;
@@ -227,7 +228,8 @@ instruction_set_t *load_instruction_set(FILE *file) {
 	result->arch = NULL;
 	while (!feof(file)) {
 		char *line = read_line(file);
-		line = strip_whitespace(line);
+		int trimmed_start;
+		line = strip_whitespace(line, &trimmed_start);
 		if (line[0] == '\0' || line[0] == '#') {
 			free(line);
 			continue;

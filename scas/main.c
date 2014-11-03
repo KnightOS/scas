@@ -5,6 +5,7 @@
 #include "log.h"
 #include "list.h"
 #include "enums.h"
+#include "errors.h"
 #include "assembler.h"
 
 struct {
@@ -122,6 +123,8 @@ int main(int argc, char **argv) {
 	init_log(runtime.verbosity);
 	validate_runtime();
 	instruction_set_t *instruction_set = find_inst();
+	list_t *errors = create_list();
+	list_t *warnings = create_list();
 
 	list_t *objects = create_list();
 	if ((runtime.jobs & ASSEMBLE) == ASSEMBLE) {
@@ -136,13 +139,36 @@ int main(int argc, char **argv) {
 			if (!f) {
 				scas_abort("Unable to open '%s' for assembly.", runtime.input_files->items[i]);
 			}
-			object_t *o = assemble(f, instruction_set);
+			object_t *o = assemble(f, runtime.input_files->items[i], instruction_set, errors, warnings);
 			fclose(f);
 			list_add(objects, o);
 		}
 	}
+	if (errors->length != 0) {
+		int i;
+		for (i = 0; i < errors->length; ++i) {
+			error_t *error = errors->items[i];
+			fprintf(stderr, "%s:%d:%d: error #%d: %s\n", error->file_name,
+					(int)error->line_number, (int)error->column, error->code, get_error_string(error));
+			fprintf(stderr, "%s\n", error->line);
+			int j;
+			for (j = error->column; j > 0; --j) {
+				fprintf(stderr, ".");
+			}
+			fprintf(stderr, "^\n");
+		}
+		list_free(runtime.input_files);
+		list_free(objects);
+		list_free(errors);
+		list_free(warnings);
+		instruction_set_free(instruction_set);
+		return errors->length;
+	}
+
 	list_free(runtime.input_files);
 	list_free(objects);
+	list_free(errors);
+	list_free(warnings);
 	instruction_set_free(instruction_set);
 	return 0;
 }

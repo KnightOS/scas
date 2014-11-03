@@ -4,12 +4,14 @@
 #include "strings.h"
 #include "list.h"
 
-char *strip_whitespace(char *_str) {
+char *strip_whitespace(char *_str, int *trimmed_start) {
+	*trimmed_start = 0;
 	if (*_str == '\0')
 		return _str;
 	char *strold = _str;
 	while (*_str == ' ' || *_str == '\t') {
 		_str++;
+		*trimmed_start += 1;
 	}
 	char *str = malloc(strlen(_str) + 1);
 	strcpy(str, _str);
