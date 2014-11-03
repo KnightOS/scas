@@ -46,6 +46,8 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		line = strip_comments(line);
 		line = strip_whitespace(line, &state.column);
 		if (strlen(line) == 0) {
+			free(_line);
+			free(line);
 			continue;
 		}
 		instruction_match_t *match = match_instruction(state.instruction_set, line);
