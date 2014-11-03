@@ -12,7 +12,7 @@ void stack_free(stack_t *stack);
 void stack_push(stack_t *stack, void *item);
 void *stack_pop(stack_t *stack);
 void *stack_peek(stack_t *stack);
-void stack_shrink_to_fit(stack *stack);
+void stack_shrink_to_fit(stack_t *stack);
 
 #define STACK_GROWTH_RATE 16
 

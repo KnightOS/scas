@@ -1,4 +1,5 @@
 #include "stack.h"
+#include "stdlib.h"
 
 stack_t *create_stack() {
 	stack_t *stack = malloc(sizeof *stack);
@@ -18,7 +19,7 @@ void stack_free(stack_t *stack) {
 void stack_push(stack_t *stack, void *item) {
 	if (stack->capacity <= stack->length) {
 		stack->capacity += STACK_GROWTH_RATE;
-		stack->items = realloc(stack->items, capacity);
+		stack->items = realloc(stack->items, stack->capacity);
 	}
 
 	stack->items[stack->length++] = item;
