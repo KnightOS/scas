@@ -26,6 +26,10 @@ struct assembler_state {
 	uint8_t *instruction_buffer;
 };
 
+int try_empty_line(struct assembler_state state, const char *line) {
+	return strlen(line) == 0;
+}
+
 int try_match_instruction(struct assembler_state state, const char *line) {
 	instruction_match_t *match = match_instruction(state.instruction_set, line);
 	if (match == NULL) {
@@ -79,6 +83,11 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 
 	list_add(state.object->areas, state.current_area);
 
+	int(*const line_ops[])(struct assembler_state, const char *) = {
+		try_empty_line,
+		try_match_instruction
+	};
+
 	while (!feof(file)) {
 		++state.line_number;
 		char *line = read_line(file);
@@ -86,15 +95,11 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		strcpy(state.line, line);
 		line = strip_comments(line);
 		line = strip_whitespace(line, &state.column);
-		if (strlen(line) == 0) {
-			free(state.line);
-			free(line);
-			continue;
-		}
-		if (try_match_instruction(state, line)) {
-			free(state.line);
-			free(line);
-			continue;
+		int i;
+		for (i = 0; i < sizeof(line_ops) / sizeof(void*); ++i) {
+			if (line_ops[i](state, line)) {
+				break;
+			}
 		}
 		free(state.line);
 		free(line);
