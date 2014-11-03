@@ -7,7 +7,7 @@
 const char *get_error_string(error_t *error) {
 	switch (error->code) {
 		case ERROR_INVALID_INSTRUCTION:
-			return "Invaid instruction";
+			return "Invalid instruction";
 		default:
 			return NULL;
 	}
