@@ -127,6 +127,10 @@ That is, the following:
 This equates *symbol* with the expression *2 + 2*, and considers *2 + 2* a single
 input.
 
+*area* <name>::
+	Defines the following code as code included in the area _name_. By default,
+	all code is assembled into the _CODE_ area.
+
 *ascii* "<text>"::
 	Converts _text_ to the global string encoding (*not ASCII*) and inserts it
 	into the output.
@@ -166,12 +170,23 @@ input.
 	evaluated at the time this directive is parsed, rather than when the symbol is
 	used.
 
+*export* <symbol>::
+	Explicitly exports _symbol_. This is not required unless *-e* is specified at
+	the command line.
+
 *fill* <size> <value>::
 	Inserts _size_ number of bytes into the output, whose value is _value_. If
 	omitted, _value_ defaults to zero.
 
+*globl* <symbol>::
+	Alias for *export*. Included for sdas compatability.
+
 *if, ifdef, ifndef, else, elif, endif*::
 	See _Conditionals_.
+
+*import* <symbol>::
+	Explicitly imports _symbol_ for use. This is not required unless *-n* is
+	specified at the command line.
 
 *include* "<path>"::
 	Inserts the specified file's contents into the assembly source directly.
@@ -188,10 +203,16 @@ input.
 *macro* <definition>::
 	See _Macros_.
 
+*module* <name>::
+	This directive is included for sdas compatability and is ignored.
+
 *nolist*::
 	Pauses listing until the next *list* directive. All preprocessor directives
 	are processed but no assembly is performed and no text is written to listing
 	files.
+
+*optsdcc* <options...>::
+	This directive is included for sdas compatability and is ignored.
 
 *org* <expression>::
 	Evaluates _expression_ and sets PC to the resulting value. All labels beyond
