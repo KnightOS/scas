@@ -131,16 +131,16 @@ char *split_line(struct assembler_state *state, char *line) {
 
 object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, list_t *errors, list_t *warnings) {
 	struct assembler_state state = {
-		create_object(),
-		create_area("CODE"),
-		set,
-		0, 0,
-		file_name,
-		errors,
-		warnings,
-		"",
-		malloc(64 / 8),
-		create_stack()
+		.object = create_object(),
+		.current_area = create_area("CODE"),
+		.instruction_set = set,
+		.line_number = 0, .column = 0,
+		.file_name = file_name,
+		.errors = errors,
+		.warnings = warnings,
+		.line = "",
+		.instruction_buffer = malloc(64 / 8),
+		.extra_lines = create_stack()
 	};
 
 	list_add(state.object->areas, state.current_area);
