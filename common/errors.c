@@ -12,6 +12,8 @@ const char *get_error_string(error_t *error) {
 			return "Value truncated";
 		case ERROR_INVALID_SYNTAX:
 			return "Invalid syntax";
+		case ERROR_INVALID_DIRECTIVE:
+			return "Invalid directive";
 		default:
 			return NULL;
 	}

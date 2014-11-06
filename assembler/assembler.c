@@ -12,21 +12,11 @@
 #include "match.h"
 #include "errors.h"
 #include "expression.h"
+#include "directives.h"
 
 #define ERROR(ERROR_CODE, COLUMN) add_error(state.errors, ERROR_CODE, state.line_number, state.line, COLUMN, state.file_name);
 
-struct assembler_state {
-	object_t *object;
-	area_t *current_area;
-	instruction_set_t *instruction_set;
-	int line_number;
-	int column;
-	const char *file_name;
-	list_t *errors;
-	list_t *warnings;
-	char *line;
-	uint8_t *instruction_buffer;
-};
+struct assembler_state state;
 
 int try_empty_line(struct assembler_state state, char **line) {
 	return strlen(*line) == 0;
@@ -137,7 +127,8 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 	int(*const line_ops[])(struct assembler_state, char **) = {
 		try_empty_line,
 		try_add_label,
-		try_match_instruction
+		try_handle_directive,
+		try_match_instruction,
 	};
 
 	while (!feof(file)) {
