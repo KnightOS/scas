@@ -109,6 +109,26 @@ int try_match_instruction(struct assembler_state state, char **_line) {
 	return 1;
 }
 
+char *split_line(struct assembler_state state, char *line) {
+	int i, j, _;
+	for (i = 0, j = 0; line[i]; ++i) {
+		if (line[i] == '\\') {
+			char *part = malloc(i - j + 1);
+			strncpy(part, line + j, i - j);
+			part[i - j + 1] = '\0';
+			part = strip_whitespace(part, &_);
+			stack_push(state.extra_lines, part);
+			j = i + 1;
+		}
+	}
+	char *part = malloc(i - j + 1);
+	strncpy(part, line + j, i - j);
+	part[i - j + 1] = '\0';
+	part = strip_whitespace(part, &_);
+	free(line);
+	return part;
+}
+
 object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, list_t *errors, list_t *warnings) {
 	struct assembler_state state = {
 		create_object(),
@@ -119,7 +139,8 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		errors,
 		warnings,
 		"",
-		malloc(64 / 8)
+		malloc(64 / 8),
+		create_stack()
 	};
 
 	list_add(state.object->areas, state.current_area);
@@ -131,13 +152,21 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		try_match_instruction,
 	};
 
+	char *line;
 	while (!feof(file)) {
-		++state.line_number;
-		char *line = read_line(file);
+		if (state.extra_lines->length == 0) {
+			++state.line_number;
+			line = read_line(file);
+		} else {
+			line = stack_pop(state.extra_lines);
+		}
 		state.line = malloc(strlen(line) + 1);
 		strcpy(state.line, line);
 		line = strip_comments(line);
 		line = strip_whitespace(line, &state.column);
+		if (code_strchr(line, '\\')) {
+			line = split_line(state, line);
+		}
 		int i;
 		for (i = 0; i < sizeof(line_ops) / sizeof(void*); ++i) {
 			if (line_ops[i](state, &line)) {
@@ -147,5 +176,9 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		free(state.line);
 		free(line);
 	}
+
+	stack_free(state.extra_lines);
+	free(state.instruction_buffer);
+
 	return state.object;
 }

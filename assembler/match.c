@@ -126,7 +126,7 @@ instruction_match_t *try_match(instruction_set_t *set, instruction_t *inst, cons
 			}
 		}
 	}
-	if (str[j] && !match) {
+	if (str[j] || !match) {
 		/* Not a match, clean up */
 		free_flat_list(result->operands);
 		for (i = 0; i < result->immediate_values->length; ++i) {
