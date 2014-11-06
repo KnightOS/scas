@@ -20,14 +20,17 @@ void print_tokenized_expression(tokenized_expression_t *expression) {
 		expression_token_t *token = expression->tokens->items[i];
 		switch (token->type) {
 			case SYMBOL:
-				printf("%s ", token->symbol);
+				printf("%s", token->symbol);
 				break;
 			case NUMBER:
-				printf("0x%04X ", (unsigned int)token->number);
+				printf("0x%04X", (unsigned int)token->number);
 				break;
 			case OPERATOR:
-				printf("%s ", operators[token->operator].operator);
+				printf("%s", operators[token->operator].operator);
 				break;
+		}
+		if (i != expression->tokens->length - 1) {
+			putchar(' ');
 		}
 	}
 }
