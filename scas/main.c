@@ -161,13 +161,21 @@ int main(int argc, char **argv) {
 				printf("' (width: %d)\n", (int)imm->width);
 			}
 		}
+	} else {
+		/* TODO: Load object files from disk */
+	}
+	if ((runtime.jobs & LINK) == LINK) {
+		/* TODO: Link objects */
+	} else {
+		/* TODO: Save object files to disk */
 	}
 	if (errors->length != 0) {
 		int i;
 		for (i = 0; i < errors->length; ++i) {
 			error_t *error = errors->items[i];
 			fprintf(stderr, "%s:%d:%d: error #%d: %s\n", error->file_name,
-					(int)error->line_number, (int)error->column, error->code, get_error_string(error));
+					(int)error->line_number, (int)error->column, error->code,
+					get_error_string(error));
 			fprintf(stderr, "%s\n", error->line);
 			int j;
 			for (j = error->column; j > 0; --j) {
