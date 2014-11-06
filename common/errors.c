@@ -8,6 +8,10 @@ const char *get_error_string(error_t *error) {
 	switch (error->code) {
 		case ERROR_INVALID_INSTRUCTION:
 			return "Invalid instruction";
+		case ERROR_VALUE_TRUNCATED:
+			return "Value truncated";
+		case ERROR_INVALID_SYNTAX:
+			return "Invalid syntax";
 		default:
 			return NULL;
 	}

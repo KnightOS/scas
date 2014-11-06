@@ -50,25 +50,29 @@ int try_match_instruction(struct assembler_state state, const char *line) {
 			tokenized_expression_t *expression = parse_expression(ref->value_provided);
 			int error;
 			uint64_t result = evaluate_expression(expression, NULL /* TODO: Symbols */, &error);
-			if (error) {
+			if (error == EXPRESSION_BAD_SYMBOL) {
+				/* TODO: Throw error if using explicit import */
 				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
 				late_imm->address = state.current_area->data_length + (imm->shift / 8);
 				late_imm->width = imm->width;
 				late_imm->type = imm->type;
 				late_imm->expression = expression;
 				list_add(state.current_area->late_immediates, late_imm);
+			} else if (error == EXPRESSION_BAD_SYNTAX) {
+				ERROR(ERROR_INVALID_SYNTAX, state.column);
 			} else {
 				uint64_t mask = 1;
-				int shift = imm->shift;
+				int shift = imm->width;
 				while (--shift) {
 					mask <<= 1;
 					mask |= 1;
 				}
 				if ((result & mask) != result) {
-					/* TODO: Truncation error */
+					ERROR(ERROR_VALUE_TRUNCATED, state.column);
+				} else {
+					result = result & mask;
+					instruction |= result << (match->instruction->width - imm->shift - imm->width);
 				}
-				result = result & mask;
-				instruction |= result << (match->instruction->width - imm->shift - imm->width);
 			}
 		}
 		int bytes_width = match->instruction->width / 8;

@@ -11,6 +11,11 @@ enum {
 	OPEN_PARENTHESIS
 };
 
+enum {
+	EXPRESSION_BAD_SYMBOL = 1,
+	EXPRESSION_BAD_SYNTAX = 2
+};
+
 typedef struct {
 	int type;
 	char *symbol;

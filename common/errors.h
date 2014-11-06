@@ -5,7 +5,9 @@
 #include <stddef.h>
 
 enum {
-    ERROR_INVALID_INSTRUCTION = 1
+    ERROR_INVALID_INSTRUCTION = 1,
+    ERROR_VALUE_TRUNCATED = 2,
+    ERROR_INVALID_SYNTAX = 3
 };
 
 typedef struct {
