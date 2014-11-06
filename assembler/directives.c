@@ -76,7 +76,7 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 			} else if (error == EXPRESSION_BAD_SYNTAX) {
 				ERROR(ERROR_INVALID_SYNTAX, state->column);
 			} else {
-				if ((result & 0xFF) != result) {
+				if ((result & 0xFF) != result && ~result >> 8) {
 					ERROR(ERROR_VALUE_TRUNCATED, state->column);
 				} else {
 					*state->instruction_buffer = (uint8_t)result;

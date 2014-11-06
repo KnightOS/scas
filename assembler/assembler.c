@@ -95,7 +95,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 					mask <<= 1;
 					mask |= 1;
 				}
-				if ((result & mask) != result) {
+				if ((result & mask) != result && ~result >> imm->width) {
 					ERROR(ERROR_VALUE_TRUNCATED, state->column);
 				} else {
 					result = result & mask;
