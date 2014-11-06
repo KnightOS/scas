@@ -11,8 +11,8 @@
 static operator_t operators[] = {
 	{ "+", OP_PLUS, 0, 0, 0, operator_add },
 	{ "-", OP_MINUS, 0, 0, 0, operator_subtract },
-	{ "+", OP_UNARY_PLUS, 1, 0, 0, operator_unary_plus },
-	{ "-", OP_UNARY_MINUS, 1, 0, 0, operator_unary_minus },
+	{ "+", OP_UNARY_PLUS, 1, 99, 1, operator_unary_plus },
+	{ "-", OP_UNARY_MINUS, 1, 99, 1, operator_unary_minus },
 	{ "*", OP_MULTIPLY, 0, 1, 0, operator_multiply },
 	{ "/", OP_DIVIDE, 0, 1, 0, operator_divide }
 };
