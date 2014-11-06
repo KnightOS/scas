@@ -33,7 +33,7 @@ typedef struct {
 	int operator_type;
 	int precedence;
 	int right_assocative;
-	uint64_t (*function)(stack_t *);
+	uint64_t (*function)(stack_t *, int *);
 } operator_t;
 
 // NOTE: when passing operators, pass them sorted by length, largest first.

@@ -64,7 +64,7 @@ uint64_t evaluate_expression(tokenized_expression_t *expression, list_t *symbols
 				op = operators[token->operator];
 				resolved = malloc(sizeof(expression_token_t));
 				resolved->type = NUMBER;
-				resolved->number = op.function(stack);
+				resolved->number = op.function(stack, error);
 				list_add(to_free, resolved);
 				stack_push(stack, resolved);
 				break;

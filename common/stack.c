@@ -26,6 +26,9 @@ void stack_push(stack_t *stack, void *item) {
 }
 
 void *stack_pop(stack_t *stack) {
+	if (stack->length == 0) {
+		return NULL;
+	}
 	return stack->items[--stack->length];
 }
 
