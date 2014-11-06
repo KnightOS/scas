@@ -46,29 +46,37 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 	}
 	int i;
 	for (i = 0; i < argc; ++i) {
-		/* TODO: Check for a string */
-		tokenized_expression_t *expression = parse_expression(argv[i]);
-		int error;
-		uint64_t result = evaluate_expression(expression, NULL /* TODO: Symbols */, &error);
-		if (error == EXPRESSION_BAD_SYMBOL) {
-			/* TODO: Throw error if using explicit import */
-			late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
-			late_imm->address = state->current_area->data_length;
-			late_imm->width = 8;
-			late_imm->type = IMM_TYPE_ABSOLUTE;
-			late_imm->expression = expression;
-			list_add(state->current_area->late_immediates, late_imm);
-			*state->instruction_buffer = 0;
-		} else if (error == EXPRESSION_BAD_SYNTAX) {
-			ERROR(ERROR_INVALID_SYNTAX, state->column);
+		int len = strlen(argv[i]);
+		if (argv[i][0] == '"' && argv[i][len - 1] == '"') {
+			/* TODO: Do we need to do anything fancy wrt encoding? */
+			argv[i][len - 1] = '\0';
+			len -= 2;
+			len = unescape_string(argv[i] + 1);
+			append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len);
 		} else {
-			if ((result & 0xFF) != result) {
-				ERROR(ERROR_VALUE_TRUNCATED, state->column);
+			tokenized_expression_t *expression = parse_expression(argv[i]);
+			int error;
+			uint64_t result = evaluate_expression(expression, NULL /* TODO: Symbols */, &error);
+			if (error == EXPRESSION_BAD_SYMBOL) {
+				/* TODO: Throw error if using explicit import */
+				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
+				late_imm->address = state->current_area->data_length;
+				late_imm->width = 8;
+				late_imm->type = IMM_TYPE_ABSOLUTE;
+				late_imm->expression = expression;
+				list_add(state->current_area->late_immediates, late_imm);
+				*state->instruction_buffer = 0;
+			} else if (error == EXPRESSION_BAD_SYNTAX) {
+				ERROR(ERROR_INVALID_SYNTAX, state->column);
 			} else {
-				*state->instruction_buffer = (uint8_t)result;
+				if ((result & 0xFF) != result) {
+					ERROR(ERROR_VALUE_TRUNCATED, state->column);
+				} else {
+					*state->instruction_buffer = (uint8_t)result;
+				}
 			}
+			append_to_area(state->current_area, state->instruction_buffer, 1);
 		}
-		append_to_area(state->current_area, state->instruction_buffer, 1);
 	}
 	return 1;
 }
@@ -114,20 +122,29 @@ char **split_directive(char *line, int *argc) {
 	} else {
 		delimiters = ",";
 	}
+	int in_string = 0, in_character = 0;
 	int i, j, _;
 	for (i = 0, j = 0; line[i]; ++i) {
-		if (strchr(delimiters, line[i]) != NULL) {
-			char *item = malloc(i - j + 1);
-			strncpy(item, line + j, i - j);
-			item[i - j] = '\0';
-			item = strip_whitespace(item, &_);
-			if (*argc == capacity) {
-				capacity *= 2;
-				parts = realloc(parts, sizeof(char *) * capacity);
+		if (line[i] == '\\') {
+			++i;
+		} else if (line[i] == '"' && !in_character) {
+			in_string = !in_string;
+		} else if (line[i] == '\'' && !in_string) {
+			in_character = !in_character;
+		} else if (!in_character && !in_string) {
+			if (strchr(delimiters, line[i]) != NULL) {
+				char *item = malloc(i - j + 1);
+				strncpy(item, line + j, i - j);
+				item[i - j] = '\0';
+				item = strip_whitespace(item, &_);
+				if (*argc == capacity) {
+					capacity *= 2;
+					parts = realloc(parts, sizeof(char *) * capacity);
+				}
+				parts[*argc] = item;
+				j = i + 1;
+				++*argc;
 			}
-			parts[*argc] = item;
-			j = i + 1;
-			++*argc;
 		}
 	}
 	char *item = malloc(i - j);

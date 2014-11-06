@@ -1,5 +1,6 @@
 #include "stringop.h"
 #include <stdlib.h>
+#include <stdio.h>
 #include "string.h"
 #include "strings.h"
 #include "list.h"
@@ -75,7 +76,66 @@ void free_flat_list(list_t *list) {
 	list_free(list);
 }
 
-char *code_strchr(const char *string, char delimiter) {
-	/* TODO: strchr, but respecting strings in code */
-	return strchr(string, delimiter);
+char *code_strchr(const char *str, char delimiter) {
+	int in_string = 0, in_character = 0;
+	int i = 0;
+	while (str[i] != '\0') {
+		if (str[i] == '"' && !in_character) {
+			in_string = !in_string;
+		} else if (str[i] == '\'' && !in_string) {
+			in_character = !in_character;
+		} else if (!in_character && !in_string) {
+			if (str[i] == delimiter) {
+				return (char *)str + i;
+			}
+		}
+		++i;
+	}
+	return NULL;
+}
+
+int unescape_string(char *string) {
+	/* TODO: More C string escapes */
+	int len = strlen(string);
+	int i;
+	for (i = 0; string[i]; ++i) {
+		if (string[i] == '\\') {
+			--len;
+			switch (string[++i]) {
+			case '0':
+				string[i - 1] = '\0';
+				memmove(string + i, string + i + 1, len - i);
+				break;
+			case 'a':
+				string[i - 1] = '\a';
+				memmove(string + i, string + i + 1, len - i);
+				break;
+			case 'b':
+				string[i - 1] = '\b';
+				memmove(string + i, string + i + 1, len - i);
+				break;
+			case 't':
+				string[i - 1] = '\t';
+				memmove(string + i, string + i + 1, len - i);
+				break;
+			case 'n':
+				string[i - 1] = '\n';
+				memmove(string + i, string + i + 1, len - i);
+				break;
+			case 'v':
+				string[i - 1] = '\v';
+				memmove(string + i, string + i + 1, len - i);
+				break;
+			case 'f':
+				string[i - 1] = '\f';
+				memmove(string + i, string + i + 1, len - i);
+				break;
+			case 'r':
+				string[i - 1] = '\r';
+				memmove(string + i, string + i + 1, len - i);
+				break;
+			}
+		}
+	}
+	return len;
 }
