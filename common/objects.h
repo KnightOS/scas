@@ -5,6 +5,17 @@
 #include <stdint.h>
 #include <stddef.h>
 
+enum {
+    SYMBOL_LABEL,
+    SYMBOL_EQUATE
+};
+
+typedef struct {
+    int type;
+    char *name;
+    uint64_t value;
+} symbol_t;
+
 typedef struct {
     tokenized_expression_t *expression;
     uint64_t width;
@@ -15,6 +26,7 @@ typedef struct {
 typedef struct {
     char *name;
     list_t *late_immediates;
+    list_t *symbols;
     uint8_t *data;
     int data_length;
     int data_capacity;

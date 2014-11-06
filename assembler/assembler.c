@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
+#include <ctype.h>
 #include "list.h"
 #include "objects.h"
 #include "readline.h"
@@ -27,11 +28,39 @@ struct assembler_state {
 	uint8_t *instruction_buffer;
 };
 
-int try_empty_line(struct assembler_state state, const char *line) {
-	return strlen(line) == 0;
+int try_empty_line(struct assembler_state state, char **line) {
+	return strlen(*line) == 0;
 }
 
-int try_match_instruction(struct assembler_state state, const char *line) {
+int try_add_label(struct assembler_state state, char **line) {
+	int i;
+	for (i = 0; (*line)[i] && (*line)[i] != ':'; ++i) {
+		int isvalid = isalnum((*line)[i]) || (*line)[i] == '_' ||
+			(i == 0 && (*line)[i] == '.');
+		if (!isvalid) {
+			return 0;
+		}
+	}
+	if ((*line)[i] != ':') {
+		return 0;
+	}
+	/* Add label */
+	symbol_t *sym = malloc(sizeof(symbol_t));
+	sym->name = malloc(i + 1);
+	strncpy(sym->name, *line, i);
+	sym->name[i] = '\0';
+	sym->type = SYMBOL_LABEL;
+	sym->value = state.current_area->data_length;
+	list_add(state.current_area->symbols, sym);
+	/* Modify this line so that processing may continue */
+	memmove(*line, *line + i + 1, strlen(*line + i));
+	int _;
+	*line = strip_whitespace(*line, &_);
+	return strlen(*line) == 0;
+}
+
+int try_match_instruction(struct assembler_state state, char **_line) {
+	char *line = *_line;
 	instruction_match_t *match = match_instruction(state.instruction_set, line);
 	if (match == NULL) {
 		ERROR(ERROR_INVALID_INSTRUCTION, state.column);
@@ -61,6 +90,10 @@ int try_match_instruction(struct assembler_state state, const char *line) {
 			} else if (error == EXPRESSION_BAD_SYNTAX) {
 				ERROR(ERROR_INVALID_SYNTAX, state.column);
 			} else {
+				if (imm->type == IMM_TYPE_RELATIVE) {
+					result += state.current_area->data_length;
+				}
+				/* TODO: Handle IMM_TYPE_RESTART */
 				uint64_t mask = 1;
 				int shift = imm->width;
 				while (--shift) {
@@ -101,8 +134,9 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 
 	list_add(state.object->areas, state.current_area);
 
-	int(*const line_ops[])(struct assembler_state, const char *) = {
+	int(*const line_ops[])(struct assembler_state, char **) = {
 		try_empty_line,
+		try_add_label,
 		try_match_instruction
 	};
 
@@ -115,7 +149,7 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		line = strip_whitespace(line, &state.column);
 		int i;
 		for (i = 0; i < sizeof(line_ops) / sizeof(void*); ++i) {
-			if (line_ops[i](state, line)) {
+			if (line_ops[i](state, &line)) {
 				break;
 			}
 		}

@@ -145,6 +145,7 @@ int main(int argc, char **argv) {
 			list_add(objects, o);
 			/* Temporary test code */
 			area_t *area = o->areas->items[0];
+			printf("Area '%s':\nMachine code:\n\t", area->name);
 			int j;
 			for (j = 0; j < area->data_length; j += 16) {
 				int k;
@@ -153,12 +154,19 @@ int main(int argc, char **argv) {
 				}
 				printf("\n");
 			}
-			printf("Immediate values:\n");
+			printf("Unresolved immediate values:\n");
 			for (j = 0; j < area->late_immediates->length; ++j) {
 				late_immediate_t *imm = area->late_immediates->items[j];
-				printf("0x%04X: '", (uint16_t)imm->address);
+				printf("\t0x%04X: '", (uint16_t)imm->address);
 				print_tokenized_expression(imm->expression);
 				printf("' (width: %d)\n", (int)imm->width);
+			}
+			if (area->symbols->length != 0) {
+				printf("Symbols:\n");
+				for (j = 0; j < area->symbols->length; ++j) {
+					symbol_t *sym = area->symbols->items[j];
+					printf("\t%s: 0x%04X\n", sym->name, (unsigned int)sym->value);
+				}
 			}
 		}
 	} else {

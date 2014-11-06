@@ -19,6 +19,7 @@ area_t *create_area(const char *name) {
 	a->name = malloc(sizeof(name) + 1);
 	strcpy(a->name, name);
 	a->late_immediates = create_list();
+	a->symbols = create_list();
 	a->data_length = 0;
 	a->data_capacity = 1024;
 	a->data = malloc(a->data_capacity);
