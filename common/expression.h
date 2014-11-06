@@ -36,5 +36,6 @@ typedef struct {
 tokenized_expression_t *parse_expression(const char *str);
 void initialize_expressions();
 void print_tokenized_expression(tokenized_expression_t *expression);
+uint64_t evaluate_expression(tokenized_expression_t *expression, list_t *symbols, int *error);
 
 #endif

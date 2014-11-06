@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "log.h"
 #include "stack.h"
+#include "stringop.h"
 #include "operators.h"
 
 static operator_t operators[] = {
@@ -35,13 +36,40 @@ void print_tokenized_expression(tokenized_expression_t *expression) {
 	}
 }
 
-uint64_t evaluate_expression(tokenized_expression_t *expression, list_t symbols, int *error) {
+uint64_t evaluate_expression(tokenized_expression_t *expression, list_t *symbols, int *error) {
 	stack_t *stack = create_stack();
+	list_t *to_free = create_list();
 	expression_token_t *token;
+	expression_token_t *resolved;
+	operator_t op;
 	uint64_t res = 0;
 	*error = 0;
 
-	/* TODO */
+	int i;
+	for (i = 0; i < expression->tokens->length; ++i) {
+		expression_token_t *token = expression->tokens->items[i];
+		switch (token->type) {
+			case SYMBOL:
+				*error = 1;
+				resolved = malloc(sizeof(expression_token_t));
+				resolved->type = NUMBER;
+				resolved->number = 0 /* TODO: Resolve */;
+				list_add(to_free, resolved);
+				stack_push(stack, resolved);
+				break;
+			case NUMBER:
+				stack_push(stack, token);
+				break;
+			case OPERATOR:
+				op = operators[token->operator];
+				resolved = malloc(sizeof(expression_token_t));
+				resolved->type = NUMBER;
+				resolved->number = op.function(stack);
+				list_add(to_free, resolved);
+				stack_push(stack, resolved);
+				break;
+		}
+	}
 
 	if (stack->length == 0) {
 		*error = 1;
@@ -54,6 +82,7 @@ uint64_t evaluate_expression(tokenized_expression_t *expression, list_t symbols,
 		}
 	}
 	stack_free(stack);
+	free_flat_list(to_free);
 	return res;
 }
 

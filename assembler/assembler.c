@@ -48,14 +48,28 @@ int try_match_instruction(struct assembler_state state, const char *line) {
 			immediate_t *imm = find_instruction_immediate(match->instruction, ref->key);
 
 			tokenized_expression_t *expression = parse_expression(ref->value_provided);
-			/* TODO: attempt to evaluate expression now with the symbols we already have */
-
-			late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
-			late_imm->address = state.current_area->data_length + (imm->shift / 8);
-			late_imm->width = imm->width;
-			late_imm->type = imm->type;
-			late_imm->expression = expression;
-			list_add(state.current_area->late_immediates, late_imm);
+			int error;
+			uint64_t result = evaluate_expression(expression, NULL /* TODO: Symbols */, &error);
+			if (error) {
+				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
+				late_imm->address = state.current_area->data_length + (imm->shift / 8);
+				late_imm->width = imm->width;
+				late_imm->type = imm->type;
+				late_imm->expression = expression;
+				list_add(state.current_area->late_immediates, late_imm);
+			} else {
+				uint64_t mask = 1;
+				int shift = imm->shift;
+				while (--shift) {
+					mask <<= 1;
+					mask |= 1;
+				}
+				if ((result & mask) != result) {
+					/* TODO: Truncation error */
+				}
+				result = result & mask;
+				instruction |= result << (match->instruction->width - imm->shift - imm->width);
+			}
 		}
 		int bytes_width = match->instruction->width / 8;
 		for (i = 0; i < bytes_width; ++i) {
