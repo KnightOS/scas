@@ -152,7 +152,12 @@ int try_handle_directive(struct assembler_state *state, char **line) {
 		}
 		int argc;
 		char **argv = split_directive(*line + strlen(d->match) + 1, &argc);
-		return d->function(state, argv, argc);
+		int ret = d->function(state, argv, argc);
+		while (argc--) {
+			free(argv[argc]);
+		}
+		free(argv);
+		return ret;
 	}
 	return 0;
 }
