@@ -1,11 +1,12 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 #include "list.h"
+#include "expression.h"
 #include <stdint.h>
 #include <stddef.h>
 
 typedef struct {
-    char *expression;
+    tokenized_expression_t *expression;
     uint64_t width;
     uint64_t address;
     int type;

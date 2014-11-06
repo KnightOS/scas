@@ -10,6 +10,7 @@
 #include "instructions.h"
 #include "match.h"
 #include "errors.h"
+#include "expression.h"
 
 #define ERROR(ERROR_CODE, COLUMN) add_error(state.errors, ERROR_CODE, state.line_number, state.line, COLUMN, state.file_name);
 
@@ -45,16 +46,15 @@ int try_match_instruction(struct assembler_state state, const char *line) {
 		for (i = 0; i < match->immediate_values->length; ++i) {
 			immediate_ref_t *ref = match->immediate_values->items[i];
 			immediate_t *imm = find_instruction_immediate(match->instruction, ref->key);
-			/* 
-			 * TODO: Attempt to evaluate this right here and now, and add it if it fails
-			 * Do NOT include symbols when evaluating here, that'll make it so we can't relocate this.
-			 * Until then, we just assume it failed and add it to the list of late immediate values
-			 */
+
+			tokenized_expression_t *expression = parse_expression(ref->value_provided);
+			/* TODO: attempt to evaluate expression now with the symbols we already have */
+
 			late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
 			late_imm->address = state.current_area->data_length + (imm->shift / 8);
 			late_imm->width = imm->width;
 			late_imm->type = imm->type;
-			late_imm->expression = ref->value_provided;
+			late_imm->expression = expression;
 			list_add(state.current_area->late_immediates, late_imm);
 		}
 		int bytes_width = match->instruction->width / 8;
