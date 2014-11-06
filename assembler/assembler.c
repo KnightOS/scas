@@ -14,15 +14,15 @@
 #include "expression.h"
 #include "directives.h"
 
-#define ERROR(ERROR_CODE, COLUMN) add_error(state.errors, ERROR_CODE, state.line_number, state.line, COLUMN, state.file_name);
+#define ERROR(ERROR_CODE, COLUMN) add_error(state->errors, ERROR_CODE, state->line_number, state->line, COLUMN, state->file_name);
 
 struct assembler_state state;
 
-int try_empty_line(struct assembler_state state, char **line) {
+int try_empty_line(struct assembler_state *state, char **line) {
 	return strlen(*line) == 0;
 }
 
-int try_add_label(struct assembler_state state, char **line) {
+int try_add_label(struct assembler_state *state, char **line) {
 	int i;
 	for (i = 0; (*line)[i] && (*line)[i] != ':'; ++i) {
 		int isvalid = isalnum((*line)[i]) || (*line)[i] == '_' ||
@@ -40,8 +40,8 @@ int try_add_label(struct assembler_state state, char **line) {
 	strncpy(sym->name, *line, i);
 	sym->name[i] = '\0';
 	sym->type = SYMBOL_LABEL;
-	sym->value = state.current_area->data_length;
-	list_add(state.current_area->symbols, sym);
+	sym->value = state->current_area->data_length;
+	list_add(state->current_area->symbols, sym);
 	/* Modify this line so that processing may continue */
 	memmove(*line, *line + i + 1, strlen(*line + i));
 	int _;
@@ -49,11 +49,11 @@ int try_add_label(struct assembler_state state, char **line) {
 	return strlen(*line) == 0;
 }
 
-int try_match_instruction(struct assembler_state state, char **_line) {
+int try_match_instruction(struct assembler_state *state, char **_line) {
 	char *line = *_line;
-	instruction_match_t *match = match_instruction(state.instruction_set, line);
+	instruction_match_t *match = match_instruction(state->instruction_set, line);
 	if (match == NULL) {
-		ERROR(ERROR_INVALID_INSTRUCTION, state.column);
+		ERROR(ERROR_INVALID_INSTRUCTION, state->column);
 		return 0;
 	} else {
 		uint64_t instruction = match->instruction->value;
@@ -72,16 +72,16 @@ int try_match_instruction(struct assembler_state state, char **_line) {
 			if (error == EXPRESSION_BAD_SYMBOL) {
 				/* TODO: Throw error if using explicit import */
 				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
-				late_imm->address = state.current_area->data_length + (imm->shift / 8);
+				late_imm->address = state->current_area->data_length + (imm->shift / 8);
 				late_imm->width = imm->width;
 				late_imm->type = imm->type;
 				late_imm->expression = expression;
-				list_add(state.current_area->late_immediates, late_imm);
+				list_add(state->current_area->late_immediates, late_imm);
 			} else if (error == EXPRESSION_BAD_SYNTAX) {
-				ERROR(ERROR_INVALID_SYNTAX, state.column);
+				ERROR(ERROR_INVALID_SYNTAX, state->column);
 			} else {
 				if (imm->type == IMM_TYPE_RELATIVE) {
-					result += state.current_area->data_length;
+					result += state->current_area->data_length;
 				}
 				/* TODO: Handle IMM_TYPE_RESTART */
 				uint64_t mask = 1;
@@ -91,7 +91,7 @@ int try_match_instruction(struct assembler_state state, char **_line) {
 					mask |= 1;
 				}
 				if ((result & mask) != result) {
-					ERROR(ERROR_VALUE_TRUNCATED, state.column);
+					ERROR(ERROR_VALUE_TRUNCATED, state->column);
 				} else {
 					result = result & mask;
 					instruction |= result << (match->instruction->width - imm->shift - imm->width);
@@ -100,16 +100,16 @@ int try_match_instruction(struct assembler_state state, char **_line) {
 		}
 		int bytes_width = match->instruction->width / 8;
 		for (i = 0; i < bytes_width; ++i) {
-			state.instruction_buffer[bytes_width - i - 1] = instruction & 0xFF;
+			state->instruction_buffer[bytes_width - i - 1] = instruction & 0xFF;
 			instruction >>= 8;
 		}
 		/* Add completed instruction */
-		append_to_area(state.current_area, state.instruction_buffer, bytes_width);
+		append_to_area(state->current_area, state->instruction_buffer, bytes_width);
 	}
 	return 1;
 }
 
-char *split_line(struct assembler_state state, char *line) {
+char *split_line(struct assembler_state *state, char *line) {
 	int i, j, _;
 	for (i = 0, j = 0; line[i]; ++i) {
 		if (line[i] == '\\') {
@@ -117,7 +117,7 @@ char *split_line(struct assembler_state state, char *line) {
 			strncpy(part, line + j, i - j);
 			part[i - j + 1] = '\0';
 			part = strip_whitespace(part, &_);
-			stack_push(state.extra_lines, part);
+			stack_push(state->extra_lines, part);
 			j = i + 1;
 		}
 	}
@@ -145,7 +145,7 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 
 	list_add(state.object->areas, state.current_area);
 
-	int(*const line_ops[])(struct assembler_state, char **) = {
+	int(*const line_ops[])(struct assembler_state *, char **) = {
 		try_empty_line,
 		try_add_label,
 		try_handle_directive,
@@ -165,11 +165,11 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		line = strip_comments(line);
 		line = strip_whitespace(line, &state.column);
 		if (code_strchr(line, '\\')) {
-			line = split_line(state, line);
+			line = split_line(&state, line);
 		}
 		int i;
 		for (i = 0; i < sizeof(line_ops) / sizeof(void*); ++i) {
-			if (line_ops[i](state, &line)) {
+			if (line_ops[i](&state, &line)) {
 				break;
 			}
 		}

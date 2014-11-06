@@ -3,26 +3,45 @@
 #include "expression.h"
 #include "stringop.h"
 #include "objects.h"
+#include "list.h"
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
 #include <stdint.h>
 #include <stdlib.h>
 
-#define ERROR(ERROR_CODE, COLUMN) add_error(state.errors, ERROR_CODE, state.line_number, state.line, COLUMN, state.file_name);
+#define ERROR(ERROR_CODE, COLUMN) add_error(state->errors, ERROR_CODE, state->line_number, state->line, COLUMN, state->file_name);
 
 struct directive {
 	char *match;
-	int(*function)(struct assembler_state state, char **argv, int argc);
+	int(*function)(struct assembler_state *state, char **argv, int argc);
 };
 
-int handle_area(struct assembler_state state, char **argv, int argc) {
+int handle_area(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 1) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	area_t *area = NULL;
+	int i;
+	for (i = 0; i < state->object->areas->length; ++i) {
+		area_t *a = state->object->areas->items[i];
+		if (strcasecmp(a->name, argv[0]) == 0) {
+			area = a;
+			break;
+		}
+	}
+	if (!area) {
+		area = create_area(argv[0]);
+		list_add(state->object->areas, area);
+	}
+	state->current_area = area;
 	return 1;
 }
 
-int handle_db(struct assembler_state state, char **argv, int argc) {
+int handle_db(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state.column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
 		return 1;
 	}
 	int i;
@@ -34,22 +53,22 @@ int handle_db(struct assembler_state state, char **argv, int argc) {
 		if (error == EXPRESSION_BAD_SYMBOL) {
 			/* TODO: Throw error if using explicit import */
 			late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
-			late_imm->address = state.current_area->data_length;
+			late_imm->address = state->current_area->data_length;
 			late_imm->width = 8;
 			late_imm->type = IMM_TYPE_ABSOLUTE;
 			late_imm->expression = expression;
-			list_add(state.current_area->late_immediates, late_imm);
-			*state.instruction_buffer = 0;
+			list_add(state->current_area->late_immediates, late_imm);
+			*state->instruction_buffer = 0;
 		} else if (error == EXPRESSION_BAD_SYNTAX) {
-			ERROR(ERROR_INVALID_SYNTAX, state.column);
+			ERROR(ERROR_INVALID_SYNTAX, state->column);
 		} else {
 			if ((result & 0xFF) != result) {
-				ERROR(ERROR_VALUE_TRUNCATED, state.column);
+				ERROR(ERROR_VALUE_TRUNCATED, state->column);
 			} else {
-				*state.instruction_buffer = (uint8_t)result;
+				*state->instruction_buffer = (uint8_t)result;
 			}
 		}
-		append_to_area(state.current_area, state.instruction_buffer, 1);
+		append_to_area(state->current_area, state->instruction_buffer, 1);
 	}
 	return 1;
 }
@@ -124,11 +143,11 @@ char **split_directive(char *line, int *argc) {
 	return parts;
 }
 
-int try_handle_directive(struct assembler_state state, char **line) {
+int try_handle_directive(struct assembler_state *state, char **line) {
 	if (**line == '.' || **line == '#') {
 		struct directive *d = find_directive(*line);
 		if (d == NULL) {
-			ERROR(ERROR_INVALID_DIRECTIVE, state.column);
+			ERROR(ERROR_INVALID_DIRECTIVE, state->column);
 			return 1;
 		}
 		int argc;
