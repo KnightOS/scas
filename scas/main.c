@@ -154,12 +154,14 @@ int main(int argc, char **argv) {
 				}
 				printf("\n");
 			}
-			printf("Unresolved immediate values:\n");
-			for (j = 0; j < area->late_immediates->length; ++j) {
-				late_immediate_t *imm = area->late_immediates->items[j];
-				printf("\t0x%04X: '", (uint16_t)imm->address);
-				print_tokenized_expression(imm->expression);
-				printf("' (width: %d)\n", (int)imm->width);
+			if (area->late_immediates->length != 0) {
+				printf("Unresolved immediate values:\n");
+				for (j = 0; j < area->late_immediates->length; ++j) {
+					late_immediate_t *imm = area->late_immediates->items[j];
+					printf("\t0x%04X: '", (uint16_t)imm->address);
+					print_tokenized_expression(imm->expression);
+					printf("' (width: %d)\n", (int)imm->width);
+				}
 			}
 			if (area->symbols->length != 0) {
 				printf("Symbols:\n");
