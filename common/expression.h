@@ -16,6 +16,11 @@ enum {
 	EXPRESSION_BAD_SYNTAX = 2
 };
 
+enum {
+	OPERATOR_UNARY = 1,
+	OPERATOR_BINARY = 2,
+};
+
 typedef struct {
 	int type;
 	char *symbol;
@@ -30,7 +35,8 @@ typedef struct {
 
 typedef struct {
 	char *operator;
-	int operator_type;
+	int expression_type;
+	int is_unary;
 	int precedence;
 	int right_assocative;
 	uint64_t (*function)(stack_t *, int *);

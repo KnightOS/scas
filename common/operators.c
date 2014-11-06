@@ -43,3 +43,21 @@ uint64_t operator_divide(stack_t *stack, int *error) {
 	}
 	return left->number / right->number;
 }
+
+uint64_t operator_unary_plus(stack_t *stack, int *error) {
+	expression_token_t *token = stack_pop(stack);
+	if (token == NULL) {
+		*error = EXPRESSION_BAD_SYNTAX;
+		return 0;
+	}
+	return token->number;
+}
+
+uint64_t operator_unary_minus(stack_t *stack, int *error) {
+	expression_token_t *token = stack_pop(stack);
+	if (token == NULL) {
+		*error = EXPRESSION_BAD_SYNTAX;
+		return 0;
+	}
+	return -token->number;
+}

@@ -54,9 +54,16 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 			len = unescape_string(argv[i] + 1);
 			append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len);
 		} else {
-			tokenized_expression_t *expression = parse_expression(argv[i]);
 			int error;
-			uint64_t result = evaluate_expression(expression, NULL /* TODO: Symbols */, &error);
+			uint64_t result;
+			tokenized_expression_t *expression = parse_expression(argv[i]);
+
+			if (expression == NULL) {
+				error = EXPRESSION_BAD_SYNTAX;
+			} else {
+				result = evaluate_expression(expression, NULL /* TODO: Symbols */, &error);
+			}
+
 			if (error == EXPRESSION_BAD_SYMBOL) {
 				/* TODO: Throw error if using explicit import */
 				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));

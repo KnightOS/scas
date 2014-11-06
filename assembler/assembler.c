@@ -66,9 +66,14 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 			immediate_ref_t *ref = match->immediate_values->items[i];
 			immediate_t *imm = find_instruction_immediate(match->instruction, ref->key);
 
-			tokenized_expression_t *expression = parse_expression(ref->value_provided);
 			int error;
-			uint64_t result = evaluate_expression(expression, NULL /* TODO: Symbols */, &error);
+			uint64_t result;
+			tokenized_expression_t *expression = parse_expression(ref->value_provided);
+			if (expression == NULL) {
+				error = EXPRESSION_BAD_SYNTAX;
+			} else {
+				result = evaluate_expression(expression, NULL /* TODO: Symbols */, &error);
+			}
 			if (error == EXPRESSION_BAD_SYMBOL) {
 				/* TODO: Throw error if using explicit import */
 				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));

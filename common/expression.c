@@ -9,10 +9,12 @@
 #include "operators.h"
 
 static operator_t operators[] = {
-	{ "+", OP_PLUS, 0, 0, operator_add },
-	{ "-", OP_MINUS, 0, 0, operator_subtract },
-	{ "*", OP_MULTIPLY, 0, 0, operator_multiply },
-	{ "/", OP_DIVIDE, 0, 0, operator_divide }
+	{ "+", OP_PLUS, 0, 0, 0, operator_add },
+	{ "-", OP_MINUS, 0, 0, 0, operator_subtract },
+	{ "+", OP_UNARY_PLUS, 1, 0, 0, operator_unary_plus },
+	{ "-", OP_UNARY_MINUS, 1, 0, 0, operator_unary_minus },
+	{ "*", OP_MULTIPLY, 0, 1, 0, operator_multiply },
+	{ "/", OP_DIVIDE, 0, 1, 0, operator_divide }
 };
 
 void print_tokenized_expression(tokenized_expression_t *expression) {
@@ -21,13 +23,13 @@ void print_tokenized_expression(tokenized_expression_t *expression) {
 		expression_token_t *token = expression->tokens->items[i];
 		switch (token->type) {
 			case SYMBOL:
-				printf("%s", token->symbol);
+				printf("'%s'", token->symbol);
 				break;
 			case NUMBER:
 				printf("0x%04X", (unsigned int)token->number);
 				break;
 			case OPERATOR:
-				printf("%s", operators[token->operator].operator);
+				printf("[(%snary) %s]", operators[token->operator].is_unary ? "u" : "bi", operators[token->operator].operator);
 				break;
 		}
 		if (i != expression->tokens->length - 1) {
@@ -100,11 +102,11 @@ expression_token_t *parse_digit(const char **string) {
 	}
 }
 
-expression_token_t *parse_operator(const char **string) {
+expression_token_t *parse_operator(const char **string, int is_unary) {
 	int i;
 	for (i = 0; i < sizeof(operators) / sizeof(operator_t); i++) {
 		operator_t op = operators[i];
-		if (strncmp(op.operator, *string, strlen(op.operator)) == 0) {
+		if (op.is_unary == is_unary && strncmp(op.operator, *string, strlen(op.operator)) == 0) {
 			expression_token_t *exp = malloc(sizeof(expression_token_t));
 			exp->type = OPERATOR;
 			exp->operator = i;
@@ -132,6 +134,11 @@ expression_token_t *parse_symbol(const char **string) {
 	return expr;
 }
 
+enum {
+	STATE_VALUE,
+	STATE_OPERATOR,
+};
+
 // Based on shunting-yard
 tokenized_expression_t *parse_expression(const char *str) {
 	char *operator_cache = malloc(sizeof(operators) / sizeof(operator_t) + 1);
@@ -142,6 +149,7 @@ tokenized_expression_t *parse_expression(const char *str) {
 	}
 	operator_cache[i] = 0;
 
+	int tokenizer_state = STATE_OPERATOR;
 	tokenized_expression_t *list = malloc(sizeof(tokenized_expression_t));
 	list->tokens = create_list();
 	list->symbols = create_list();
@@ -156,16 +164,24 @@ tokenized_expression_t *parse_expression(const char *str) {
 		if (*current == 0) {
 			break;
 		} else if (isdigit(*current)) {
+			if (tokenizer_state == STATE_VALUE) {
+				return 0;
+			}
+
 			expr = parse_digit(&current);
+			tokenizer_state = STATE_VALUE;
 		} else if (*current == '(') {
+			if (tokenizer_state == STATE_VALUE) {
+				return 0;
+			}
 			expr = malloc(sizeof(expression_token_t));
 			expr->type = OPEN_PARENTHESIS;
 			stack_push(stack, expr);
 			current++;
+			tokenizer_state = STATE_OPERATOR;
 			continue;
 		} else if (*current == ')') {
-			if (stack->length == 0) {
-				// hum, nicely error here
+			if (stack->length == 0 || tokenizer_state == STATE_OPERATOR) {
 				return 0;
 			}
 			expr = stack->items[stack->length - 1];
@@ -184,12 +200,21 @@ tokenized_expression_t *parse_expression(const char *str) {
 			stack_pop(stack);
 			free(expr);
 			current++;
+			tokenizer_state = STATE_OPERATOR;
 			continue;
 		} else if(strchr(operator_cache, *current)) {
-			expr = parse_operator(&current);
+			expr = parse_operator(&current, tokenizer_state == STATE_OPERATOR);
+			if (expr == 0) {
+				return 0;
+			}
+			tokenizer_state = STATE_OPERATOR;
 		} else {
+			if (tokenizer_state == STATE_VALUE) {
+				return 0;
+			}
 			expr = parse_symbol(&current);
 			list_add(list->symbols, expr->symbol);
+			tokenizer_state = STATE_VALUE;
 		}
 
 		if (expr->type == OPERATOR) {
