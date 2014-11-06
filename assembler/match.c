@@ -13,14 +13,14 @@
  * 		ld a, (0x100 + 2)
  * get_operand_string could be used to extract "a" and "0x100 + 2"
  */
-char *get_operand_string(instruction_t *inst, int i, const char *code, int j) {
+char *get_operand_string(instruction_t *inst, int *i, const char *code, int j) {
 	char delimiter = '\0';
 	char *res;
-	while (inst->match[i]) {
-		if (inst->match[i] == '-' || inst->match[i] == '_') {
-			++i;
+	while (inst->match[*i]) {
+		if (inst->match[*i] == '-' || inst->match[*i] == '_') {
+			++*i;
 		} else {
-			delimiter = inst->match[i];
+			delimiter = inst->match[*i];
 			break;
 		}
 	}
@@ -35,6 +35,8 @@ char *get_operand_string(instruction_t *inst, int i, const char *code, int j) {
 	}
 	res = malloc(end - (code + j));
 	strncpy(res, code + j, end - (code + j));
+	res[end - (code + j)] = '\0';
+	--*i;
 	return res;
 }
 
@@ -76,7 +78,7 @@ instruction_match_t *try_match(instruction_set_t *set, instruction_t *inst, cons
 			}
 		} else if (inst->match[i] == '%' || inst->match[i] == '^' || inst->match[i] == '&') /* Immediate value */ {
 			char key = inst->match[++i]; while (inst->match[++i] != '>'); ++i;
-			char *value = get_operand_string(inst, i, str, j);
+			char *value = get_operand_string(inst, &i, str, j);
 			if (value == NULL) {
 				match = 0;
 				break;
@@ -103,7 +105,7 @@ instruction_match_t *try_match(instruction_set_t *set, instruction_t *inst, cons
 				match = 0;
 				break;
 			}
-			char *value = get_operand_string(inst, i, str, j);
+			char *value = get_operand_string(inst, &i, str, j);
 			if (value == NULL) {
 				match = 0;
 				break;
@@ -118,6 +120,7 @@ instruction_match_t *try_match(instruction_set_t *set, instruction_t *inst, cons
 			ref->shift = inst_op->shift;
 			ref->op = op;
 			list_add(result->operands, ref);
+			j += strlen(value) - 1;
 			free(value);
 		} else {
 			if (toupper(inst->match[i]) != toupper(str[j])) {

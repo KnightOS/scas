@@ -153,7 +153,7 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 	};
 
 	char *line;
-	while (!feof(file)) {
+	while (!feof(file) || state.extra_lines->length) {
 		if (state.extra_lines->length == 0) {
 			++state.line_number;
 			line = read_line(file);
