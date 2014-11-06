@@ -140,9 +140,7 @@ tokenized_expression_t *parse_expression(const char *str) {
 				return 0;
 			}
 			expr = stack->items[stack->length - 1];
-			scas_log(L_DEBUG, "Size: %d", stack->length);
 			while (expr && expr->type != OPEN_PARENTHESIS) {
-				scas_log(L_DEBUG, "Check expr - %p", expr);
 				stack_pop(stack);
 				list_add(list->tokens, expr);
 
