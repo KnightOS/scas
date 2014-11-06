@@ -145,9 +145,10 @@ int main(int argc, char **argv) {
 			list_add(objects, o);
 			/* Temporary test code */
 			area_t *area = o->areas->items[0];
-			printf("Area '%s':\nMachine code:\n\t", area->name);
+			printf("Area '%s':\nMachine code:\n", area->name);
 			int j;
 			for (j = 0; j < area->data_length; j += 16) {
+				printf("\t");
 				int k;
 				for (k = 0; k < 16 && j + k < area->data_length; ++k) {
 					printf("%02X ", area->data[j + k]);
