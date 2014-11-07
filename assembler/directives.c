@@ -186,6 +186,47 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_dw(struct assembler_state *state, char **argv, int argc) {
+	if (argc == 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	int i;
+	for (i = 0; i < argc; ++i) {
+		int error;
+		uint64_t result;
+		tokenized_expression_t *expression = parse_expression(argv[i]);
+
+		if (expression == NULL) {
+			error = EXPRESSION_BAD_SYNTAX;
+		} else {
+			result = evaluate_expression(expression, state->equates, &error);
+		}
+
+		if (error == EXPRESSION_BAD_SYMBOL) {
+			/* TODO: Throw error if using explicit import */
+			late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
+			late_imm->address = state->current_area->data_length;
+			late_imm->width = 16;
+			late_imm->type = IMM_TYPE_ABSOLUTE;
+			late_imm->expression = expression;
+			list_add(state->current_area->late_immediates, late_imm);
+			*state->instruction_buffer = 0;
+		} else if (error == EXPRESSION_BAD_SYNTAX) {
+			ERROR(ERROR_INVALID_SYNTAX, state->column);
+		} else {
+			if ((result & 0xFFFF) != result && ~result >> 16) {
+				ERROR(ERROR_VALUE_TRUNCATED, state->column);
+			} else {
+				state->instruction_buffer[1] = (uint8_t)(result >> 8);
+				state->instruction_buffer[0] = (uint8_t)(result & 0xFF);
+			}
+		}
+		append_to_area(state->current_area, state->instruction_buffer, 2);
+	}
+	return 1;
+}
+
 int handle_equ(struct assembler_state *state, char **argv, int argc) {
 	/* TODO: Rewrite these forms somewhere higher up:
 	 * key = value
@@ -228,6 +269,7 @@ struct directive directives[] = {
 	{ "asciiz", handle_asciiz },
 	{ "block", handle_block },
 	{ "db", handle_db },
+	{ "dw", handle_dw },
 	{ "equ", handle_equ },
 };
 
