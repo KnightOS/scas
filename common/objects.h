@@ -3,6 +3,7 @@
 #include "list.h"
 #include "expression.h"
 #include <stdint.h>
+#include <stdio.h>
 #include <stddef.h>
 
 enum {
@@ -14,6 +15,7 @@ typedef struct {
     int type;
     char *name;
     uint64_t value;
+    int exported;
 } symbol_t;
 
 typedef struct {
@@ -28,8 +30,8 @@ typedef struct {
     list_t *late_immediates;
     list_t *symbols;
     uint8_t *data;
-    int data_length;
-    int data_capacity;
+    uint64_t data_length;
+    uint64_t data_capacity;
 } area_t;
 
 typedef struct {
@@ -41,5 +43,6 @@ object_t *create_object();
 void object_free(object_t *object);
 area_t *create_area(const char *name);
 void append_to_area(area_t *area, uint8_t *data, size_t length);
+void fwriteobj(FILE *file, object_t *object, char *arch);
 
 #endif

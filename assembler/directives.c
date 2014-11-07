@@ -117,6 +117,7 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 		strcpy(sym->name, argv[0]);
 		sym->type = SYMBOL_EQUATE;
 		sym->value = result;
+		sym->exported = 0;
 		list_add(state->equates, sym);
 	}
 	return 1;

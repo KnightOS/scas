@@ -6,9 +6,9 @@
 #include "list.h"
 
 enum {
-    IMM_TYPE_ABSOLUTE,
-    IMM_TYPE_RELATIVE,
-    IMM_TYPE_RESTART
+    IMM_TYPE_ABSOLUTE = 0,
+    IMM_TYPE_RELATIVE = 1,
+    IMM_TYPE_RESTART = 2
 };
 
 typedef struct {

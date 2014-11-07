@@ -18,23 +18,45 @@ static operator_t operators[] = {
 	{ "/", OP_DIVIDE, 0, 1, 0, operator_divide }
 };
 
-void print_tokenized_expression(tokenized_expression_t *expression) {
+void print_tokenized_expression(FILE *f, tokenized_expression_t *expression) {
 	int i;
 	for (i = 0; i < expression->tokens->length; ++i) {
 		expression_token_t *token = expression->tokens->items[i];
 		switch (token->type) {
 			case SYMBOL:
-				printf("'%s'", token->symbol);
+				fprintf(f, "'%s'", token->symbol);
 				break;
 			case NUMBER:
-				printf("0x%04X", (unsigned int)token->number);
+				fprintf(f, "0x%04X", (unsigned int)token->number);
 				break;
 			case OPERATOR:
-				printf("[(%snary) %s]", operators[token->operator].is_unary ? "u" : "bi", operators[token->operator].operator);
+				fprintf(f, "[(%snary) %s]", operators[token->operator].is_unary ? "u" :
+						"bi", operators[token->operator].operator);
 				break;
 		}
 		if (i != expression->tokens->length - 1) {
-			putchar(' ');
+			fputc(' ', f);
+		}
+	}
+}
+
+void fwrite_tokens(FILE *f, tokenized_expression_t *expression) {
+	uint32_t len = expression->tokens->length;
+	fwrite(&len, sizeof(uint32_t), 1, f);
+	int i;
+	for (i = 0; i < expression->tokens->length; ++i) {
+		expression_token_t *token = expression->tokens->items[i];
+		fputc(token->type, f);
+		switch (token->type) {
+			case SYMBOL:
+				fprintf(f, "%s", token->symbol);
+				break;
+			case NUMBER:
+				fwrite(&token->number, sizeof(uint64_t), 1, f);
+				break;
+			case OPERATOR:
+				fputc(token->operator, f);
+				break;
 		}
 	}
 }

@@ -36,7 +36,7 @@ specified. All multi-octet values are little-endian unless specified otherwise.
 
 "SCASOBJ" is the literal ASCII string "SCASOBJ", without a length prefix. The
 version is an unsigned 8-bit integer that specifies what version of the SCASOBJ
-specification is in use. The current version is 0. The architecture is the the
+specification is in use. The current version is 1. The architecture is the the
 instruction set used to assemble this file, often set to "z80". The following
 architectures are supported:
 
@@ -79,7 +79,7 @@ Each symbol takes the following format:
 | Exported | Name length | Name | Value |
 +----------+=============+======+=======+
 
-The length and value are both 32-bit unsigned integers. The name itself is a UTF-8
+The length and value are both 64-bit unsigned integers. The name itself is a UTF-8
 string with no null delimiter. Exported is 1 if the symbol has been exported, or 0
 if it's an internal symbol.
 
@@ -95,9 +95,9 @@ assigned to.
 The length here is an unsigned 32-bit integer. Each expression takes the following
 format:
 
-+------+-------+=============+=========+=========+============+
-| Type | Width | Instruction | Address | Address | Expression |
-+------+-------+=============+=========+=========+============+
++------+-------+=============+=========+============+
+| Type | Width | Instruction | Address | Expression |
++------+-------+=============+=========+============+
 
 The type specifies the type of immediate value, and can be one of the following:
 
@@ -112,6 +112,8 @@ belongs to. This may be the same as the address of the immediate value.
 
 "Address" is the address of the immediate value, relative to the start of the
 area.
+
+Both of these values are unsigned 64-bit integers.
 
 The "Expression" takes this format:
 
@@ -141,13 +143,18 @@ The type is one of these values:
    This token is an 64-bit unsigned integer.
 
 * 0x02: Operator
-
-   This token is an 8-bit ASCII character with the upper bit reset.
+   This token is an operator:
+   - 0x00: +
+   - 0x01: -
+   - 0x02: + (unary)
+   - 0x03: - (unary)
+   - 0x04: *
+   - 0x05: /
 
 ## Machine Code
 
 The next section is unlinked machine code. It is preceeded by its length as an
-unsigned 32-bit integer.
+unsigned 64-bit integer.
 
 Any expression that would demand a symbol, as in the following example, uses
 zero instead of the actual value. The expression list can be used to resolve

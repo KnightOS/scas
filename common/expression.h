@@ -3,6 +3,7 @@
 #include "list.h"
 #include "stack.h"
 #include <stdint.h>
+#include <stdio.h>
 
 enum {
 	SYMBOL = 0x00,
@@ -46,7 +47,8 @@ typedef struct {
 // Otherwise the parser may parse e.g. '>>' as '>' '>'.
 tokenized_expression_t *parse_expression(const char *str);
 void initialize_expressions();
-void print_tokenized_expression(tokenized_expression_t *expression);
+void print_tokenized_expression(FILE *f, tokenized_expression_t *expression);
 uint64_t evaluate_expression(tokenized_expression_t *expression, list_t *symbols, int *error);
+void fwrite_tokens(FILE *f, tokenized_expression_t *expression);
 
 #endif

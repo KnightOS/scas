@@ -64,17 +64,17 @@ void parse_arguments(int argc, char **argv) {
 	int i;
 	for (i = 1; i < argc; ++i) {
 		if (argv[i][0] == '-' && argv[i][1] != '\0') {
-			if (strcasecmp("-o", argv[i]) == 0 || strcasecmp("--output", argv[i]) == 0) {
+			if (strcmp("-o", argv[i]) == 0 || strcmp("--output", argv[i]) == 0) {
 				runtime.output_file = argv[++i];
-			} else if (strcasecmp("-i", argv[i]) == 0 || strcasecmp("--input", argv[i]) == 0) {
+			} else if (strcmp("-i", argv[i]) == 0 || strcmp("--input", argv[i]) == 0) {
 				list_add(runtime.input_files, argv[++i]);
-			} else if (strcasecmp("-l", argv[i]) == 0 || strcasecmp("--link", argv[i]) == 0) {
+			} else if (strcmp("-l", argv[i]) == 0 || strcmp("--link", argv[i]) == 0) {
 				runtime.jobs = LINK;
-			} else if (strcasecmp("-O", argv[i]) == 0 || strcasecmp("--object", argv[i]) == 0) {
+			} else if (strcmp("-O", argv[i]) == 0 || strcmp("--object", argv[i]) == 0) {
 				runtime.jobs = ASSEMBLE;
-			} else if (strcasecmp("-e", argv[i]) == 0 || strcasecmp("--export-explicit", argv[i]) == 0) {
+			} else if (strcmp("-e", argv[i]) == 0 || strcmp("--export-explicit", argv[i]) == 0) {
 				runtime.explicit_export = 1;
-			} else if (strcasecmp("-n", argv[i]) == 0 || strcasecmp("--no-implicit-symbols", argv[i]) == 0) {
+			} else if (strcmp("-n", argv[i]) == 0 || strcmp("--no-implicit-symbols", argv[i]) == 0) {
 				runtime.explicit_import = 0;
 			} else if (argv[i][1] == 'v') {
 				int j;
@@ -147,27 +147,27 @@ int main(int argc, char **argv) {
 			int ai;
 			for (ai = 0; ai < o->areas->length; ++ai) {
 				area_t *area = o->areas->items[ai];
-				printf("Area '%s':\nMachine code:\n", area->name);
+				fprintf(stderr, "Area '%s':\nMachine code:\n", area->name);
 				int j;
 				for (j = 0; j < area->data_length; j += 16) {
-					printf("\t");
+					fprintf(stderr, "\t");
 					int k;
 					for (k = 0; k < 16 && j + k < area->data_length; ++k) {
-						printf("%02X ", area->data[j + k]);
+						fprintf(stderr, "%02X ", area->data[j + k]);
 					}
-					printf("\n");
+					fprintf(stderr, "\n");
 				}
 				if (area->late_immediates->length != 0) {
-					printf("Unresolved immediate values:\n");
+					fprintf(stderr, "Unresolved immediate values:\n");
 					for (j = 0; j < area->late_immediates->length; ++j) {
 						late_immediate_t *imm = area->late_immediates->items[j];
-						printf("\t0x%04X: '", (uint16_t)imm->address);
-						print_tokenized_expression(imm->expression);
-						printf("' (width: %d)\n", (int)imm->width);
+						fprintf(stderr, "\t0x%04X: '", (uint16_t)imm->address);
+						print_tokenized_expression(stderr, imm->expression);
+						fprintf(stderr, "' (width: %d)\n", (int)imm->width);
 					}
 				}
 				if (area->symbols->length != 0) {
-					printf("Symbols:\n");
+					fprintf(stderr, "Symbols:\n");
 					for (j = 0; j < area->symbols->length; ++j) {
 						symbol_t *sym = area->symbols->items[j];
 						printf("\t%s: 0x%04X\n", sym->name, (unsigned int)sym->value);
@@ -181,7 +181,18 @@ int main(int argc, char **argv) {
 	if ((runtime.jobs & LINK) == LINK) {
 		/* TODO: Link objects */
 	} else {
-		/* TODO: Save object files to disk */
+		FILE *f;
+		if (strcasecmp(runtime.output_file, "-") == 0) {
+			f = stdout;
+		} else {
+			f = fopen(runtime.output_file, "w+");
+		}
+		if (!f) {
+			scas_abort("Unable to open '%s' for output.", runtime.output_file);
+		}
+		object_t *o = objects->items[0];
+		fwriteobj(f, o, runtime.arch);
+		fclose(f);
 	}
 	if (errors->length != 0) {
 		int i;
