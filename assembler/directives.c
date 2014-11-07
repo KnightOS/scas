@@ -10,7 +10,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define ERROR(ERROR_CODE, COLUMN) add_error(state->errors, ERROR_CODE, state->line_number, state->line, COLUMN, state->file_name);
+#define ERROR(ERROR_CODE, COLUMN) add_error(state->errors, ERROR_CODE, \
+		state->line_number, state->line, COLUMN, state->file_name);
 
 struct directive {
 	char *match;
@@ -61,7 +62,7 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 			if (expression == NULL) {
 				error = EXPRESSION_BAD_SYNTAX;
 			} else {
-				result = evaluate_expression(expression, NULL /* TODO: Symbols */, &error);
+				result = evaluate_expression(expression, state->equates, &error);
 			}
 
 			if (error == EXPRESSION_BAD_SYMBOL) {
@@ -88,30 +89,63 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_equ(struct assembler_state *state, char **argv, int argc) {
+	/* TODO: Rewrite these forms somewhere higher up:
+	 * key = value
+	 * key .equ value
+	 * Also, concat all the args into one string (except for the key)
+	 */
+	if (argc != 2) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	tokenized_expression_t *expression = parse_expression(argv[1]);
+	int error;
+	uint64_t result;
+	if (expression == NULL) {
+		return 1;
+	} else {
+		result = evaluate_expression(expression, state->equates, &error);
+	}
+	if (error == EXPRESSION_BAD_SYMBOL) {
+		ERROR(ERROR_UNKNOWN_SYMBOL, state->column);
+	} else if (error == EXPRESSION_BAD_SYNTAX) {
+		ERROR(ERROR_INVALID_SYNTAX, state->column);
+	} else {
+		symbol_t *sym = malloc(sizeof(symbol_t));
+		sym->name = malloc(strlen(argv[0]) + 1);
+		strcpy(sym->name, argv[0]);
+		sym->type = SYMBOL_EQUATE;
+		sym->value = result;
+		list_add(state->equates, sym);
+	}
+	return 1;
+}
+
 /* Keep this alphabetized */
 struct directive directives[] = {
 	{ "area", handle_area },
 	{ "db", handle_db },
+	{ "equ", handle_equ },
 };
+
+int directive_compare(const void *_a, const void *_b) {
+	const struct directive *a = _a;
+	const struct directive *b = _b;
+	return strcasecmp(a->match, b->match);
+}
 
 struct directive *find_directive(char *line) {
 	++line;
 	int whitespace = 0;
 	while (line[whitespace] && !isspace(line[whitespace++])); --whitespace;
-	int length = sizeof(directives) / sizeof(struct directive);
-	int min = 0, max = length - 1;
-	while (max >= min) {
-		int mid = (max - min) / 2;
-		int cmp = strncasecmp(directives[mid].match, line, whitespace);
-		if (cmp == 0) {
-			return &directives[mid];
-		} else if (cmp < 0) {
-			min = mid - 1;
-		} else {
-			max = mid + 1;
-		}
-	}
-	return NULL;
+	char b = line[whitespace];
+	line[whitespace] = '\0';
+	struct directive d = { .match=line };
+	struct directive *res = bsearch(&d, directives, sizeof(directives) / sizeof(struct directive), 
+			sizeof(struct directive), directive_compare);
+	line[whitespace] = b;
+	return res;
 }
 
 char **split_directive(char *line, int *argc) {

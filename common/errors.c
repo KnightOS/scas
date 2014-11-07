@@ -14,6 +14,8 @@ const char *get_error_string(error_t *error) {
 			return "Invalid syntax";
 		case ERROR_INVALID_DIRECTIVE:
 			return "Invalid directive";
+		case ERROR_UNKNOWN_SYMBOL:
+			return "Unkown symbol";
 		default:
 			return NULL;
 	}

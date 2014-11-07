@@ -7,6 +7,7 @@
 #include "stack.h"
 #include "stringop.h"
 #include "operators.h"
+#include "objects.h"
 
 static operator_t operators[] = {
 	{ "+", OP_PLUS, 0, 0, 0, operator_add },
@@ -52,10 +53,22 @@ uint64_t evaluate_expression(tokenized_expression_t *expression, list_t *symbols
 		expression_token_t *token = expression->tokens->items[i];
 		switch (token->type) {
 			case SYMBOL:
-				*error = EXPRESSION_BAD_SYMBOL;
 				resolved = malloc(sizeof(expression_token_t));
 				resolved->type = NUMBER;
-				resolved->number = 0 /* TODO: Resolve */;
+				resolved->number = 0;
+				int found = 0;
+				int j;
+				for (j = 0; j < symbols->length; ++j) {
+					symbol_t *sym = symbols->items[j];
+					if (strcasecmp(sym->name, token->symbol) == 0) {
+						resolved->number = sym->value;
+						found = 1;
+						break;
+					}
+				}
+				if (!found) {
+					*error = EXPRESSION_BAD_SYMBOL;
+				}
 				list_add(to_free, resolved);
 				stack_push(stack, resolved);
 				break;

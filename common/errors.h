@@ -9,6 +9,7 @@ enum {
     ERROR_VALUE_TRUNCATED = 2,
     ERROR_INVALID_SYNTAX = 3,
     ERROR_INVALID_DIRECTIVE = 4,
+    ERROR_UNKNOWN_SYMBOL = 5,
 };
 
 typedef struct {

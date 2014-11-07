@@ -14,7 +14,8 @@
 #include "expression.h"
 #include "directives.h"
 
-#define ERROR(ERROR_CODE, COLUMN) add_error(state->errors, ERROR_CODE, state->line_number, state->line, COLUMN, state->file_name);
+#define ERROR(ERROR_CODE, COLUMN) add_error(state->errors, ERROR_CODE, \
+		state->line_number, state->line, COLUMN, state->file_name);
 
 struct assembler_state state;
 
@@ -72,7 +73,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 			if (expression == NULL) {
 				error = EXPRESSION_BAD_SYNTAX;
 			} else {
-				result = evaluate_expression(expression, NULL /* TODO: Symbols */, &error);
+				result = evaluate_expression(expression, state->equates, &error);
 			}
 			if (error == EXPRESSION_BAD_SYMBOL) {
 				/* TODO: Throw error if using explicit import */
@@ -138,6 +139,7 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 	struct assembler_state state = {
 		.object = create_object(),
 		.current_area = create_area("CODE"),
+		.equates = create_list(),
 		.instruction_set = set,
 		.line_number = 0, .column = 0,
 		.file_name = file_name,

@@ -8,6 +8,7 @@
 struct assembler_state {
 	object_t *object;
 	area_t *current_area;
+	list_t *equates;
 	instruction_set_t *instruction_set;
 	int line_number;
 	int column;
