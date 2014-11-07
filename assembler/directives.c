@@ -164,6 +164,42 @@ int handle_block(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_bndry(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 1) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	int error;
+	uint64_t result;
+	tokenized_expression_t *expression = parse_expression(argv[0]);
+	if (expression == NULL) {
+		error = EXPRESSION_BAD_SYNTAX;
+	} else {
+		result = evaluate_expression(expression, state->equates, &error);
+	}
+	if (error == EXPRESSION_BAD_SYMBOL) {
+		ERROR(ERROR_UNKNOWN_SYMBOL, state->column);
+	} else if (error == EXPRESSION_BAD_SYNTAX) {
+		ERROR(ERROR_INVALID_SYNTAX, state->column);
+	} else {
+		if (state->PC % result != 0) {
+			uint8_t *buf = calloc(1024, sizeof(uint8_t));
+			int len = state->PC % result;
+			while (len) {
+				append_to_area(state->current_area, buffer, len > 256 ? 256 : len);
+				if (len > 256) {
+					len -= 256;
+					state->PC += 256;
+				} else {
+					state->PC += len;
+					len = 0;
+				}
+			}
+		}
+	}
+	return 1;
+}
+
 int handle_db(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
@@ -309,6 +345,19 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_even(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	if (state->PC % 2 != 0) {
+		uint8_t pad = 0;
+		append_to_area(state->current_area, &pad, sizeof(uint8_t));
+		++state->PC;
+	}
+	return 1;
+}
+
 int handle_incbin(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
@@ -387,6 +436,19 @@ int handle_nolist(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_odd(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	if (state->PC % 2 != 1) {
+		uint8_t pad = 0;
+		append_to_area(state->current_area, &pad, sizeof(uint8_t));
+		++state->PC;
+	}
+	return 1;
+}
+
 int handle_org(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
@@ -419,20 +481,32 @@ struct directive directives[] = {
 	{ "ascii", handle_ascii },
 	{ "asciip", handle_asciip },
 	{ "asciiz", handle_asciiz },
+	{ "blkb", handle_block },
 	{ "block", handle_block },
+	{ "bndry", handle_bndry },
+	{ "byte", handle_db },
 	{ "db", handle_db },
+	{ "ds", handle_block },
 	{ "dw", handle_dw },
 	{ "echo", handle_echo },
 	{ "equ", handle_equ },
 	{ "equate", handle_equ },
+	{ "even", handle_even },
+	{ "gblequ", handle_equ }, /* TODO: Allow users to export equates? */
 	{ "incbin", handle_incbin },
 	{ "include", handle_include },
+	{ "lclequ", handle_equ },
 	{ "list", handle_list },
+	{ "local", handle_nop },
 	{ "module", handle_nop },
 	{ "nolist", handle_nolist },
+	{ "odd", handle_odd },
 	{ "optsdcc", handle_nop },
 	{ "org", handle_org },
+	{ "rmb", handle_block },
+	{ "rs", handle_block },
 	{ "section", handle_area },
+	{ "strs", handle_ascii },
 };
 
 int directive_compare(const void *_a, const void *_b) {

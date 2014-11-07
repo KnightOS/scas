@@ -178,9 +178,6 @@ input.
 	Inserts _size_ number of bytes into the output, whose value is _value_. If
 	omitted, _value_ defaults to zero.
 
-*globl* <symbol>::
-	Alias for *export*. Included for sdas compatability.
-
 *if, ifdef, ifndef, else, elif, endif*::
 	See _Conditionals_.
 
@@ -203,23 +200,14 @@ input.
 *macro* <definition>::
 	See _Macros_.
 
-*module* <name>::
-	This directive is included for sdas compatability and is ignored.
-
 *nolist*::
 	Pauses listing until the next *list* directive. All preprocessor directives
 	are processed but no assembly is performed and no text is written to listing
 	files.
 
-*optsdcc* <options...>::
-	This directive is included for sdas compatability and is ignored.
-
 *org* <expression>::
 	Evaluates _expression_ and sets PC to the resulting value. All labels beyond
 	this point will be relative to _expression_.
-
-*section* <name>::
-	Alias for *area*.
 
 *!*::
 	! directives are ignored.
@@ -230,6 +218,10 @@ lines are all equivalent:
 	.equ foo 10
 	foo .equ 10
 	foo=10
+
+A number of undocumented directives are also present that provide compatability
+with a number of other assemblers. They are intentionally undocumented - please
+make use of this set of directives for your needs.
 
 Macros versus Equates
 ---------------------
