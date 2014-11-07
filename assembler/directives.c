@@ -40,6 +40,72 @@ int handle_area(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_ascii(struct assembler_state *state, char **argv, int argc) {
+	if (argc == 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	int i;
+	for (i = 0; i < argc; ++i) {
+		int len = strlen(argv[i]);
+		if (argv[i][0] != '"' || argv[i][len - 1] != '"') {
+			ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+			return 1;
+		}
+		argv[i][len - 1] = '\0';
+		len -= 2;
+		len = unescape_string(argv[i] + 1);
+		append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len);
+	}
+	return 1;
+}
+
+int handle_asciiz(struct assembler_state *state, char **argv, int argc) {
+	if (argc == 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	int i;
+	for (i = 0; i < argc; ++i) {
+		int len = strlen(argv[i]);
+		if (argv[i][0] != '"' || argv[i][len - 1] != '"') {
+			ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+			return 1;
+		}
+		argv[i][len - 1] = '\0';
+		len -= 2;
+		len = unescape_string(argv[i] + 1);
+		append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len + 1 /* Includes the null terminator */);
+	}
+	return 1;
+}
+
+int handle_asciip(struct assembler_state *state, char **argv, int argc) {
+	if (argc == 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	int i;
+	for (i = 0; i < argc; ++i) {
+		int len = strlen(argv[i]);
+		if (argv[i][0] != '"' || argv[i][len - 1] != '"') {
+			ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+			return 1;
+		}
+		argv[i][len - 1] = '\0';
+		len -= 2;
+		len = unescape_string(argv[i] + 1);
+		uint8_t _len = len;
+		if (_len != len) {
+			/* Would it be obvious that this is because the string is too long? */
+			ERROR(ERROR_VALUE_TRUNCATED, state->column);
+		}
+		append_to_area(state->current_area, &_len, sizeof(uint8_t));
+		append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len);
+	}
+	return 1;
+}
+
 int handle_db(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
@@ -126,6 +192,9 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 /* Keep this alphabetized */
 struct directive directives[] = {
 	{ "area", handle_area },
+	{ "ascii", handle_ascii },
+	{ "asciip", handle_asciip },
+	{ "asciiz", handle_asciiz },
 	{ "db", handle_db },
 	{ "equ", handle_equ },
 };
