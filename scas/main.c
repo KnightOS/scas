@@ -45,8 +45,13 @@ void validate_runtime() {
 	}
 	if (runtime.output_file == NULL) {
 		/* Auto-assign an output file name */
-		const char *bin = ".bin";
-		runtime.output_file = malloc(strlen(runtime.input_files->items[0]) + sizeof(bin));
+		const char *ext;
+		if ((runtime.jobs & LINK) == LINK) {
+			ext = ".bin";
+		} else {
+			ext = ".o";
+		}
+		runtime.output_file = malloc(strlen(runtime.input_files->items[0]) + strlen(ext) + 1);
 		memcpy(runtime.output_file, runtime.input_files->items[0], strlen(runtime.input_files->items[0]));
 		int i = strlen(runtime.output_file);
 		while (runtime.output_file[--i] != '.' && i != 0);
@@ -54,8 +59,8 @@ void validate_runtime() {
 			i = strlen(runtime.output_file);
 		}
 		int j;
-		for (j = 0; j < sizeof(bin); j++) {
-			runtime.output_file[i + j] = bin[j];
+		for (j = 0; j < sizeof(ext); j++) {
+			runtime.output_file[i + j] = ext[j];
 		}
 	}
 }
