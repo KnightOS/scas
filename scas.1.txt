@@ -89,6 +89,17 @@ Options
 *-v[vv...]*::
 	Specifies different levels of log verbosity.
 
+Compatability
+-------------
+
+scas is compatible with:
+
+* Sass
+* Spasm
+* TASM
+* ASxxxx (mostly)
+* Brass (mostly)
+
 Examples
 --------
 
