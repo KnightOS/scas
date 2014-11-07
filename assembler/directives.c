@@ -186,7 +186,7 @@ int handle_bndry(struct assembler_state *state, char **argv, int argc) {
 			uint8_t *buf = calloc(1024, sizeof(uint8_t));
 			int len = state->PC % result;
 			while (len) {
-				append_to_area(state->current_area, buffer, len > 256 ? 256 : len);
+				append_to_area(state->current_area, buf, len > 256 ? 256 : len);
 				if (len > 256) {
 					len -= 256;
 					state->PC += 256;
