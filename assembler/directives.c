@@ -415,7 +415,6 @@ int handle_org(struct assembler_state *state, char **argv, int argc) {
 
 /* Keep this alphabetized */
 struct directive directives[] = {
-	{ "!", handle_nop },
 	{ "area", handle_area },
 	{ "ascii", handle_ascii },
 	{ "asciip", handle_asciip },
@@ -442,7 +441,11 @@ int directive_compare(const void *_a, const void *_b) {
 	return strcasecmp(a->match, b->match);
 }
 
+static struct directive nop = { "!", handle_nop };
 struct directive *find_directive(char *line) {
+	if (line[1] == '!') {
+		return &nop;
+	}
 	++line;
 	int whitespace = 0;
 	while (line[whitespace] && !isspace(line[whitespace++]));
