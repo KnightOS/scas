@@ -42,7 +42,7 @@ int try_add_label(struct assembler_state *state, char **line) {
 	strncpy(sym->name, *line, i);
 	sym->name[i] = '\0';
 	sym->type = SYMBOL_LABEL;
-	sym->value = state->current_area->data_length;
+	sym->value = state->PC;
 	sym->exported = 1; /* TODO: Support explicit export */
 	list_add(state->current_area->symbols, sym);
 	/* Modify this line so that processing may continue */
@@ -89,7 +89,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 				ERROR(ERROR_INVALID_SYNTAX, state->column);
 			} else {
 				if (imm->type == IMM_TYPE_RELATIVE) {
-					result += state->current_area->data_length;
+					result += state->PC;
 				}
 				/* TODO: Handle IMM_TYPE_RESTART */
 				uint64_t mask = 1;
@@ -118,6 +118,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 		}
 		/* Add completed instruction */
 		append_to_area(state->current_area, state->instruction_buffer, bytes_width);
+		state->PC += bytes_width;
 	}
 	return 1;
 }
@@ -157,7 +158,8 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		.line = "",
 		.instruction_buffer = malloc(64 / 8),
 		.extra_lines = create_stack(),
-		.nolist = 0
+		.nolist = 0,
+		.PC = 0
 	};
 	int *ln = malloc(sizeof(int)); *ln = 0;
 	char *name = malloc(strlen(file_name) + 1);

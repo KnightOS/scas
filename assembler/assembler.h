@@ -20,6 +20,7 @@ struct assembler_state {
 	uint8_t *instruction_buffer;
 	stack_t *extra_lines;
 	int nolist;
+	uint64_t PC;
 };
 
 object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, list_t *errors, list_t *warnings);

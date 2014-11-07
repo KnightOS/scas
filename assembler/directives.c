@@ -20,6 +20,22 @@ struct directive {
 	int(*function)(struct assembler_state *state, char **argv, int argc);
 };
 
+char *join_args(char **argv, int argc) {
+	int len = 0, i;
+	for (i = 0; i < argc; ++i) {
+		len += strlen(argv[i]) + 1;
+	}
+	char *res = malloc(len);
+	len = 0;
+	for (i = 0; i < argc; ++i) {
+		strcpy(res + len, argv[i]);
+		len += strlen(argv[i]);
+		res[len++] = ' ';
+	}
+	res[len - 1] = '\0';
+	return res;
+}
+
 int handle_nop(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
@@ -62,6 +78,7 @@ int handle_ascii(struct assembler_state *state, char **argv, int argc) {
 		len -= 2;
 		len = unescape_string(argv[i] + 1);
 		append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len);
+		state->PC += len;
 	}
 	return 1;
 }
@@ -82,6 +99,7 @@ int handle_asciiz(struct assembler_state *state, char **argv, int argc) {
 		len -= 2;
 		len = unescape_string(argv[i] + 1);
 		append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len + 1 /* Includes the null terminator */);
+		state->PC += len + 1;
 	}
 	return 1;
 }
@@ -108,6 +126,7 @@ int handle_asciip(struct assembler_state *state, char **argv, int argc) {
 		}
 		append_to_area(state->current_area, &_len, sizeof(uint8_t));
 		append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len);
+		state->PC += len + 1;
 	}
 	return 1;
 }
@@ -135,7 +154,9 @@ int handle_block(struct assembler_state *state, char **argv, int argc) {
 			append_to_area(state->current_area, buffer, result > 256 ? 256 : result);
 			if (result > 256) {
 				result -= 256;
+				state->PC += 256;
 			} else {
+				state->PC += result;
 				result = 0;
 			}
 		}
@@ -157,6 +178,7 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 			len -= 2;
 			len = unescape_string(argv[i] + 1);
 			append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len);
+			state->PC += len;
 		} else {
 			int error;
 			uint64_t result;
@@ -187,6 +209,7 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 				}
 			}
 			append_to_area(state->current_area, state->instruction_buffer, 1);
+			state->PC++;
 		}
 	}
 	return 1;
@@ -229,6 +252,7 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 			}
 		}
 		append_to_area(state->current_area, state->instruction_buffer, 2);
+		state->PC += 2;
 	}
 	return 1;
 }
@@ -264,6 +288,7 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 	int error;
 	uint64_t result;
 	if (expression == NULL) {
+		ERROR(ERROR_INVALID_SYNTAX, state->column);
 		return 1;
 	} else {
 		result = evaluate_expression(expression, state->equates, &error);
@@ -308,8 +333,8 @@ int handle_incbin(struct assembler_state *state, char **argv, int argc) {
 	uint8_t *buf = malloc(1024);
 	int l;
 	while ((l = fread(buf, sizeof(uint8_t), 1024, file))) {
-		fprintf(stderr, "Adding %d\n", l);
 		append_to_area(state->current_area, buf, l);
+		state->PC += l;
 	}
 	free(buf);
 	fclose(file);
@@ -345,12 +370,46 @@ int handle_include(struct assembler_state *state, char **argv, int argc) {
 }
 
 int handle_list(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
 	state->nolist = 0;
 	return 1;
 }
 
 int handle_nolist(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
 	state->nolist = 1;
+	return 1;
+}
+
+int handle_org(struct assembler_state *state, char **argv, int argc) {
+	if (argc == 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	int error;
+	uint64_t result;
+	char *args = join_args(argv, argc);
+	tokenized_expression_t *expression = parse_expression(args);
+	free(args);
+	if (!expression) {
+		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		return 1;
+	} else {
+		result = evaluate_expression(expression, state->equates, &error);
+	}
+	if (error == EXPRESSION_BAD_SYMBOL) {
+		ERROR(ERROR_UNKNOWN_SYMBOL, state->column);
+	} else if (error == EXPRESSION_BAD_SYNTAX) {
+		ERROR(ERROR_INVALID_SYNTAX, state->column);
+	} else {
+		state->PC = result;
+	}
 	return 1;
 }
 
@@ -373,6 +432,7 @@ struct directive directives[] = {
 	{ "module", handle_nop },
 	{ "nolist", handle_nolist },
 	{ "optsdcc", handle_nop },
+	{ "org", handle_org },
 	{ "section", handle_area },
 };
 
