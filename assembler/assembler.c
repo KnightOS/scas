@@ -15,7 +15,8 @@
 #include "directives.h"
 
 #define ERROR(ERROR_CODE, COLUMN) add_error(state->errors, ERROR_CODE, \
-		state->line_number, state->line, COLUMN, state->file_name);
+		*(int*)stack_peek(state->line_number_stack), \
+		state->line, COLUMN, stack_peek(state->file_name_stack));
 
 struct assembler_state state;
 
@@ -142,14 +143,23 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		.current_area = create_area("CODE"),
 		.equates = create_list(),
 		.instruction_set = set,
-		.line_number = 0, .column = 0,
-		.file_name = file_name,
+		.line_number_stack = create_stack(),
+		.column = 0,
+		.file_stack = create_stack(),
+		.file_name_stack = create_stack(),
 		.errors = errors,
 		.warnings = warnings,
 		.line = "",
 		.instruction_buffer = malloc(64 / 8),
 		.extra_lines = create_stack()
 	};
+	int *ln = malloc(sizeof(int));
+	*ln = 0;
+	char *name = malloc(strlen(file_name) + 1);
+	strcpy(name, file_name);
+	stack_push(state.file_name_stack, name);
+	stack_push(state.line_number_stack, ln);
+	stack_push(state.file_stack, file);
 
 	list_add(state.object->areas, state.current_area);
 
@@ -161,30 +171,44 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 	};
 
 	char *line;
-	while (!feof(file) || state.extra_lines->length) {
-		if (state.extra_lines->length == 0) {
-			++state.line_number;
-			line = read_line(file);
+	FILE *cur;
+	while ((cur = stack_peek(state.file_stack))) {
+		if (!feof(cur) || state.extra_lines->length) {
+			if (state.extra_lines->length == 0) {
+				++*(int*)stack_peek(state.line_number_stack);
+				line = read_line(cur);
+			} else {
+				line = stack_pop(state.extra_lines);
+			}
+			state.line = malloc(strlen(line) + 1);
+			strcpy(state.line, line);
+			line = strip_comments(line);
+			line = strip_whitespace(line, &state.column);
+			if (code_strchr(line, '\\')) {
+				line = split_line(&state, line);
+			}
+			int i;
+			for (i = 0; i < sizeof(line_ops) / sizeof(void*); ++i) {
+				if (line_ops[i](&state, &line)) {
+					break;
+				}
+			}
+			free(state.line);
+			free(line);
 		} else {
-			line = stack_pop(state.extra_lines);
-		}
-		state.line = malloc(strlen(line) + 1);
-		strcpy(state.line, line);
-		line = strip_comments(line);
-		line = strip_whitespace(line, &state.column);
-		if (code_strchr(line, '\\')) {
-			line = split_line(&state, line);
-		}
-		int i;
-		for (i = 0; i < sizeof(line_ops) / sizeof(void*); ++i) {
-			if (line_ops[i](&state, &line)) {
+			free(stack_pop(state.file_name_stack));
+			free(stack_pop(state.line_number_stack));
+			if (cur != file) {
+				fclose(file);
+				stack_pop(state.file_stack);
+			} else {
 				break;
 			}
 		}
-		free(state.line);
-		free(line);
 	}
 
+	stack_free(state.file_name_stack);
+	stack_free(state.line_number_stack);
 	stack_free(state.extra_lines);
 	free(state.instruction_buffer);
 

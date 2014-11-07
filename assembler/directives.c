@@ -12,7 +12,8 @@
 #include <stdarg.h>
 
 #define ERROR(ERROR_CODE, COLUMN) add_error(state->errors, ERROR_CODE, \
-		state->line_number, state->line, COLUMN, state->file_name);
+		*(int*)stack_peek(state->line_number_stack), \
+		state->line, COLUMN, stack_peek(state->file_name_stack));
 
 struct directive {
 	char *match;

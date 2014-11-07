@@ -10,9 +10,10 @@ struct assembler_state {
 	area_t *current_area;
 	list_t *equates;
 	instruction_set_t *instruction_set;
-	int line_number;
+	stack_t *line_number_stack;
 	int column;
-	const char *file_name;
+	stack_t *file_name_stack;
+	stack_t *file_stack;
 	list_t *errors;
 	list_t *warnings;
 	char *line;
