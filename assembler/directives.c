@@ -106,6 +106,37 @@ int handle_asciip(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_block(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 1) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	int error;
+	uint64_t result;
+	tokenized_expression_t *expression = parse_expression(argv[0]);
+	if (expression == NULL) {
+		error = EXPRESSION_BAD_SYNTAX;
+	} else {
+		result = evaluate_expression(expression, state->equates, &error);
+	}
+	if (error == EXPRESSION_BAD_SYMBOL) {
+		ERROR(ERROR_UNKNOWN_SYMBOL, state->column);
+	} else if (error == EXPRESSION_BAD_SYNTAX) {
+		ERROR(ERROR_INVALID_SYNTAX, state->column);
+	} else {
+		uint8_t *buffer = calloc(256, sizeof(uint8_t));
+		while (result) {
+			append_to_area(state->current_area, buffer, result > 256 ? 256 : result);
+			if (result > 256) {
+				result -= 256;
+			} else {
+				result = 0;
+			}
+		}
+	}
+	return 1;
+}
+
 int handle_db(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
@@ -195,6 +226,7 @@ struct directive directives[] = {
 	{ "ascii", handle_ascii },
 	{ "asciip", handle_asciip },
 	{ "asciiz", handle_asciiz },
+	{ "block", handle_block },
 	{ "db", handle_db },
 	{ "equ", handle_equ },
 };
