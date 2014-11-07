@@ -19,6 +19,10 @@ struct directive {
 	int(*function)(struct assembler_state *state, char **argv, int argc);
 };
 
+int handle_nop(struct assembler_state *state, char **argv, int argc) {
+	return 1;
+}
+
 int handle_area(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
@@ -281,6 +285,7 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 
 /* Keep this alphabetized */
 struct directive directives[] = {
+	{ "!", handle_nop },
 	{ "area", handle_area },
 	{ "ascii", handle_ascii },
 	{ "asciip", handle_asciip },
@@ -290,6 +295,10 @@ struct directive directives[] = {
 	{ "dw", handle_dw },
 	{ "echo", handle_echo },
 	{ "equ", handle_equ },
+	{ "equate", handle_equ },
+	{ "module", handle_nop },
+	{ "optsdcc", handle_nop },
+	{ "section", handle_area },
 };
 
 int directive_compare(const void *_a, const void *_b) {
