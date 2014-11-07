@@ -102,7 +102,12 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 					ERROR(ERROR_VALUE_TRUNCATED, state->column);
 				} else {
 					result = result & mask;
-					instruction |= result << (match->instruction->width - imm->shift - imm->width);
+					int bits = imm->width;
+					while (bits) {
+						bits -= 8;
+						instruction |= (result & 0xFF) << (match->instruction->width - imm->shift - imm->width) << bits;
+						result >>= 8;
+					}
 				}
 			}
 		}
@@ -151,7 +156,8 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		.warnings = warnings,
 		.line = "",
 		.instruction_buffer = malloc(64 / 8),
-		.extra_lines = create_stack()
+		.extra_lines = create_stack(),
+		.nolist = 0
 	};
 	int *ln = malloc(sizeof(int)); *ln = 0;
 	char *name = malloc(strlen(file_name) + 1);
@@ -167,6 +173,10 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		try_add_label,
 		try_handle_directive,
 		try_match_instruction,
+	};
+	int(*const nolist_line_ops[])(struct assembler_state *, char **) = {
+		try_empty_line,
+		try_handle_directive,
 	};
 
 	char *line;
@@ -188,8 +198,14 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 			}
 			int i;
 			for (i = 0; i < sizeof(line_ops) / sizeof(void*); ++i) {
-				if (line_ops[i](&state, &line)) {
-					break;
+				if (state.nolist) {
+					if (nolist_line_ops[i](&state, &line)) {
+						break;
+					}
+				} else {
+					if (line_ops[i](&state, &line)) {
+						break;
+					}
 				}
 			}
 			free(state.line);

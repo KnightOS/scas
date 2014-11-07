@@ -284,34 +284,6 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_include(struct assembler_state *state, char **argv, int argc) {
-	if (argc != 1) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
-		return 1;
-	}
-	/* TODO: Pass runtime settings down to assembler from main */
-	int len = strlen(argv[0]);
-	if ((argv[0][0] != '"' || argv[0][len - 1] != '"') && (argv[0][0] != '<' || argv[0][len - 1] != '>')) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
-		return 1;
-	}
-	argv[0][len - 1] = '\0';
-	len -= 2;
-	len = unescape_string(argv[0] + 1);
-	char *name = malloc(strlen(argv[0] + 1));
-	strcpy(name, argv[0] + 1);
-	FILE *file = fopen(name, "r");
-	if (!file) {
-		ERROR(ERROR_BAD_FILE, state->column);
-		return 1;
-	}
-	stack_push(state->file_stack, file);
-	stack_push(state->file_name_stack, name);
-	int *ln = malloc(sizeof(int)); *ln = 0;
-	stack_push(state->line_number_stack, ln);
-	return 1;
-}
-
 int handle_incbin(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
@@ -344,6 +316,44 @@ int handle_incbin(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_include(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 1) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	/* TODO: Pass runtime settings down to assembler from main */
+	int len = strlen(argv[0]);
+	if ((argv[0][0] != '"' || argv[0][len - 1] != '"') && (argv[0][0] != '<' || argv[0][len - 1] != '>')) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	argv[0][len - 1] = '\0';
+	len -= 2;
+	len = unescape_string(argv[0] + 1);
+	char *name = malloc(strlen(argv[0] + 1));
+	strcpy(name, argv[0] + 1);
+	FILE *file = fopen(name, "r");
+	if (!file) {
+		ERROR(ERROR_BAD_FILE, state->column);
+		return 1;
+	}
+	stack_push(state->file_stack, file);
+	stack_push(state->file_name_stack, name);
+	int *ln = malloc(sizeof(int)); *ln = 0;
+	stack_push(state->line_number_stack, ln);
+	return 1;
+}
+
+int handle_list(struct assembler_state *state, char **argv, int argc) {
+	state->nolist = 0;
+	return 1;
+}
+
+int handle_nolist(struct assembler_state *state, char **argv, int argc) {
+	state->nolist = 1;
+	return 1;
+}
+
 /* Keep this alphabetized */
 struct directive directives[] = {
 	{ "!", handle_nop },
@@ -359,7 +369,9 @@ struct directive directives[] = {
 	{ "equate", handle_equ },
 	{ "incbin", handle_incbin },
 	{ "include", handle_include },
+	{ "list", handle_list },
 	{ "module", handle_nop },
+	{ "nolist", handle_nolist },
 	{ "optsdcc", handle_nop },
 	{ "section", handle_area },
 };
@@ -373,7 +385,10 @@ int directive_compare(const void *_a, const void *_b) {
 struct directive *find_directive(char *line) {
 	++line;
 	int whitespace = 0;
-	while (line[whitespace] && !isspace(line[whitespace++])); --whitespace;
+	while (line[whitespace] && !isspace(line[whitespace++]));
+	if (line[whitespace]) {
+		--whitespace;
+	}
 	char b = line[whitespace];
 	line[whitespace] = '\0';
 	struct directive d = { .match=line };
