@@ -15,7 +15,9 @@ const char *get_error_string(error_t *error) {
 		case ERROR_INVALID_DIRECTIVE:
 			return "Invalid directive";
 		case ERROR_UNKNOWN_SYMBOL:
-			return "Unkown symbol";
+			return "Unknown symbol";
+		case ERROR_BAD_FILE:
+			return "Unable to open file for reading";
 		default:
 			return NULL;
 	}

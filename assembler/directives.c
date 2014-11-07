@@ -284,6 +284,34 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_include(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 1) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	/* TODO: Pass runtime settings down to assembler from main */
+	int len = strlen(argv[0]);
+	if ((argv[0][0] != '"' || argv[0][len - 1] != '"') && (argv[0][0] != '<' || argv[0][len - 1] != '>')) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	argv[0][len - 1] = '\0';
+	len -= 2;
+	len = unescape_string(argv[0] + 1);
+	char *name = malloc(strlen(argv[0] + 1));
+	strcpy(name, argv[0] + 1);
+	FILE *file = fopen(name, "r");
+	if (!file) {
+		ERROR(ERROR_BAD_FILE, state->column);
+		return 1;
+	}
+	stack_push(state->file_stack, file);
+	stack_push(state->file_name_stack, name);
+	int *ln = malloc(sizeof(int)); *ln = 0;
+	stack_push(state->line_number_stack, ln);
+	return 1;
+}
+
 /* Keep this alphabetized */
 struct directive directives[] = {
 	{ "!", handle_nop },
@@ -297,6 +325,7 @@ struct directive directives[] = {
 	{ "echo", handle_echo },
 	{ "equ", handle_equ },
 	{ "equate", handle_equ },
+	{ "include", handle_include },
 	{ "module", handle_nop },
 	{ "optsdcc", handle_nop },
 	{ "section", handle_area },

@@ -153,8 +153,7 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		.instruction_buffer = malloc(64 / 8),
 		.extra_lines = create_stack()
 	};
-	int *ln = malloc(sizeof(int));
-	*ln = 0;
+	int *ln = malloc(sizeof(int)); *ln = 0;
 	char *name = malloc(strlen(file_name) + 1);
 	strcpy(name, file_name);
 	stack_push(state.file_name_stack, name);
@@ -199,7 +198,7 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 			free(stack_pop(state.file_name_stack));
 			free(stack_pop(state.line_number_stack));
 			if (cur != file) {
-				fclose(file);
+				fclose(cur);
 				stack_pop(state.file_stack);
 			} else {
 				break;

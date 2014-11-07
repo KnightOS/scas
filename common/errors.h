@@ -10,6 +10,7 @@ enum {
     ERROR_INVALID_SYNTAX = 3,
     ERROR_INVALID_DIRECTIVE = 4,
     ERROR_UNKNOWN_SYMBOL = 5,
+    ERROR_BAD_FILE = 6,
 };
 
 typedef struct {

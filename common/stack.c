@@ -33,6 +33,9 @@ void *stack_pop(stack_t *stack) {
 }
 
 void *stack_peek(stack_t *stack) {
+	if (stack->length == 0) {
+		return NULL;
+	}
 	return stack->items[stack->length - 1];
 }
 
