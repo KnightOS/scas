@@ -9,6 +9,7 @@
 #include <ctype.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #define ERROR(ERROR_CODE, COLUMN) add_error(state->errors, ERROR_CODE, \
 		state->line_number, state->line, COLUMN, state->file_name);
@@ -227,6 +228,23 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_echo(struct assembler_state *state, char **argv, int argc) {
+	if (argc == 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	int len = strlen(argv[0]);
+	if (argv[0][0] != '"' || argv[0][len - 1] != '"') {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	argv[0][len - 1] = '\0';
+	len -= 2;
+	/* TODO: Handle format string properly */
+	puts(argv[0] + 1);
+	return 1;
+}
+
 int handle_equ(struct assembler_state *state, char **argv, int argc) {
 	/* TODO: Rewrite these forms somewhere higher up:
 	 * key = value
@@ -270,6 +288,7 @@ struct directive directives[] = {
 	{ "block", handle_block },
 	{ "db", handle_db },
 	{ "dw", handle_dw },
+	{ "echo", handle_echo },
 	{ "equ", handle_equ },
 };
 
