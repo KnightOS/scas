@@ -147,26 +147,32 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 	struct assembler_state state = {
 		.object = create_object(),
 		.current_area = create_area("CODE"),
-		.equates = create_list(),
-		.instruction_set = set,
-		.line_number_stack = create_stack(),
-		.column = 0,
+
 		.file_stack = create_stack(),
 		.file_name_stack = create_stack(),
+		.line_number_stack = create_stack(),
 		.errors = errors,
 		.warnings = warnings,
-		.line = "",
-		.instruction_buffer = malloc(64 / 8),
+
 		.extra_lines = create_stack(),
+		.line = "",
+		.column = 0,
+
+		.instruction_set = set,
+		.instruction_buffer = malloc(64 / 8),
+		.if_stack = create_stack(),
+		.equates = create_list(),
 		.nolist = 0,
-		.PC = 0
+		.PC = 0,
 	};
 	int *ln = malloc(sizeof(int)); *ln = 0;
+	int *_if = malloc(sizeof(int)); *_if = 1;
 	char *name = malloc(strlen(file_name) + 1);
 	strcpy(name, file_name);
 	stack_push(state.file_name_stack, name);
 	stack_push(state.line_number_stack, ln);
 	stack_push(state.file_stack, file);
+	stack_push(state.if_stack, _if);
 
 	list_add(state.object->areas, state.current_area);
 
@@ -200,7 +206,7 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 			}
 			int i;
 			for (i = 0; i < sizeof(line_ops) / sizeof(void*); ++i) {
-				if (state.nolist) {
+				if (state.nolist || !*(int*)stack_peek(state.if_stack)) {
 					if (nolist_line_ops[i](&state, &line)) {
 						break;
 					}
@@ -224,6 +230,10 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		}
 	}
 
+	while (state.if_stack->length != 0) {
+		free(stack_pop(state.if_stack));
+	}
+	stack_free(state.if_stack);
 	stack_free(state.file_name_stack);
 	stack_free(state.line_number_stack);
 	stack_free(state.extra_lines);
