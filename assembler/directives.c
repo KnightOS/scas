@@ -18,6 +18,7 @@
 struct directive {
 	char *match;
 	int(*function)(struct assembler_state *state, char **argv, int argc);
+	int allow_space_delimiter;
 };
 
 char *join_args(char **argv, int argc) {
@@ -477,36 +478,36 @@ int handle_org(struct assembler_state *state, char **argv, int argc) {
 
 /* Keep this alphabetized */
 struct directive directives[] = {
-	{ "area", handle_area },
-	{ "ascii", handle_ascii },
-	{ "asciip", handle_asciip },
-	{ "asciiz", handle_asciiz },
-	{ "blkb", handle_block },
-	{ "block", handle_block },
-	{ "bndry", handle_bndry },
-	{ "byte", handle_db },
-	{ "db", handle_db },
-	{ "ds", handle_block },
-	{ "dw", handle_dw },
-	{ "echo", handle_echo },
-	{ "equ", handle_equ },
-	{ "equate", handle_equ },
-	{ "even", handle_even },
-	{ "gblequ", handle_equ }, /* TODO: Allow users to export equates? */
-	{ "incbin", handle_incbin },
-	{ "include", handle_include },
-	{ "lclequ", handle_equ },
-	{ "list", handle_list },
-	{ "local", handle_nop },
-	{ "module", handle_nop },
-	{ "nolist", handle_nolist },
-	{ "odd", handle_odd },
-	{ "optsdcc", handle_nop },
-	{ "org", handle_org },
-	{ "rmb", handle_block },
-	{ "rs", handle_block },
-	{ "section", handle_area },
-	{ "strs", handle_ascii },
+	{ "area", handle_area, 1 },
+	{ "ascii", handle_ascii, 1 },
+	{ "asciip", handle_asciip, 1 },
+	{ "asciiz", handle_asciiz, 1 },
+	{ "blkb", handle_block, 0 },
+	{ "block", handle_block, 0 },
+	{ "bndry", handle_bndry, 1 },
+	{ "byte", handle_db, 0 },
+	{ "db", handle_db, 0 },
+	{ "ds", handle_block, 0 },
+	{ "dw", handle_dw, 0 },
+	{ "echo", handle_echo, 1 },
+	{ "equ", handle_equ, 1 },
+	{ "equate", handle_equ, 1 },
+	{ "even", handle_even, 1 },
+	{ "gblequ", handle_equ, 1 }, /* TODO: Allow users to export equates? */
+	{ "incbin", handle_incbin, 1 },
+	{ "include", handle_include, 1 },
+	{ "lclequ", handle_equ, 1 },
+	{ "list", handle_list, 1 },
+	{ "local", handle_nop, 1 },
+	{ "module", handle_nop, 1 },
+	{ "nolist", handle_nolist, 1 },
+	{ "odd", handle_odd, 1 },
+	{ "optsdcc", handle_nop, 1 },
+	{ "org", handle_org, 0 },
+	{ "rmb", handle_block, 1 },
+	{ "rs", handle_block, 1 },
+	{ "section", handle_area, 1 },
+	{ "strs", handle_ascii, 1 },
 };
 
 int directive_compare(const void *_a, const void *_b) {
@@ -535,7 +536,7 @@ struct directive *find_directive(char *line) {
 	return res;
 }
 
-char **split_directive(char *line, int *argc) {
+char **split_directive(char *line, int *argc, int allow_space_delimiter) {
 	*argc = 0;
 	while (isspace(*line) && *line) ++line;
 	/*
@@ -545,7 +546,7 @@ char **split_directive(char *line, int *argc) {
 	int capacity = 10;
 	char **parts = malloc(sizeof(char *) * capacity);
 	char *delimiters;
-	if (code_strchr(line, ',') == NULL) {
+	if (code_strchr(line, ',') == NULL && allow_space_delimiter) {
 		delimiters = "\t ";
 	} else {
 		delimiters = ",";
@@ -596,7 +597,7 @@ int try_handle_directive(struct assembler_state *state, char **line) {
 			return 1;
 		}
 		int argc;
-		char **argv = split_directive(*line + strlen(d->match) + 1, &argc);
+		char **argv = split_directive(*line + strlen(d->match) + 1, &argc, d->allow_space_delimiter);
 		int ret = d->function(state, argv, argc);
 		while (argc--) {
 			free(argv[argc]);

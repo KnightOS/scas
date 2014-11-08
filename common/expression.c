@@ -14,8 +14,24 @@ static operator_t operators[] = {
 	{ "-", OP_MINUS, 0, 0, 0, operator_subtract },
 	{ "+", OP_UNARY_PLUS, 1, 99, 1, operator_unary_plus },
 	{ "-", OP_UNARY_MINUS, 1, 99, 1, operator_unary_minus },
+	{ "~", OP_NEGATE, 1, 99, 1, operator_negate },
+	{ "!", OP_LOGICAL_NOT, 1, 99, 1, operator_logical_not },
 	{ "*", OP_MULTIPLY, 0, 1, 0, operator_multiply },
-	{ "/", OP_DIVIDE, 0, 1, 0, operator_divide }
+	{ "/", OP_DIVIDE, 0, 1, 0, operator_divide },
+	{ "%", OP_MODULO, 0, 1, 0, operator_modulo },
+	{ "<<", OP_LEFT_SHIFT, 0, 2, 0, operator_left_shift },
+	{ ">>", OP_RIGHT_SHIFT, 0, 2, 0, operator_right_shift },
+	{ "<=", OP_LESS_THAN_OR_EQUAL_TO, 0, 3, 0, operator_less_than_or_equal_to },
+	{ ">=", OP_GREATER_THAN_OR_EQUAL_TO, 0, 3, 0, operator_greater_than_or_equal_to },
+	{ "<", OP_LESS_THAN, 0, 3, 0, operator_less_than },
+	{ ">", OP_GREATER_THAN, 0, 3, 0, operator_greater_than },
+	{ "==", OP_EQUAL_TO, 0, 4, 0, operator_equal_to },
+	{ "!=", OP_NOT_EQUAL_TO, 0, 4, 0, operator_not_equal_to },
+	{ "&&", OP_LOGICAL_AND, 0, 5, 0, operator_logical_and },
+	{ "||", OP_LOGICAL_OR, 0, 6, 0, operator_logical_or },
+	{ "&", OP_BITWISE_AND, 0, 7, 0, operator_bitwise_and },
+	{ "^", OP_BITWISE_XOR, 0, 8, 0, operator_bitwise_xor },
+	{ "|", OP_BITWISE_OR, 0, 9, 0, operator_bitwise_or },
 };
 
 void print_tokenized_expression(FILE *f, tokenized_expression_t *expression) {
