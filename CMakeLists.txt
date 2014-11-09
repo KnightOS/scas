@@ -14,6 +14,7 @@ add_definitions(-DINSTRUCTION_SET_PATH="${INSTRUCTION_SET_PATH}/")
 
 include_directories(
     assembler/
+    linker/
     scas/
     common/
 )

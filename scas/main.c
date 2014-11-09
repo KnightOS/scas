@@ -7,6 +7,7 @@
 #include "enums.h"
 #include "errors.h"
 #include "assembler.h"
+#include "linker.h"
 #include "expression.h"
 
 struct {
@@ -183,21 +184,25 @@ int main(int argc, char **argv) {
 	} else {
 		/* TODO: Load object files from disk */
 	}
-	if ((runtime.jobs & LINK) == LINK) {
-		/* TODO: Link objects */
+
+	FILE *out;
+	if (strcasecmp(runtime.output_file, "-") == 0) {
+		out = stdout;
 	} else {
-		FILE *f;
-		if (strcasecmp(runtime.output_file, "-") == 0) {
-			f = stdout;
-		} else {
-			f = fopen(runtime.output_file, "w+");
-		}
-		if (!f) {
-			scas_abort("Unable to open '%s' for output.", runtime.output_file);
-		}
+		out = fopen(runtime.output_file, "w+");
+	}
+	if (!out) {
+		scas_abort("Unable to open '%s' for output.", runtime.output_file);
+	}
+
+	if ((runtime.jobs & LINK) == LINK) {
+		/* TODO: Linker scripts */
+		link_objects(out, objects, errors, warnings);
+	} else {
+		/* TODO: Link all provided assembly files together, or disallow mulitple input files when assembling */
 		object_t *o = objects->items[0];
-		fwriteobj(f, o, runtime.arch);
-		fclose(f);
+		fwriteobj(out, o, runtime.arch);
+		fclose(out);
 	}
 	if (errors->length != 0) {
 		int i;
@@ -213,18 +218,14 @@ int main(int argc, char **argv) {
 			}
 			fprintf(stderr, "^\n");
 		}
-		list_free(runtime.input_files);
-		list_free(objects);
-		list_free(errors);
-		list_free(warnings);
-		instruction_set_free(instruction_set);
-		return errors->length;
 	}
+	/* TODO: Emit warnings */
 
+	int ret = errors->length;
 	list_free(runtime.input_files);
 	list_free(objects);
 	list_free(errors);
 	list_free(warnings);
 	instruction_set_free(instruction_set);
-	return 0;
+	return ret;
 }
