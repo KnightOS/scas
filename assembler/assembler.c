@@ -174,13 +174,11 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		.PC = 0,
 	};
 	int *ln = malloc(sizeof(int)); *ln = 0;
-	int *_if = malloc(sizeof(int)); *_if = 1;
 	char *name = malloc(strlen(file_name) + 1);
 	strcpy(name, file_name);
 	stack_push(state.file_name_stack, name);
 	stack_push(state.line_number_stack, ln);
 	stack_push(state.file_stack, file);
-	stack_push(state.if_stack, _if);
 	stack_push(state.source_map_stack, create_source_map(state.current_area, file_name));
 
 	list_add(state.object->areas, state.current_area);
@@ -213,9 +211,10 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 			if (code_strchr(line, '\\')) {
 				line = split_line(&state, line);
 			}
+			fprintf(stderr, "%s\n", line);
 			int i;
 			for (i = 0; i < sizeof(line_ops) / sizeof(void*); ++i) {
-				if (state.nolist || !*(int*)stack_peek(state.if_stack)) {
+				if (state.nolist || (state.if_stack->length && !*(int*)stack_peek(state.if_stack))) {
 					if (nolist_line_ops[i](&state, &line)) {
 						break;
 					}

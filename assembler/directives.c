@@ -332,6 +332,73 @@ int handle_echo(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_elseif(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 1) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	if (*(int *)stack_peek(state->if_stack)) {
+		return 1;
+	}
+	tokenized_expression_t *expression = parse_expression(argv[0]);
+	int error;
+	uint64_t result;
+	if (expression == NULL) {
+		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		return 1;
+	} else {
+		result = evaluate_expression(expression, state->equates, &error);
+	}
+	if (error == EXPRESSION_BAD_SYNTAX) {
+		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		return 1;
+	} else if (error == EXPRESSION_BAD_SYMBOL) {
+		ERROR(ERROR_UNKNOWN_SYMBOL, state->column);
+		return 1;
+	} else {
+		*(int *)stack_peek(state->if_stack) = result;
+	}
+	return 1;
+}
+
+int handle_else(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	if (*(int *)stack_peek(state->if_stack)) {
+		return 1;
+	}
+	*(int *)stack_peek(state->if_stack) = 1;
+	return 1;
+}
+
+int handle_end(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	if (state->if_stack->length == 0) {
+		/* nop */
+		return 1;
+	}
+	stack_pop(state->if_stack);
+	return 1;
+}
+
+int handle_endif(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	if (state->if_stack->length == 0) {
+		ERROR(ERROR_TRAILING_END, state->column);
+		return 1;
+	}
+	stack_pop(state->if_stack);
+	return 1;
+}
+
 int handle_equ(struct assembler_state *state, char **argv, int argc) {
 	/* TODO: Rewrite these forms somewhere higher up:
 	 * key = value
@@ -378,6 +445,83 @@ int handle_even(struct assembler_state *state, char **argv, int argc) {
 		append_to_area(state->current_area, &pad, sizeof(uint8_t));
 		++state->PC;
 	}
+	return 1;
+}
+
+int handle_if(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 1) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	tokenized_expression_t *expression = parse_expression(argv[0]);
+	int error;
+	uint64_t result;
+	if (expression == NULL) {
+		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		return 1;
+	} else {
+		result = evaluate_expression(expression, state->equates, &error);
+	}
+	if (error == EXPRESSION_BAD_SYNTAX) {
+		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		return 1;
+	} else if (error == EXPRESSION_BAD_SYMBOL) {
+		ERROR(ERROR_UNKNOWN_SYMBOL, state->column);
+		return 1;
+	} else {
+		int *r = malloc(sizeof(int));
+		*r = result;
+		stack_push(state->if_stack, r);
+	}
+	return 1;
+}
+
+int handle_ifdef(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 1) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	int *r = malloc(sizeof(int));
+	int i;
+	for (i = 0; !*r && i < state->equates->length; ++i) {
+		symbol_t *sym = state->equates->items[i];
+		if (strcasecmp(sym->name, argv[0]) == 0) {
+			*r = 1;
+		}
+	}
+	for (i = 0; !*r && i < state->current_area->symbols->length; ++i) {
+		symbol_t *sym = state->current_area->symbols->items[i];
+		if (strcasecmp(sym->name, argv[0]) == 0) {
+			*r = 1;
+		}
+	}
+	/* TODO: Also search macros */
+	stack_push(state->if_stack, r);
+	return 1;
+}
+
+int handle_ifndef(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 1) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	int *r = malloc(sizeof(int));
+	int i;
+	for (i = 0; !*r && i < state->equates->length; ++i) {
+		symbol_t *sym = state->equates->items[i];
+		if (strcasecmp(sym->name, argv[0]) == 0) {
+			*r = 1;
+		}
+	}
+	for (i = 0; !*r && i < state->current_area->symbols->length; ++i) {
+		symbol_t *sym = state->current_area->symbols->items[i];
+		if (strcasecmp(sym->name, argv[0]) == 0) {
+			*r = 1;
+		}
+	}
+	/* TODO: Also search macros */
+	*r = !*r;
+	stack_push(state->if_stack, r);
 	return 1;
 }
 
@@ -505,7 +649,7 @@ int handle_org(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-/* Keep this alphabetized */
+/* Keep these alphabetized */
 struct directive directives[] = {
 	{ "area", handle_area, 1 },
 	{ "ascii", handle_ascii, 1 },
@@ -519,10 +663,18 @@ struct directive directives[] = {
 	{ "ds", handle_block, 0 },
 	{ "dw", handle_dw, 0 },
 	{ "echo", handle_echo, 1 },
+	{ "elif", handle_elseif, 0 },
+	{ "else", handle_else, 0 },
+	{ "elseif", handle_elseif, 0 },
+	{ "end", handle_end, 0 },
+	{ "endif", handle_endif, 0 },
 	{ "equ", handle_equ, 1 },
 	{ "equate", handle_equ, 1 },
 	{ "even", handle_even, 1 },
 	{ "gblequ", handle_equ, 1 }, /* TODO: Allow users to export equates? */
+	{ "if", handle_if, 0 },
+	{ "ifdef", handle_ifdef, 0 },
+	{ "ifndef", handle_ifndef, 0 },
 	{ "incbin", handle_incbin, 1 },
 	{ "include", handle_include, 1 },
 	{ "lclequ", handle_equ, 1 },
@@ -539,6 +691,14 @@ struct directive directives[] = {
 	{ "strs", handle_ascii, 1 },
 };
 
+struct directive if_directives[] = {
+	{ "elif", handle_elseif, 0 },
+	{ "else", handle_else, 0 },
+	{ "elseif", handle_elseif, 0 },
+	{ "end", handle_end, 0 },
+	{ "endif", handle_endif, 0 },
+};
+
 int directive_compare(const void *_a, const void *_b) {
 	const struct directive *a = _a;
 	const struct directive *b = _b;
@@ -546,7 +706,7 @@ int directive_compare(const void *_a, const void *_b) {
 }
 
 static struct directive nop = { "!", handle_nop };
-struct directive *find_directive(char *line) {
+struct directive *find_directive(struct directive dirs[], int l, char *line) {
 	if (line[1] == '!') {
 		return &nop;
 	}
@@ -559,8 +719,7 @@ struct directive *find_directive(char *line) {
 	char b = line[whitespace];
 	line[whitespace] = '\0';
 	struct directive d = { .match=line };
-	struct directive *res = bsearch(&d, directives, sizeof(directives) / sizeof(struct directive), 
-			sizeof(struct directive), directive_compare);
+	struct directive *res = bsearch(&d, dirs, l, sizeof(struct directive), directive_compare);
 	line[whitespace] = b;
 	return res;
 }
@@ -574,6 +733,7 @@ char **split_directive(char *line, int *argc, int allow_space_delimiter) {
 	 */
 	int capacity = 10;
 	char **parts = malloc(sizeof(char *) * capacity);
+	if (!*line) return parts;
 	char *delimiters;
 	if (code_strchr(line, ',') == NULL && allow_space_delimiter) {
 		delimiters = "\t ";
@@ -620,8 +780,18 @@ char **split_directive(char *line, int *argc, int allow_space_delimiter) {
 
 int try_handle_directive(struct assembler_state *state, char **line) {
 	if (**line == '.' || **line == '#') {
-		struct directive *d = find_directive(*line);
+		struct directive *dir = directives;
+		int len = sizeof(directives) / sizeof(struct directive);
+		if (state->if_stack->length != 0 && !*(int *)stack_peek(state->if_stack)) {
+			dir = if_directives;
+			len = sizeof(if_directives) / sizeof(struct directive);
+		}
+		struct directive *d = find_directive(dir, len, *line);
 		if (d == NULL) {
+			if (state->if_stack->length != 0 && !*(int *)stack_peek(state->if_stack)) {
+				// Ignore "invalid" directives inside of falsy if segments
+				return 1;
+			}
 			ERROR(ERROR_INVALID_DIRECTIVE, state->column);
 			return 1;
 		}

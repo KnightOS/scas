@@ -18,6 +18,8 @@ const char *get_error_string(error_t *error) {
 			return "Unknown symbol";
 		case ERROR_BAD_FILE:
 			return "Unable to open file for reading";
+		case ERROR_TRAILING_END:
+			return "Trailing end has no matching if";
 		default:
 			return NULL;
 	}
