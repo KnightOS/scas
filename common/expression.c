@@ -171,7 +171,7 @@ expression_token_t *parse_operator(const char **string, int is_unary) {
 
 expression_token_t *parse_symbol(const char **string) {
 	const char *end = *string;
-	while (*end && (isalnum(*end) || *end == '_' || *end == '.' || *end == '@')) {
+	while (*end && (isalnum(*end) || *end == '_' || *end == '.' || *end == '@' || *end == '$')) {
 		end++;
 	}
 	char *symbol = malloc(end - *string + 1);

@@ -28,9 +28,22 @@ typedef struct {
 } late_immediate_t;
 
 typedef struct {
+    uint64_t line_number;
+    uint64_t address;
+    uint64_t length;
+    char *source_code;
+} source_map_entry_t;
+
+typedef struct {
+    char *file_name;
+    list_t *entries;
+} source_map_t;
+
+typedef struct {
     char *name;
     list_t *late_immediates;
     list_t *symbols;
+    list_t *source_map;
     uint8_t *data;
     uint64_t data_length;
     uint64_t data_capacity;
@@ -38,7 +51,6 @@ typedef struct {
 
 typedef struct {
     list_t *areas;
-    /* TODO: Add source map */
 } object_t;
 
 object_t *create_object();
@@ -46,5 +58,7 @@ void object_free(object_t *object);
 area_t *create_area(const char *name);
 void append_to_area(area_t *area, uint8_t *data, size_t length);
 void fwriteobj(FILE *file, object_t *object, char *arch);
+void add_source_map(source_map_t *map, int line_number, const char *line, uint64_t address, uint64_t length);
+source_map_t *create_source_map(area_t *area, const char *file_name);
 
 #endif

@@ -20,6 +20,7 @@ area_t *create_area(const char *name) {
 	strcpy(a->name, name);
 	a->late_immediates = create_list();
 	a->symbols = create_list();
+	a->source_map = create_list();
 	a->data_length = 0;
 	a->data_capacity = 1024;
 	a->data = malloc(a->data_capacity);
@@ -68,8 +69,25 @@ void write_area(FILE *f, area_t *a) {
 	fwrite(&len, sizeof(uint64_t), 1, f);
 	fwrite(a->data, sizeof(uint8_t), a->data_length, f);
 	/* Source map TODO */
-	len = 0;
+	len = a->source_map->length;
 	fwrite(&len, sizeof(uint64_t), 1, f);
+	for (i = 0; i < a->source_map->length; ++i) {
+		source_map_t *map = a->source_map->items[i];
+		fwrite(map->file_name, sizeof(char), strlen(map->file_name), f);
+		len = map->entries->length;
+		fwrite(&len, sizeof(uint64_t), 1, f);
+		int j;
+		for (j = 0; j < map->entries->length; ++j) {
+			source_map_entry_t *entry = map->entries->items[j];
+			len = entry->line_number;
+			fwrite(&len, sizeof(uint64_t), 1, f);
+			len = entry->address;
+			fwrite(&len, sizeof(uint64_t), 1, f);
+			len = entry->length;
+			fwrite(&len, sizeof(uint64_t), 1, f);
+			fwrite(entry->source_code, sizeof(char), strlen(entry->source_code), f);
+		}
+	}
 }
 
 void fwriteobj(FILE *f, object_t *o, char *arch) {
@@ -84,4 +102,23 @@ void fwriteobj(FILE *f, object_t *o, char *arch) {
 		write_area(f, a);
 	}
 	fflush(f);
+}
+
+source_map_t *create_source_map(area_t *area, const char *file_name) {
+	source_map_t *map = malloc(sizeof(source_map_t));
+	map->file_name = malloc(strlen(file_name));
+	strcpy(map->file_name, file_name);
+	map->entries = create_list();
+	list_add(area->source_map, map);
+	return map;
+}
+
+void add_source_map(source_map_t *map, int line_number, const char *line, uint64_t address, uint64_t length) {
+	source_map_entry_t *entry = malloc(sizeof(source_map_entry_t));
+	entry->line_number = line_number;
+	entry->address = address;
+	entry->length = length;
+	entry->source_code = malloc(strlen(line) + 1);
+	strcpy(entry->source_code, line);
+	list_add(map->entries, entry);
 }

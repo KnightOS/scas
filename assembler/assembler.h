@@ -8,6 +8,7 @@
 struct assembler_state {
 	object_t *object;
 	area_t *current_area;
+	stack_t *source_map_stack;
 	stack_t *file_stack;
 	stack_t *file_name_stack;
 	stack_t *line_number_stack;

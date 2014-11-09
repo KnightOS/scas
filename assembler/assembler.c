@@ -18,6 +18,10 @@
 		*(int*)stack_peek(state->line_number_stack), \
 		state->line, COLUMN, stack_peek(state->file_name_stack));
 
+#define MAP_SOURCE(LENGTH) add_source_map((source_map_t *)stack_peek(state->source_map_stack), \
+		*(int*)stack_peek(state->line_number_stack), state->line, \
+		state->current_area->data_length, LENGTH);
+
 struct assembler_state state;
 
 int try_empty_line(struct assembler_state *state, char **line) {
@@ -119,6 +123,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 			instruction >>= 8;
 		}
 		/* Add completed instruction */
+		MAP_SOURCE(bytes_width);
 		append_to_area(state->current_area, state->instruction_buffer, bytes_width);
 		state->PC += bytes_width;
 	}
@@ -149,6 +154,7 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 	struct assembler_state state = {
 		.object = create_object(),
 		.current_area = create_area("CODE"),
+		.source_map_stack = create_stack(),
 
 		.file_stack = create_stack(),
 		.file_name_stack = create_stack(),
@@ -175,6 +181,7 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 	stack_push(state.line_number_stack, ln);
 	stack_push(state.file_stack, file);
 	stack_push(state.if_stack, _if);
+	stack_push(state.source_map_stack, create_source_map(state.current_area, file_name));
 
 	list_add(state.object->areas, state.current_area);
 
@@ -223,9 +230,11 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		} else {
 			free(stack_pop(state.file_name_stack));
 			free(stack_pop(state.line_number_stack));
+			stack_pop(state.source_map_stack);
 			if (cur != file) {
 				fclose(cur);
 				stack_pop(state.file_stack);
+				stack_pop(state.source_map_stack);
 			} else {
 				break;
 			}
@@ -239,6 +248,7 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 	stack_free(state.file_name_stack);
 	stack_free(state.line_number_stack);
 	stack_free(state.extra_lines);
+	stack_free(state.source_map_stack);
 	free(state.instruction_buffer);
 
 	return state.object;

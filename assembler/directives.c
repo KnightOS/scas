@@ -15,6 +15,10 @@
 		*(int*)stack_peek(state->line_number_stack), \
 		state->line, COLUMN, stack_peek(state->file_name_stack));
 
+#define MAP_SOURCE(LENGTH) add_source_map((source_map_t *)stack_peek(state->source_map_stack), \
+		*(int*)stack_peek(state->line_number_stack), state->line, \
+		state->current_area->data_length, LENGTH);
+
 struct directive {
 	char *match;
 	int(*function)(struct assembler_state *state, char **argv, int argc);
@@ -78,6 +82,7 @@ int handle_ascii(struct assembler_state *state, char **argv, int argc) {
 		argv[i][len - 1] = '\0';
 		len -= 2;
 		len = unescape_string(argv[i] + 1);
+		MAP_SOURCE(len);
 		append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len);
 		state->PC += len;
 	}
@@ -99,6 +104,7 @@ int handle_asciiz(struct assembler_state *state, char **argv, int argc) {
 		argv[i][len - 1] = '\0';
 		len -= 2;
 		len = unescape_string(argv[i] + 1);
+		MAP_SOURCE(len + 1);
 		append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len + 1 /* Includes the null terminator */);
 		state->PC += len + 1;
 	}
@@ -125,6 +131,7 @@ int handle_asciip(struct assembler_state *state, char **argv, int argc) {
 			/* Would it be obvious that this is because the string is too long? */
 			ERROR(ERROR_VALUE_TRUNCATED, state->column);
 		}
+		MAP_SOURCE(len + 1);
 		append_to_area(state->current_area, &_len, sizeof(uint8_t));
 		append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len);
 		state->PC += len + 1;
@@ -151,6 +158,7 @@ int handle_block(struct assembler_state *state, char **argv, int argc) {
 		ERROR(ERROR_INVALID_SYNTAX, state->column);
 	} else {
 		uint8_t *buffer = calloc(256, sizeof(uint8_t));
+		MAP_SOURCE(result);
 		while (result) {
 			append_to_area(state->current_area, buffer, result > 256 ? 256 : result);
 			if (result > 256) {
@@ -186,6 +194,7 @@ int handle_bndry(struct assembler_state *state, char **argv, int argc) {
 		if (state->PC % result != 0) {
 			uint8_t *buf = calloc(1024, sizeof(uint8_t));
 			int len = state->PC % result;
+			MAP_SOURCE(len);
 			while (len) {
 				append_to_area(state->current_area, buf, len > 256 ? 256 : len);
 				if (len > 256) {
@@ -206,6 +215,7 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
 		return 1;
 	}
+	uint64_t olen = 0;
 	int i;
 	for (i = 0; i < argc; ++i) {
 		int len = strlen(argv[i]);
@@ -214,6 +224,7 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 			argv[i][len - 1] = '\0';
 			len -= 2;
 			len = unescape_string(argv[i] + 1);
+			olen += len;
 			append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len);
 			state->PC += len;
 		} else {
@@ -246,10 +257,14 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 					*state->instruction_buffer = (uint8_t)result;
 				}
 			}
+			++olen;
 			append_to_area(state->current_area, state->instruction_buffer, 1);
 			state->PC++;
 		}
 	}
+	add_source_map((source_map_t *)stack_peek(state->source_map_stack),
+		*(int*)stack_peek(state->line_number_stack), state->line,
+		state->current_area->data_length, olen);
 	return 1;
 }
 
@@ -258,6 +273,7 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
 		return 1;
 	}
+	uint64_t olen;
 	int i;
 	for (i = 0; i < argc; ++i) {
 		int error;
@@ -292,7 +308,11 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 		}
 		append_to_area(state->current_area, state->instruction_buffer, 2);
 		state->PC += 2;
+		olen += 2;
 	}
+	add_source_map((source_map_t *)stack_peek(state->source_map_stack),
+		*(int*)stack_peek(state->line_number_stack), state->line,
+		state->current_area->data_length, olen);
 	return 1;
 }
 
@@ -355,6 +375,7 @@ int handle_even(struct assembler_state *state, char **argv, int argc) {
 	}
 	if (state->PC % 2 != 0) {
 		uint8_t pad = 0;
+		MAP_SOURCE(1);
 		append_to_area(state->current_area, &pad, sizeof(uint8_t));
 		++state->PC;
 	}
@@ -383,11 +404,16 @@ int handle_incbin(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	uint8_t *buf = malloc(1024);
+	uint64_t olen;
 	int l;
 	while ((l = fread(buf, sizeof(uint8_t), 1024, file))) {
 		append_to_area(state->current_area, buf, l);
 		state->PC += l;
+		olen += l;
 	}
+	add_source_map((source_map_t *)stack_peek(state->source_map_stack),
+		*(int*)stack_peek(state->line_number_stack), state->line,
+		state->current_area->data_length, olen);
 	free(buf);
 	fclose(file);
 	return 1;
@@ -418,6 +444,7 @@ int handle_include(struct assembler_state *state, char **argv, int argc) {
 	stack_push(state->file_name_stack, name);
 	int *ln = malloc(sizeof(int)); *ln = 0;
 	stack_push(state->line_number_stack, ln);
+	stack_push(state->source_map_stack, create_source_map(state->current_area, name));
 	return 1;
 }
 
@@ -446,6 +473,7 @@ int handle_odd(struct assembler_state *state, char **argv, int argc) {
 	}
 	if (state->PC % 2 != 1) {
 		uint8_t pad = 0;
+		MAP_SOURCE(1);
 		append_to_area(state->current_area, &pad, sizeof(uint8_t));
 		++state->PC;
 	}

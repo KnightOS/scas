@@ -208,10 +208,12 @@ The file count is an unsigned 32-bit integer. Each file uses this format:
 | File name | Line count | Lines... |
 +===========+============+==========+
 
-+=========+===============+======+
-| Address | Output length | Code |
-+=========+===============+======+
++=============+=========+===============+======+
+| Line number | Address | Output length | Code |
++=============+=========+===============+======+
 
 The address is relative to the start of this area, and the output length refers
 to the length of the machine code output by this line of code. The code is the
-assembly code itself that was is used to represent this machine code.
+assembly code itself that was is used to represent this machine code. The line
+number is, of course, the line this code appears on in the source file, as an
+unsigned 64-bit integer.
