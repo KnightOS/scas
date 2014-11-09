@@ -43,6 +43,7 @@ int try_add_label(struct assembler_state *state, char **line) {
 	sym->name[i] = '\0';
 	sym->type = SYMBOL_LABEL;
 	sym->value = state->PC;
+	sym->defined_address = state->current_area->data_length;
 	sym->exported = 1; /* TODO: Support explicit export */
 	list_add(state->current_area->symbols, sym);
 	/* Modify this line so that processing may continue */

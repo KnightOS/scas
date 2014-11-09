@@ -15,6 +15,7 @@ typedef struct {
     int type;
     char *name;
     uint64_t value;
+    uint64_t defined_address;
     int exported;
 } symbol_t;
 

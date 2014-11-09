@@ -50,6 +50,7 @@ void write_area(FILE *f, area_t *a) {
 		fwrite(&len, sizeof(uint32_t), 1, f);
 		fprintf(f, "%s", sym->name);
 		fwrite(&sym->value, sizeof(uint64_t), 1, f);
+		fwrite(&sym->defined_address, sizeof(uint64_t), 1, f);
 	}
 	/* Expressions */
 	len = a->late_immediates->length;

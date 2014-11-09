@@ -75,13 +75,15 @@ The number of symbols is encoded as an unsigned 32-bit integer.
 
 Each symbol takes the following format:
 
-+----------+=============+======+=======+
-| Exported | Name length | Name | Value |
-+----------+=============+======+=======+
++----------+=============+======+=======+==============+
+| Exported | Name length | Name | Value | Base address |
++----------+=============+======+=======+==============+
 
 The length and value are both 64-bit unsigned integers. The name itself is a UTF-8
 string with no null delimiter. Exported is 1 if the symbol has been exported, or 0
-if it's an internal symbol.
+if it's an internal symbol. The base address is the address at which it was defined,
+which may be used to insert instructions into the machine code while still
+resolving the correct address of labels.
 
 ## Immediate Value Expressions
 
