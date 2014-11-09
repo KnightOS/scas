@@ -231,6 +231,7 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 				/* TODO: Throw error if using explicit import */
 				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
 				late_imm->address = state->current_area->data_length;
+				late_imm->base_address = state->current_area->data_length;
 				late_imm->width = 8;
 				late_imm->type = IMM_TYPE_ABSOLUTE;
 				late_imm->expression = expression;
@@ -273,6 +274,7 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 			/* TODO: Throw error if using explicit import */
 			late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
 			late_imm->address = state->current_area->data_length;
+			late_imm->base_address = state->current_area->data_length;
 			late_imm->width = 16;
 			late_imm->type = IMM_TYPE_ABSOLUTE;
 			late_imm->expression = expression;

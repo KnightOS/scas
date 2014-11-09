@@ -81,6 +81,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 			if (error == EXPRESSION_BAD_SYMBOL) {
 				/* TODO: Throw error if using explicit import */
 				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
+				late_imm->base_address = state->current_area->data_length;
 				late_imm->address = state->current_area->data_length + (imm->shift / 8);
 				late_imm->width = imm->width;
 				late_imm->type = imm->type;

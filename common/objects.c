@@ -59,7 +59,7 @@ void write_area(FILE *f, area_t *a) {
 		late_immediate_t *imm = a->late_immediates->items[i];
 		fputc(imm->type, f);
 		fputc(imm->width, f);
-		fwrite(&imm->address, sizeof(uint64_t), 1, f); /* TODO: Instruction address */
+		fwrite(&imm->base_address, sizeof(uint64_t), 1, f);
 		fwrite(&imm->address, sizeof(uint64_t), 1, f);
 		fwrite_tokens(f, imm->expression);
 	}
