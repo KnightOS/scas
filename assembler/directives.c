@@ -47,8 +47,7 @@ int handle_nop(struct assembler_state *state, char **argv, int argc) {
 
 int handle_area(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
-		return 1;
+		/* This space intentionally left blank */
 	}
 	area_t *area = NULL;
 	int i;
