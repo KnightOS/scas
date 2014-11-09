@@ -19,7 +19,7 @@ const char *get_error_string(error_t *error) {
 		case ERROR_BAD_FILE:
 			return "Unable to open file for reading";
 		case ERROR_TRAILING_END:
-			return "Trailing end has no matching if";
+			return "No matching if directive";
 		default:
 			return NULL;
 	}

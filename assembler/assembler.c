@@ -211,7 +211,6 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 			if (code_strchr(line, '\\')) {
 				line = split_line(&state, line);
 			}
-			fprintf(stderr, "%s\n", line);
 			int i;
 			for (i = 0; i < sizeof(line_ops) / sizeof(void*); ++i) {
 				if (state.nolist || (state.if_stack->length && !*(int*)stack_peek(state.if_stack))) {

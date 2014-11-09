@@ -337,6 +337,10 @@ int handle_elseif(struct assembler_state *state, char **argv, int argc) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
 		return 1;
 	}
+	if (state->if_stack->length == 0) {
+		ERROR(ERROR_TRAILING_END, state->column);
+		return 1;
+	}
 	if (*(int *)stack_peek(state->if_stack)) {
 		return 1;
 	}
@@ -366,10 +370,12 @@ int handle_else(struct assembler_state *state, char **argv, int argc) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
 		return 1;
 	}
-	if (*(int *)stack_peek(state->if_stack)) {
+	if (state->if_stack->length == 0) {
+		ERROR(ERROR_TRAILING_END, state->column);
 		return 1;
 	}
-	*(int *)stack_peek(state->if_stack) = 1;
+	int *top = stack_peek(state->if_stack);
+	*top = !*top;
 	return 1;
 }
 
@@ -449,6 +455,13 @@ int handle_even(struct assembler_state *state, char **argv, int argc) {
 }
 
 int handle_if(struct assembler_state *state, char **argv, int argc) {
+	if (state->if_stack->length != 0 && !*(int *)stack_peek(state->if_stack)) {
+		/* Push up another falsy if if we're already in a falsy if */
+		int *r = malloc(sizeof(int));
+		*r = 0;
+		stack_push(state->if_stack, r);
+		return 1;
+	}
 	if (argc != 1) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
 		return 1;
@@ -477,6 +490,13 @@ int handle_if(struct assembler_state *state, char **argv, int argc) {
 }
 
 int handle_ifdef(struct assembler_state *state, char **argv, int argc) {
+	if (state->if_stack->length != 0 && !*(int *)stack_peek(state->if_stack)) {
+		/* Push up another falsy if if we're already in a falsy if */
+		int *r = malloc(sizeof(int));
+		*r = 0;
+		stack_push(state->if_stack, r);
+		return 1;
+	}
 	if (argc != 1) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
 		return 1;
@@ -501,6 +521,16 @@ int handle_ifdef(struct assembler_state *state, char **argv, int argc) {
 }
 
 int handle_ifndef(struct assembler_state *state, char **argv, int argc) {
+	if (state->if_stack->length != 0 && !*(int *)stack_peek(state->if_stack)) {
+		/* Push up another falsy if if we're already in a falsy if */
+		int *r = malloc(sizeof(int));
+		*r = 0;
+		stack_push(state->if_stack, r);
+		return 1;
+	}
+	if (state->if_stack->length != 0 && !*(int *)stack_peek(state->if_stack)) {
+		return 1;
+	}
 	if (argc != 1) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
 		return 1;
@@ -697,6 +727,9 @@ struct directive if_directives[] = {
 	{ "elseif", handle_elseif, 0 },
 	{ "end", handle_end, 0 },
 	{ "endif", handle_endif, 0 },
+	{ "if", handle_if, 0 },
+	{ "ifdef", handle_ifdef, 0 },
+	{ "ifndef", handle_ifndef, 0 },
 };
 
 int directive_compare(const void *_a, const void *_b) {
