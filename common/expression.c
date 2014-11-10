@@ -282,6 +282,10 @@ tokenized_expression_t *parse_expression(const char *str) {
 			tokenizer_state = STATE_VALUE;
 		}
 
+		if (!expr) {
+			return 0;
+		}
+
 		if (expr->type == OPERATOR) {
 			operator_t *operator = &operators[expr->operator];
 			expression_token_t *expr2 = stack->length ? stack_peek(stack) : 0;
