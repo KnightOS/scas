@@ -140,17 +140,31 @@ uint64_t evaluate_expression(tokenized_expression_t *expression, list_t *symbols
 }
 
 expression_token_t *parse_digit(const char **string) {
-	if (strlen(*string) > 1 && (*string)[1] == 'b') {
-		// TODO: binary string
-		return 0;
-	} else {
-		expression_token_t *expr = malloc(sizeof(expression_token_t));
-		expr->type = NUMBER;
-		char *end;
-		expr->number = strtol(*string, &end, 0);
-		*string = end;
-		return expr;
+	int base = 0;
+	if ((*string)[0] != 0 && !isdigit((*string)[1])) {
+		switch ((*string)[1]) {
+		case 'b':
+			base = 2;
+			break;
+		case 'x':
+			base = 16;
+			break;
+		case 0:
+			// It's probably a single digit number
+			break;
+		default:
+			return 0;
+			break;
+		}
+		*string += 2;
 	}
+
+	expression_token_t *expr = malloc(sizeof(expression_token_t));
+	expr->type = NUMBER;
+	char *end;
+	expr->number = strtol(*string, &end, base);
+	*string = end;
+	return expr;
 }
 
 expression_token_t *parse_operator(const char **string, int is_unary) {
