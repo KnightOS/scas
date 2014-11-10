@@ -47,6 +47,8 @@ typedef struct {
     uint8_t *data;
     uint64_t data_length;
     uint64_t data_capacity;
+    /* Only used for linking */
+    uint64_t final_address;
 } area_t;
 
 typedef struct {
