@@ -117,13 +117,14 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 }
 
 void link_objects(FILE *output, list_t *objects, list_t *errors, list_t *warnings) {
+	scas_log(L_INFO, "Linking %d objects together", objects->length);
 	list_t *area_states = create_list();
 	list_t *symbols = create_list();
 	int i;
 	/* TODO: Automatic relocation should take place first */
 	/* Determine how big each area is and create a state for them */
-	scas_log(L_INFO, "Linking %d objects together", objects->length);
 	scas_log(L_DEBUG, "Assigning addresses for each area");
+	indent_log();
 	for (i = 0; i < objects->length; ++i) {
 		object_t *o = objects->items[i];
 		int j;
@@ -141,6 +142,7 @@ void link_objects(FILE *output, list_t *objects, list_t *errors, list_t *warning
 					(unsigned long)a->final_address, a->name, i);
 		}
 	}
+	deindent_log();
 	/* Find a final address for all areas and relocate their symbols */
 	scas_log(L_DEBUG, "Assigning final address to each area in final executable");
 	indent_log();
