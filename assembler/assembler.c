@@ -189,8 +189,8 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 	stack_push(state.line_number_stack, ln);
 	stack_push(state.file_stack, file);
 	stack_push(state.source_map_stack, create_source_map(state.current_area, file_name));
-
 	list_add(state.object->areas, state.current_area);
+	list_add(state.current_area->source_map, stack_peek(state.source_map_stack));
 
 	int(*const line_ops[])(struct assembler_state *, char **) = {
 		try_empty_line,

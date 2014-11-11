@@ -1,6 +1,7 @@
 #include "errors.h"
 #include "list.h"
 #include "log.h"
+#include "objects.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -48,12 +49,36 @@ void add_error(list_t *errors, int code, size_t line_number, const char *line, i
 
 /* Locates the address in the source maps provided to get the file name and line number */
 void add_error_from_map(list_t *errors, int code, list_t *maps, uint64_t address) {
-	// TODO
+	source_map_t *map;
+	source_map_entry_t *entry;
+	int found = 0;
+	int i;
+	for (i = 0; i < maps->length; ++i) {
+		map = maps->items[i];
+		int j;
+		for (j = 0; j < map->entries->length; ++j) {
+			entry = map->entries->items[j];
+			if (address >= entry->address && address < entry->address + entry->length) {
+				found = 1;
+				break;
+			}
+		}
+		if (found) {
+			break;
+		}
+	}
 	error_t *error = malloc(sizeof(error_t));
 	error->code = code;
-	error->line_number = 0;
-	error->file_name = NULL;
-	error->line = NULL;
 	error->column = 0;
+	if (found) {
+		error->line_number = entry->line_number;
+		error->file_name = map->file_name;
+		error->line = malloc(strlen(entry->source_code) + 1);
+		strcpy(error->line, entry->source_code);
+	} else {
+		error->line_number = 0;
+		error->file_name = NULL;
+		error->line = NULL;
+	}
 	list_add(errors, error);
 }

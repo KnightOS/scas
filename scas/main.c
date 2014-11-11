@@ -194,14 +194,32 @@ int main(int argc, char **argv) {
 					(int)error->line_number, (int)error->column, error->code,
 					get_error_string(error));
 			fprintf(stderr, "%s\n", error->line);
-			int j;
-			for (j = error->column; j > 0; --j) {
-				fprintf(stderr, ".");
+			if (error->column != 0) {
+				int j;
+				for (j = error->column; j > 0; --j) {
+					fprintf(stderr, ".");
+				}
+				fprintf(stderr, "^\n");
 			}
-			fprintf(stderr, "^\n");
 		}
 	}
-	/* TODO: Emit warnings */
+	if (warnings->length != 0) {
+		int i;
+		for (i = 0; i < errors->length; ++i) {
+			warning_t *warning = warnings->items[i];
+			fprintf(stderr, "%s:%d:%d: warning #%d: %s\n", warning->file_name,
+					(int)warning->line_number, (int)warning->column, warning->code,
+					get_warning_string(warning));
+			fprintf(stderr, "%s\n", warning->line);
+			if (warning->column != 0) {
+				int j;
+				for (j = warning->column; j > 0; --j) {
+					fprintf(stderr, ".");
+				}
+				fprintf(stderr, "^\n");
+			}
+		}
+	}
 
 	int ret = errors->length;
 	scas_log(L_DEBUG, "Exiting with status code %d, cleaning up", ret);

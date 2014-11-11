@@ -53,8 +53,6 @@ symbol_t *find_symbol(list_t *symbols, char *name) {
 	return NULL;
 }
 
-/* TODO: Error handling in this code sucks */
-
 void gather_and_relocate_symbols(list_t *symbols, area_t *area, list_t *errors) {
 	scas_log(L_DEBUG, "Relocating symbols for area '%s' (at 0x%08X)", area->name, area->final_address);
 	indent_log();
