@@ -63,7 +63,7 @@ void gather_and_relocate_symbols(list_t *symbols, area_t *area, list_t *errors) 
 		symbol_t *sym = area->symbols->items[i];
 		symbol_t *existing = find_symbol(symbols, sym->name);
 		if (existing) {
-			add_error(errors, ERROR_DUPLICATE_SYMBOL, 0, sym->name, 0, NULL);
+			add_error_from_map(errors, ERROR_DUPLICATE_SYMBOL, area->source_map, ~0);
 			continue;
 		}
 		if (sym->type == SYMBOL_LABEL) {
@@ -85,10 +85,10 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 		int error;
 		uint64_t result = evaluate_expression(imm->expression, symbols, &error);
 		if (error == EXPRESSION_BAD_SYMBOL) {
-			add_error(errors, ERROR_UNKNOWN_SYMBOL, 0, NULL, 0, NULL);
+			add_error_from_map(errors, ERROR_UNKNOWN_SYMBOL, area->source_map, imm->base_address);
 			continue;
 		} else if (error == EXPRESSION_BAD_SYNTAX) {
-			add_error(errors, ERROR_INVALID_SYNTAX, 0, NULL, 0, NULL);
+			add_error_from_map(errors, ERROR_INVALID_SYNTAX, area->source_map, imm->base_address);
 			continue;
 		} else {
 			if (imm->type == IMM_TYPE_RELATIVE) {
@@ -102,7 +102,7 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 				mask |= 1;
 			}
 			if ((result & mask) != result && ~result >> imm->width) {
-				add_error(errors, ERROR_VALUE_TRUNCATED, 0, NULL, 0, NULL);
+				add_error_from_map(errors, ERROR_VALUE_TRUNCATED, area->source_map, imm->base_address);
 			} else {
 				result = result & mask;
 				int j;
