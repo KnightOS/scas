@@ -138,13 +138,16 @@ do that. Each token takes this format:
 
 The type is one of these values:
 
-* 0x00: Symbol
+* 0x00: Expression terminator
+   The last token in the list. The token data is omitted.
+
+* 0x01: Symbol
    This token is a string.
 
-* 0x01: Integer
+* 0x02: Integer
    This token is an 64-bit unsigned integer.
 
-* 0x02: Operator
+* 0x03: Operator
    This token is an operator:
    - 0x00: +
    - 0x01: -

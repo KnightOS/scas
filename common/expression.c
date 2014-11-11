@@ -75,6 +75,7 @@ void fwrite_tokens(FILE *f, tokenized_expression_t *expression) {
 				break;
 		}
 	}
+	fputc(0, f);
 }
 
 uint64_t evaluate_expression(tokenized_expression_t *expression, list_t *symbols, int *error) {
