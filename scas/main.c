@@ -63,6 +63,7 @@ void validate_runtime() {
 		for (j = 0; j < sizeof(ext); j++) {
 			runtime.output_file[i + j] = ext[j];
 		}
+		scas_log(L_DEBUG, "Assigned output file name to %s", runtime.output_file);
 	}
 }
 
@@ -96,6 +97,7 @@ void parse_arguments(int argc, char **argv) {
 			}
 		} else {
 			if (runtime.output_file != NULL || i != argc - 1 || runtime.input_files->length == 0) {
+				scas_log(L_INFO, "Added input file '%s'", argv[i]);
 				list_add(runtime.input_files, argv[i]);
 			} else if (runtime.output_file == NULL && i == argc - 1) {
 				runtime.output_file = argv[i];
@@ -130,6 +132,7 @@ int main(int argc, char **argv) {
 	init_log(runtime.verbosity);
 	validate_runtime();
 	instruction_set_t *instruction_set = find_inst();
+	scas_log(L_INFO, "Loaded instruction set: %s", instruction_set->arch);
 	list_t *errors = create_list();
 	list_t *warnings = create_list();
 
@@ -137,6 +140,8 @@ int main(int argc, char **argv) {
 	if ((runtime.jobs & ASSEMBLE) == ASSEMBLE) {
 		int i;
 		for (i = 0; i < runtime.input_files->length; ++i) {
+			scas_log(L_INFO, "Assembling input file: '%s'", runtime.input_files->items[i]);
+			indent_log();
 			FILE *f;
 			if (strcasecmp(runtime.input_files->items[i], "-") == 0) {
 				f = stdin;
@@ -149,42 +154,16 @@ int main(int argc, char **argv) {
 			object_t *o = assemble(f, runtime.input_files->items[i], instruction_set, errors, warnings);
 			fclose(f);
 			list_add(objects, o);
-			/* Temporary test code */
-			int ai;
-			for (ai = 0; ai < o->areas->length; ++ai) {
-				area_t *area = o->areas->items[ai];
-				fprintf(stderr, "Area '%s':\nMachine code:\n", area->name);
-				int j;
-				for (j = 0; j < area->data_length; j += 16) {
-					fprintf(stderr, "\t");
-					int k;
-					for (k = 0; k < 16 && j + k < area->data_length; ++k) {
-						fprintf(stderr, "%02X ", area->data[j + k]);
-					}
-					fprintf(stderr, "\n");
-				}
-				if (area->late_immediates->length != 0) {
-					fprintf(stderr, "Unresolved immediate values:\n");
-					for (j = 0; j < area->late_immediates->length; ++j) {
-						late_immediate_t *imm = area->late_immediates->items[j];
-						fprintf(stderr, "\t0x%04X: '", (uint16_t)imm->address);
-						print_tokenized_expression(stderr, imm->expression);
-						fprintf(stderr, "' (width: %d)\n", (int)imm->width);
-					}
-				}
-				if (area->symbols->length != 0) {
-					fprintf(stderr, "Symbols:\n");
-					for (j = 0; j < area->symbols->length; ++j) {
-						symbol_t *sym = area->symbols->items[j];
-						printf("\t%s: 0x%04X\n", sym->name, (unsigned int)sym->value);
-					}
-				}
-			}
+			deindent_log();
+			scas_log(L_INFO, "Assembler returned %d errors, %d warnings for '%s'",
+					errors->length, warnings->length, runtime.input_files->items[i]);
 		}
 	} else {
 		/* TODO: Load object files from disk */
+		scas_abort("TODO: Load object files from disk");
 	}
 
+	scas_log(L_DEBUG, "Opening output file for writing: %s", runtime.output_file);
 	FILE *out;
 	if (strcasecmp(runtime.output_file, "-") == 0) {
 		out = stdout;
@@ -197,9 +176,11 @@ int main(int argc, char **argv) {
 
 	if ((runtime.jobs & LINK) == LINK) {
 		/* TODO: Linker scripts */
+		scas_log(L_INFO, "Passing objects to linker");
 		link_objects(out, objects, errors, warnings);
 	} else {
 		/* TODO: Link all provided assembly files together, or disallow mulitple input files when assembling */
+		scas_log(L_INFO, "Skipping linking - writing to object file");
 		object_t *o = objects->items[0];
 		fwriteobj(out, o, runtime.arch);
 		fclose(out);
@@ -222,6 +203,7 @@ int main(int argc, char **argv) {
 	/* TODO: Emit warnings */
 
 	int ret = errors->length;
+	scas_log(L_DEBUG, "Exiting with status code %d, cleaning up", ret);
 	list_free(runtime.input_files);
 	list_free(objects);
 	list_free(errors);

@@ -4,6 +4,7 @@
 #include "list.h"
 #include "expression.h"
 #include "instructions.h"
+#include "log.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <strings.h>
@@ -55,6 +56,8 @@ symbol_t *find_symbol(list_t *symbols, char *name) {
 /* TODO: Error handling in this code sucks */
 
 void gather_and_relocate_symbols(list_t *symbols, area_t *area, list_t *errors) {
+	scas_log(L_DEBUG, "Relocating symbols for area '%s' (at 0x%08X)", area->name, area->final_address);
+	indent_log();
 	int i;
 	for (i = 0; i < area->symbols->length; ++i) {
 		symbol_t *sym = area->symbols->items[i];
@@ -65,18 +68,20 @@ void gather_and_relocate_symbols(list_t *symbols, area_t *area, list_t *errors) 
 		}
 		if (sym->type == SYMBOL_LABEL) {
 			sym->value += area->final_address;
+			scas_log(L_DEBUG, "Assigned symbol '%s' value 0x%08X", sym->name, sym->value);
 			list_add(symbols, sym);
 		}
 	}
+	deindent_log();
 }
 
 void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
+	scas_log(L_DEBUG, "Resolving immediate values for area '%s'", area->name);
+	indent_log();
 	int i;
 	for (i = 0; i < area->late_immediates->length; ++i) {
 		late_immediate_t *imm = area->late_immediates->items[i];
-		fprintf(stderr, "Resolving immediate: ");
-		print_tokenized_expression(stderr, imm->expression);
-		fprintf(stderr, "\n");
+		scas_log(L_DEBUG, "Resolving immediate value @0x%08X", imm->address);
 		int error;
 		uint64_t result = evaluate_expression(imm->expression, symbols, &error);
 		if (error == EXPRESSION_BAD_SYMBOL) {
@@ -86,10 +91,10 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 			add_error(errors, ERROR_INVALID_SYNTAX, 0, NULL, 0, NULL);
 			continue;
 		} else {
-			fprintf(stderr, "Result: %04X\n", result);
 			if (imm->type == IMM_TYPE_RELATIVE) {
 				result += imm->base_address;
 			}
+			scas_log(L_DEBUG, "Immediate value result: 0x%08X (width %d, base address 0x%08X)", result, imm->width, imm->base_address);
 			uint64_t mask = 1;
 			int shift = imm->width;
 			while (--shift) {
@@ -108,6 +113,7 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 			}
 		}
 	}
+	deindent_log();
 }
 
 void link_objects(FILE *output, list_t *objects, list_t *errors, list_t *warnings) {
@@ -116,7 +122,8 @@ void link_objects(FILE *output, list_t *objects, list_t *errors, list_t *warning
 	int i;
 	/* TODO: Automatic relocation should take place first */
 	/* Determine how big each area is and create a state for them */
-	fprintf(stderr, "Creating area states\n");
+	scas_log(L_INFO, "Linking %d objects together", objects->length);
+	scas_log(L_DEBUG, "Assigning addresses for each area");
 	for (i = 0; i < objects->length; ++i) {
 		object_t *o = objects->items[i];
 		int j;
@@ -130,11 +137,13 @@ void link_objects(FILE *output, list_t *objects, list_t *errors, list_t *warning
 			a->final_address = as->length;
 			as->length += a->data_length;
 			list_add(as->areas, a);
-			fprintf(stderr, "Assigning %s address %04X\n", a->name, a->final_address);
+			scas_log(L_DEBUG, "Assigned address 0x%08X to area '%s' from object %d",
+					(unsigned long)a->final_address, a->name, i);
 		}
 	}
 	/* Find a final address for all areas and relocate their symbols */
-	fprintf(stderr, "Finding final addresses\n");
+	scas_log(L_DEBUG, "Assigning final address to each area in final executable");
+	indent_log();
 	uint64_t offset_addr = 0;
 	for (i = 0; i < area_states->length; ++i) {
 		area_state_t *as = area_states->items[i];
@@ -144,11 +153,14 @@ void link_objects(FILE *output, list_t *objects, list_t *errors, list_t *warning
 		for (j = 0; j < as->areas->length; ++j) {
 			area_t *a = as->areas->items[j];
 			a->final_address += as->address;
-			fprintf(stderr, "Relocating symbols for %s\n", a->name);
+			scas_log(L_DEBUG, "Assigned final address 0x%08X for area '%s:%d'", a->final_address, a->name, j);
 			gather_and_relocate_symbols(symbols, a, errors);
 		}
 	}
+	deindent_log();
 	/* Resolve all late immediate values */
+	scas_log(L_DEBUG, "Resolving immediate values in each area");
+	indent_log();
 	for (i = 0; i < area_states->length; ++i) {
 		area_state_t *as = area_states->items[i];
 		int j;
@@ -157,6 +169,8 @@ void link_objects(FILE *output, list_t *objects, list_t *errors, list_t *warning
 			resolve_immediate_values(symbols, a, errors);
 		}
 	}
+	deindent_log();
+	scas_log(L_DEBUG, "Writing final linked output file");
 	/* Write final output file */
 	for (i = 0; i < area_states->length; ++i) {
 		area_state_t *as = area_states->items[i];
