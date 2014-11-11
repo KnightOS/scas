@@ -60,6 +60,7 @@ void object_free(object_t *object);
 area_t *create_area(const char *name);
 void append_to_area(area_t *area, uint8_t *data, size_t length);
 void fwriteobj(FILE *file, object_t *object, char *arch);
+object_t *freadobj(FILE *file, const char *name);
 void add_source_map(source_map_t *map, int line_number, const char *line, uint64_t address, uint64_t length);
 source_map_t *create_source_map(area_t *area, const char *file_name);
 

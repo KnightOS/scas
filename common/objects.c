@@ -1,5 +1,6 @@
 #include "objects.h"
 #include "log.h"
+#include "readline.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -55,6 +56,9 @@ void write_area(FILE *f, area_t *a) {
 		fwrite(&sym->value, sizeof(uint64_t), 1, f);
 		fwrite(&sym->defined_address, sizeof(uint64_t), 1, f);
 	}
+	/* Imports (TODO) */
+	len = 0;
+	fwrite(&len, sizeof(uint32_t), 1, f);
 	/* Expressions */
 	len = a->late_immediates->length;
 	fwrite(&len, sizeof(uint32_t), 1, f);
@@ -70,7 +74,7 @@ void write_area(FILE *f, area_t *a) {
 	len = a->data_length;
 	fwrite(&len, sizeof(uint64_t), 1, f);
 	fwrite(a->data, sizeof(uint8_t), a->data_length, f);
-	/* Source map TODO */
+	/* Source map */
 	len = a->source_map->length;
 	fwrite(&len, sizeof(uint64_t), 1, f);
 	for (i = 0; i < a->source_map->length; ++i) {
@@ -104,6 +108,35 @@ void fwriteobj(FILE *f, object_t *o, char *arch) {
 		write_area(f, a);
 	}
 	fflush(f);
+}
+
+area_t *read_area(FILE *f) {
+	char *name = read_line(f);
+	area_t *area = create_area(name);
+	uint32_t symbols, imports, immediates;
+	fread(&symbols, sizeof(uint32_t), 1, f);
+	// TODO: Read more stuff
+	return area;
+}
+
+object_t *freadobj(FILE *f, const char *name) {
+	object_t  *o = create_object();
+	char magic[7];
+	int len = fread(magic, sizeof(char), 7, f);
+	if (len != 7 || strncmp("SCASOBJ", magic, 7) != 0) {
+		scas_abort("'%s' is not a valid object file.", name);
+	}
+	int ver = fgetc(f);
+	if (ver != 1) {
+		scas_abort("'%s' was built with an incompatible version of scas.", name);
+	}
+	uint32_t area_count;
+	fread(&area_count, sizeof(uint32_t), 1, f);
+	int i;
+	for (i = 0; i < area_count; ++i) {
+		list_add(o->areas, read_area(f));
+	}
+	return o;
 }
 
 source_map_t *create_source_map(area_t *area, const char *file_name) {

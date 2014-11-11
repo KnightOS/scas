@@ -64,8 +64,8 @@ areas in this object file. Each area takes the following form:
 
 ## Symbols
 
-What follows is a list of symbols. These are only symbols that need a linker to
-resolve.
+What follows is a list of symbols. These include both exported symbols and
+symbols that need to be assigned a final address.
 
 +==============+============+
 | Symbol count | Symbols... |

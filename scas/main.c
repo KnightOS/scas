@@ -159,8 +159,22 @@ int main(int argc, char **argv) {
 					errors->length, warnings->length, runtime.input_files->items[i]);
 		}
 	} else {
-		/* TODO: Load object files from disk */
-		scas_abort("TODO: Load object files from disk");
+		int i;
+		for (i = 0; i < runtime.input_files->length; ++i) {
+			FILE *f;
+			if (strcasecmp(runtime.input_files->items[i], "-") == 0) {
+				f = stdin;
+			} else {
+				f = fopen(runtime.input_files->items[i], "r");
+			}
+			if (!f) {
+				scas_abort("Unable to open '%s' for linking.", runtime.input_files->items[i]);
+			}
+			scas_log(L_DEBUG, "Loading object from file '%s'", runtime.input_files->items[i]);
+			list_add(objects, freadobj(f, runtime.input_files->items[i]));
+			/* TODO: Check for incompatible architectures */
+			fclose(f);
+		}
 	}
 
 	scas_log(L_DEBUG, "Opening output file for writing: %s", runtime.output_file);
