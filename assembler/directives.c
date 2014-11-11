@@ -161,7 +161,6 @@ int handle_block(struct assembler_state *state, char **argv, int argc) {
 	} else {
 		uint8_t *buffer = calloc(256, sizeof(uint8_t));
 		MAP_SOURCE(result);
-		scas_log(L_DEBUG, "Inserting %d bytes from block directive", result);
 		while (result) {
 			append_to_area(state->current_area, buffer, result > 256 ? 256 : result);
 			if (result > 256) {
@@ -198,7 +197,6 @@ int handle_bndry(struct assembler_state *state, char **argv, int argc) {
 			uint8_t *buf = calloc(1024, sizeof(uint8_t));
 			int len = state->PC % result;
 			MAP_SOURCE(len);
-			scas_log(L_DEBUG, "Inserting %d bytes from bndry directive", len);
 			while (len) {
 				append_to_area(state->current_area, buf, len > 256 ? 256 : len);
 				if (len > 256) {
@@ -270,7 +268,6 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 	add_source_map((source_map_t *)stack_peek(state->source_map_stack),
 		*(int*)stack_peek(state->line_number_stack), state->line,
 		state->current_area->data_length, olen);
-	scas_log(L_DEBUG, "Added %d bytes from db directive", olen);
 	return 1;
 }
 
@@ -320,7 +317,6 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 	add_source_map((source_map_t *)stack_peek(state->source_map_stack),
 		*(int*)stack_peek(state->line_number_stack), state->line,
 		state->current_area->data_length, olen);
-	scas_log(L_DEBUG, "Added %d bytes from dw directive", olen);
 	return 1;
 }
 

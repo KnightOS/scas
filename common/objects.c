@@ -36,6 +36,7 @@ void append_to_area(area_t *area, uint8_t *data, size_t length) {
 	}
 	memcpy(area->data + area->data_length, data, length);
 	area->data_length += length;
+	scas_log(L_DEBUG, "Added %d bytes to area '%s' (now %d bytes total)", length, area->name, area->data_length);
 }
 
 void write_area(FILE *f, area_t *a) {
