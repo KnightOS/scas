@@ -4,6 +4,7 @@
 #include "stringop.h"
 #include "objects.h"
 #include "list.h"
+#include "log.h"
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
@@ -63,6 +64,8 @@ int handle_area(struct assembler_state *state, char **argv, int argc) {
 		list_add(state->object->areas, area);
 	}
 	state->current_area = area;
+	scas_log(L_INFO, "Switched to area '%s' from directive at %s:%d", area->name,
+			(char *)stack_peek(state->file_name_stack), *(int *)stack_peek(state->line_number_stack));
 	return 1;
 }
 
@@ -158,6 +161,7 @@ int handle_block(struct assembler_state *state, char **argv, int argc) {
 	} else {
 		uint8_t *buffer = calloc(256, sizeof(uint8_t));
 		MAP_SOURCE(result);
+		scas_log(L_DEBUG, "Inserting %d bytes from block directive", result);
 		while (result) {
 			append_to_area(state->current_area, buffer, result > 256 ? 256 : result);
 			if (result > 256) {
@@ -194,6 +198,7 @@ int handle_bndry(struct assembler_state *state, char **argv, int argc) {
 			uint8_t *buf = calloc(1024, sizeof(uint8_t));
 			int len = state->PC % result;
 			MAP_SOURCE(len);
+			scas_log(L_DEBUG, "Inserting %d bytes from bndry directive", len);
 			while (len) {
 				append_to_area(state->current_area, buf, len > 256 ? 256 : len);
 				if (len > 256) {
@@ -239,6 +244,7 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 
 			if (error == EXPRESSION_BAD_SYMBOL) {
 				/* TODO: Throw error if using explicit import */
+				scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", argv[i]);
 				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
 				late_imm->address = state->current_area->data_length;
 				late_imm->base_address = state->current_area->data_length;
@@ -264,6 +270,7 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 	add_source_map((source_map_t *)stack_peek(state->source_map_stack),
 		*(int*)stack_peek(state->line_number_stack), state->line,
 		state->current_area->data_length, olen);
+	scas_log(L_DEBUG, "Added %d bytes from db directive", olen);
 	return 1;
 }
 
@@ -287,6 +294,7 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 
 		if (error == EXPRESSION_BAD_SYMBOL) {
 			/* TODO: Throw error if using explicit import */
+			scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", argv[i]);
 			late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
 			late_imm->address = state->current_area->data_length;
 			late_imm->base_address = state->current_area->data_length;
@@ -312,6 +320,7 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 	add_source_map((source_map_t *)stack_peek(state->source_map_stack),
 		*(int*)stack_peek(state->line_number_stack), state->line,
 		state->current_area->data_length, olen);
+	scas_log(L_DEBUG, "Added %d bytes from dw directive", olen);
 	return 1;
 }
 
@@ -329,6 +338,7 @@ int handle_echo(struct assembler_state *state, char **argv, int argc) {
 	len -= 2;
 	/* TODO: Handle format string properly */
 	puts(argv[0] + 1);
+	puts("\n");
 	return 1;
 }
 
@@ -361,6 +371,7 @@ int handle_elseif(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	} else {
 		*(int *)stack_peek(state->if_stack) = result;
+		scas_log(L_DEBUG, "Set if state to %d from elseif directive", result);
 	}
 	return 1;
 }
@@ -376,6 +387,7 @@ int handle_else(struct assembler_state *state, char **argv, int argc) {
 	}
 	int *top = stack_peek(state->if_stack);
 	*top = !*top;
+	scas_log(L_DEBUG, "Inverted if state (now %d) from else directive", *top);
 	return 1;
 }
 
@@ -402,6 +414,7 @@ int handle_endif(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	stack_pop(state->if_stack);
+	scas_log(L_DEBUG, "Encountered .endif directive");
 	return 1;
 }
 
@@ -436,6 +449,7 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 		sym->value = result;
 		sym->exported = 0;
 		list_add(state->equates, sym);
+		scas_log(L_DEBUG, "Added equate '%s' with value 0x%08X", sym->name, sym->value);
 	}
 	return 1;
 }
@@ -450,6 +464,7 @@ int handle_even(struct assembler_state *state, char **argv, int argc) {
 		MAP_SOURCE(1);
 		append_to_area(state->current_area, &pad, sizeof(uint8_t));
 		++state->PC;
+		scas_log(L_DEBUG, "Added byte to pad for .even directive");
 	}
 	return 1;
 }
@@ -485,6 +500,7 @@ int handle_if(struct assembler_state *state, char **argv, int argc) {
 		int *r = malloc(sizeof(int));
 		*r = result;
 		stack_push(state->if_stack, r);
+		scas_log(L_DEBUG, "IF directive evaluated to %d", result);
 	}
 	return 1;
 }
@@ -517,6 +533,7 @@ int handle_ifdef(struct assembler_state *state, char **argv, int argc) {
 	}
 	/* TODO: Also search macros */
 	stack_push(state->if_stack, r);
+	scas_log(L_DEBUG, "IFDEF directive evaluated to %d", *r);
 	return 1;
 }
 
@@ -552,6 +569,7 @@ int handle_ifndef(struct assembler_state *state, char **argv, int argc) {
 	/* TODO: Also search macros */
 	*r = !*r;
 	stack_push(state->if_stack, r);
+	scas_log(L_DEBUG, "IFNDEF directive evaluated to %d", *r);
 	return 1;
 }
 
@@ -576,6 +594,7 @@ int handle_incbin(struct assembler_state *state, char **argv, int argc) {
 		ERROR(ERROR_BAD_FILE, state->column);
 		return 1;
 	}
+	scas_log(L_INFO, "Including binary file '%s' from '%s'", name, (char *)stack_peek(state->file_name_stack));
 	uint8_t *buf = malloc(1024);
 	uint64_t olen;
 	int l;
@@ -613,6 +632,7 @@ int handle_include(struct assembler_state *state, char **argv, int argc) {
 		ERROR(ERROR_BAD_FILE, state->column);
 		return 1;
 	}
+	scas_log(L_INFO, "Including file '%s' from '%s'", name, (char *)stack_peek(state->file_name_stack));
 	stack_push(state->file_stack, file);
 	stack_push(state->file_name_stack, name);
 	int *ln = malloc(sizeof(int)); *ln = 0;
@@ -627,6 +647,7 @@ int handle_list(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	state->nolist = 0;
+	scas_log(L_DEBUG, "Resumed listing");
 	return 1;
 }
 
@@ -636,6 +657,7 @@ int handle_nolist(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	state->nolist = 1;
+	scas_log(L_DEBUG, "Paused listing");
 	return 1;
 }
 
@@ -649,6 +671,7 @@ int handle_odd(struct assembler_state *state, char **argv, int argc) {
 		MAP_SOURCE(1);
 		append_to_area(state->current_area, &pad, sizeof(uint8_t));
 		++state->PC;
+		scas_log(L_DEBUG, "Added byte to pad for .odd directive");
 	}
 	return 1;
 }
@@ -675,6 +698,7 @@ int handle_org(struct assembler_state *state, char **argv, int argc) {
 		ERROR(ERROR_INVALID_SYNTAX, state->column);
 	} else {
 		state->PC = result;
+		scas_log(L_DEBUG, "Set origin to 0x%08X from org directive", state->PC);
 	}
 	return 1;
 }
@@ -828,6 +852,8 @@ int try_handle_directive(struct assembler_state *state, char **line) {
 			ERROR(ERROR_INVALID_DIRECTIVE, state->column);
 			return 1;
 		}
+		scas_log(L_DEBUG, "Matched directive '%s' at %s:%d", d->match,
+				(char *)stack_peek(state->file_name_stack), *(int *)stack_peek(state->line_number_stack));
 		int argc;
 		char **argv = split_directive(*line + strlen(d->match) + 1, &argc, d->allow_space_delimiter);
 		int ret = d->function(state, argv, argc);

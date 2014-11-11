@@ -5,6 +5,7 @@
 #include <strings.h>
 #include <ctype.h>
 #include "list.h"
+#include "log.h"
 #include "objects.h"
 #include "readline.h"
 #include "stringop.h"
@@ -50,6 +51,8 @@ int try_add_label(struct assembler_state *state, char **line) {
 	sym->defined_address = state->current_area->data_length;
 	sym->exported = 1; /* TODO: Support explicit export */
 	list_add(state->current_area->symbols, sym);
+	scas_log(L_DEBUG, "Added label '%s' (pre-linking value 0x%08X) from %s:%d", sym->name, sym->value,
+			(char *)stack_peek(state->file_name_stack), *(int *)stack_peek(state->line_number_stack));
 	/* Modify this line so that processing may continue */
 	memmove(*line, *line + i + 1, strlen(*line + i));
 	int _;
@@ -64,10 +67,13 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 		ERROR(ERROR_INVALID_INSTRUCTION, state->column);
 		return 0;
 	} else {
+		scas_log(L_DEBUG, "Matched string '%s' to instruction '%s'", line, match->instruction->match);
+		indent_log();
 		uint64_t instruction = match->instruction->value;
 		int i;
 		for (i = 0; i < match->operands->length; ++i) {
 			operand_ref_t *ref = match->operands->items[i];
+			scas_log(L_DEBUG, "Using operand '%s'", ref->op->match);
 			instruction |= ref->op->value << (match->instruction->width - ref->shift - ref->op->width);
 		}
 		for (i = 0; i < match->immediate_values->length; ++i) {
@@ -84,6 +90,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 			}
 			if (error == EXPRESSION_BAD_SYMBOL) {
 				/* TODO: Throw error if using explicit import */
+				scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", ref->value_provided);
 				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
 				late_imm->base_address = state->current_area->data_length;
 				late_imm->address = state->current_area->data_length + (imm->shift / 8);
@@ -97,6 +104,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 				if (imm->type == IMM_TYPE_RELATIVE) {
 					result += state->PC;
 				}
+				scas_log(L_DEBUG, "Resolved '%s' early with result 0x%08X", ref->value_provided, result);
 				/* TODO: Handle IMM_TYPE_RESTART */
 				uint64_t mask = 1;
 				int shift = imm->width;
@@ -126,6 +134,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 		MAP_SOURCE(bytes_width);
 		append_to_area(state->current_area, state->instruction_buffer, bytes_width);
 		state->PC += bytes_width;
+		deindent_log();
 	}
 	return 1;
 }
@@ -228,11 +237,11 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		} else {
 			free(stack_pop(state.file_name_stack));
 			free(stack_pop(state.line_number_stack));
-			stack_pop(state.source_map_stack);
 			if (cur != file) {
 				fclose(cur);
 				stack_pop(state.file_stack);
 				stack_pop(state.source_map_stack);
+				scas_log(L_INFO, "Returning to file '%s'", (char *)stack_peek(state.file_name_stack));
 			} else {
 				break;
 			}

@@ -37,7 +37,7 @@ void init_runtime() {
 	runtime.symbol_file = NULL;
 	runtime.include_path = getenv("SCAS_PATH");
 	runtime.linker_script = NULL;
-	runtime.verbosity = L_WARNING;
+	runtime.verbosity = L_SILENT;
 }
 
 void validate_runtime() {

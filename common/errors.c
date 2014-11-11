@@ -1,5 +1,6 @@
 #include "errors.h"
 #include "list.h"
+#include "log.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -42,4 +43,5 @@ void add_error(list_t *errors, int code, size_t line_number, const char *line, i
 	strcpy(error->line, line);
 	error->column = column;
 	list_add(errors, error);
+	scas_log(L_ERROR, "Added error '%s' at %s:%d:%d", get_error_string(error), file_name, line_number, column);
 }

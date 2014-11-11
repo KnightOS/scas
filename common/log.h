@@ -2,10 +2,10 @@
 #define LOG_H
 
 typedef enum {
-    L_ERROR = 0,
-    L_WARNING,
-    L_INFO,
-    L_DEBUG,
+    L_SILENT = 0,
+    L_ERROR = 1,
+    L_INFO = 2,
+    L_DEBUG = 3,
 } log_importance_t;
 
 void init_log(int verbosity);

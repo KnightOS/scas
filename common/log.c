@@ -7,8 +7,8 @@ int v = 0;
 int indent = 0;
 
 const char *verbosity_colors[] = {
+	"", // L_SILENT
 	"\x1B[1;31m", // L_ERROR
-	"\x1B[1;33m", // L_WARNING
 	"\x1B[1;34m", // L_INFO
 	"\x1B[1;30m", // L_DEBUG
 };
