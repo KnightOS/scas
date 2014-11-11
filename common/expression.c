@@ -152,6 +152,7 @@ expression_token_t *parse_digit(const char **string) {
 			break;
 		case 0:
 			// It's probably a single digit number
+			--*string;
 			break;
 		default:
 			return 0;
