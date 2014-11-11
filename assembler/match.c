@@ -3,6 +3,7 @@
 #include <string.h>
 #include "stringop.h"
 #include "match.h"
+#include "log.h"
 #include "instructions.h"
 
 /* 
@@ -88,6 +89,7 @@ instruction_match_t *try_match(instruction_set_t *set, instruction_t *inst, cons
 			ref->key = key;
 			ref->value_provided = value;
 			list_add(result->immediate_values, ref);
+			i--;
 		} else if (inst->match[i] == '@') /* Operand */ {
 			char key = inst->match[++i]; i += 2;
 			char *start = inst->match + i;
@@ -122,6 +124,7 @@ instruction_match_t *try_match(instruction_set_t *set, instruction_t *inst, cons
 			list_add(result->operands, ref);
 			j += strlen(value) - 1;
 			free(value);
+			i--;
 		} else {
 			if (toupper(inst->match[i]) != toupper(str[j])) {
 				match = 0;
@@ -129,7 +132,7 @@ instruction_match_t *try_match(instruction_set_t *set, instruction_t *inst, cons
 			}
 		}
 	}
-	if (str[j] || !match) {
+	if (str[j] || inst->match[i] || !match) {
 		/* Not a match, clean up */
 		free_flat_list(result->operands);
 		for (i = 0; i < result->immediate_values->length; ++i) {
