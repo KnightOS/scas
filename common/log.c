@@ -44,9 +44,11 @@ void scas_log(int verbosity, char* format, ...) {
 			c = sizeof(verbosity_colors) / sizeof(char *) - 1;
 		}
 		fprintf(stderr, verbosity_colors[c]);
-		int i;
-		for (i = 0; i < indent; ++i) {
-			fprintf(stderr, "..");
+		if (verbosity == L_DEBUG) {
+			int i;
+			for (i = 0; i < indent; ++i) {
+				fprintf(stderr, "..");
+			}
 		}
 		va_list args;
 		va_start(args, format);

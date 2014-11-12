@@ -135,6 +135,7 @@ void link_objects(FILE *output, list_t *objects, list_t *errors, list_t *warning
 			}
 			a->final_address = as->length;
 			as->length += a->data_length;
+			scas_log(L_DEBUG, "Added %d bytes to section %s, total %d bytes", a->data_length, as->name, as->length);
 			list_add(as->areas, a);
 			scas_log(L_DEBUG, "Assigned address 0x%08X to area '%s' from object %d",
 					(unsigned long)a->final_address, a->name, i);
@@ -149,6 +150,7 @@ void link_objects(FILE *output, list_t *objects, list_t *errors, list_t *warning
 		area_state_t *as = area_states->items[i];
 		as->address = offset_addr;
 		offset_addr += as->length;
+		scas_log(L_DEBUG, "Assigned area %s to address %08X (%d bytes)", as->name, as->address, as->length);
 		int j;
 		for (j = 0; j < as->areas->length; ++j) {
 			area_t *a = as->areas->items[j];

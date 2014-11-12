@@ -64,6 +64,7 @@ int handle_area(struct assembler_state *state, char **argv, int argc) {
 		list_add(state->object->areas, area);
 	}
 	state->current_area = area;
+	state->PC = area->data_length;
 	scas_log(L_INFO, "Switched to area '%s' from directive at %s:%d", area->name,
 			(char *)stack_peek(state->file_name_stack), *(int *)stack_peek(state->line_number_stack));
 	return 1;
@@ -852,7 +853,9 @@ int try_handle_directive(struct assembler_state *state, char **line) {
 				(char *)stack_peek(state->file_name_stack), *(int *)stack_peek(state->line_number_stack));
 		int argc;
 		char **argv = split_directive(*line + strlen(d->match) + 1, &argc, d->allow_space_delimiter);
+		indent_log();
 		int ret = d->function(state, argv, argc);
+		deindent_log();
 		while (argc--) {
 			free(argv[argc]);
 		}
