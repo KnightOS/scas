@@ -50,5 +50,6 @@ void initialize_expressions();
 void print_tokenized_expression(FILE *f, tokenized_expression_t *expression);
 uint64_t evaluate_expression(tokenized_expression_t *expression, list_t *symbols, int *error);
 void fwrite_tokens(FILE *f, tokenized_expression_t *expression);
+tokenized_expression_t *fread_tokenized_expression(FILE *f);
 
 #endif

@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "log.h"
+#include "readline.h"
 #include "stack.h"
 #include "stringop.h"
 #include "operators.h"
@@ -66,6 +67,7 @@ void fwrite_tokens(FILE *f, tokenized_expression_t *expression) {
 		switch (token->type) {
 			case SYMBOL:
 				fprintf(f, "%s", token->symbol);
+				fputc(0, f);
 				break;
 			case NUMBER:
 				fwrite(&token->number, sizeof(uint64_t), 1, f);
@@ -75,7 +77,31 @@ void fwrite_tokens(FILE *f, tokenized_expression_t *expression) {
 				break;
 		}
 	}
-	fputc(0, f);
+}
+
+tokenized_expression_t *fread_tokenized_expression(FILE *f) {
+	uint32_t len;
+	fread(&len, sizeof(uint32_t), 1, f);
+	tokenized_expression_t *expression = malloc(sizeof(tokenized_expression_t));
+	expression->tokens = create_list();
+	int i;
+	for (i = 0; i < len; ++i) {
+		expression_token_t *token = malloc(sizeof(expression_token_t));
+		token->type = fgetc(f);
+		switch (token->type) {
+			case SYMBOL:
+				token->symbol = read_line(f);
+				break;
+			case NUMBER:
+				fread(&token->number, sizeof(uint64_t), 1, f);
+				break;
+			case OPERATOR:
+				token->operator = fgetc(f);
+				break;
+		}
+		list_add(expression->tokens, token);
+	}
+	return expression;
 }
 
 uint64_t evaluate_expression(tokenized_expression_t *expression, list_t *symbols, int *error) {

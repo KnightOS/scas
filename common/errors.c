@@ -55,10 +55,13 @@ void add_error_from_map(list_t *errors, int code, list_t *maps, uint64_t address
 	int i;
 	for (i = 0; i < maps->length; ++i) {
 		map = maps->items[i];
+		scas_log(L_ERROR, "Searching in %s", map->file_name);
 		int j;
 		for (j = 0; j < map->entries->length; ++j) {
 			entry = map->entries->items[j];
+			scas_log(L_ERROR, "Checking (%08X)", (uint32_t)(entry->address >> 32));
 			if (address >= entry->address && address < entry->address + entry->length) {
+				scas_log(L_ERROR, "test");
 				found = 1;
 				break;
 			}

@@ -10,7 +10,7 @@ char *read_line(FILE *file) {
 	}
 	while (1) {
 		int c = getc(file);
-		if (c == EOF || c == '\n') {
+		if (c == EOF || c == '\n' || c == '\0') {
 			break;
 		}
 		if (i == size) {

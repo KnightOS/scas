@@ -138,7 +138,7 @@ void link_objects(FILE *output, list_t *objects, list_t *errors, list_t *warning
 			scas_log(L_DEBUG, "Added %d bytes to section %s, total %d bytes", a->data_length, as->name, as->length);
 			list_add(as->areas, a);
 			scas_log(L_DEBUG, "Assigned address 0x%08X to area '%s' from object %d",
-					(unsigned long)a->final_address, a->name, i);
+					a->final_address, a->name, i);
 		}
 	}
 	deindent_log();
@@ -179,8 +179,10 @@ void link_objects(FILE *output, list_t *objects, list_t *errors, list_t *warning
 		int j;
 		for (j = 0; j < as->areas->length; ++j) {
 			area_t *a = as->areas->items[j];
-			fwrite(a->data, sizeof(uint8_t), a->data_length, output);
+			scas_log(L_DEBUG, "Writing %d bytes for section %s", a->data_length, a->name);
+			fwrite(a->data, sizeof(uint8_t), (int)a->data_length, output);
 		}
 	}
+	scas_log(L_DEBUG, "Wrote %d bytes to output file.", ftell(output));
 	list_free(area_states);
 }

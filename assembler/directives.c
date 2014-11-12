@@ -67,6 +67,9 @@ int handle_area(struct assembler_state *state, char **argv, int argc) {
 	state->PC = area->data_length;
 	scas_log(L_INFO, "Switched to area '%s' from directive at %s:%d", area->name,
 			(char *)stack_peek(state->file_name_stack), *(int *)stack_peek(state->line_number_stack));
+	stack_pop(state->source_map_stack);
+	stack_push(state->source_map_stack, create_source_map(state->current_area,
+			(char *)stack_peek(state->file_name_stack)));
 	return 1;
 }
 

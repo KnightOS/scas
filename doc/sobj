@@ -30,18 +30,13 @@ specified. All multi-octet values are little-endian unless specified otherwise.
 
 ## Header
 
-+==========+---------+--------------+
-| SCASOBJ  | Version | Architecture |
-+==========+---------+--------------+
++==========+---------+
+| SCASOBJ  | Version |
++==========+---------+
 
 "SCASOBJ" is the literal ASCII string "SCASOBJ", without a length prefix. The
 version is an unsigned 8-bit integer that specifies what version of the SCASOBJ
-specification is in use. The current version is 1. The architecture is the the
-instruction set used to assemble this file, often set to "z80". The following
-architectures are supported:
-
-* 0x00: z80
-* 0x01: LR35902
+specification is in use. The current version is 1.
 
 ## Areas
 
@@ -137,9 +132,6 @@ do that. Each token takes this format:
 +------+============+
 
 The type is one of these values:
-
-* 0x00: Expression terminator
-   The last token in the list. The token data is omitted.
 
 * 0x01: Symbol
    This token is a string.

@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
 			if (!f) {
 				scas_abort("Unable to open '%s' for linking.", runtime.input_files->items[i]);
 			}
-			scas_log(L_DEBUG, "Loading object from file '%s'", runtime.input_files->items[i]);
+			scas_log(L_INFO, "Loading object from file '%s'", runtime.input_files->items[i]);
 			list_add(objects, freadobj(f, runtime.input_files->items[i]));
 			/* TODO: Check for incompatible architectures */
 			fclose(f);
@@ -197,7 +197,7 @@ int main(int argc, char **argv) {
 		/* TODO: Link all provided assembly files together, or disallow mulitple input files when assembling */
 		scas_log(L_INFO, "Skipping linking - writing to object file");
 		object_t *o = objects->items[0];
-		fwriteobj(out, o, runtime.arch);
+		fwriteobj(out, o);
 		fclose(out);
 	}
 	if (errors->length != 0) {
