@@ -92,9 +92,9 @@ assigned to.
 The length here is an unsigned 32-bit integer. Each expression takes the following
 format:
 
-+------+-------+==============+=========+============+
-| Type | Width | Base Address | Address | Expression |
-+------+-------+==============+=========+============+
++------+-------+=====================+==============+=========+============+
+| Type | Width | Instruction Address | Base Address | Address | Expression |
++------+-------+=====================+==============+=========+============+
 
 The type specifies the type of immediate value, and can be one of the following:
 
@@ -104,8 +104,9 @@ The type specifies the type of immediate value, and can be one of the following:
 Absolute values are calculated from the global address space, and relative
 values are calculated relative to the address of the instruction. The "base
 address" is the address to use as the reference for relative immediate values.
-The "address" is the address of the immediate value itself. Both are unsigned
-64-bit integers.
+The "address" is the address of the immediate value itself. The "instruction
+address" is the address of the instruction or directive that introduced this
+immediate value, which is used to resolve the value of "$".
 
 The "Expression" takes this format:
 

@@ -249,6 +249,7 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 				scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", argv[i]);
 				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
 				late_imm->address = state->current_area->data_length;
+				late_imm->instruction_address = state->current_area->data_length;
 				late_imm->base_address = state->current_area->data_length;
 				late_imm->width = 8;
 				late_imm->type = IMM_TYPE_ABSOLUTE;
@@ -298,6 +299,7 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 			scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", argv[i]);
 			late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
 			late_imm->address = state->current_area->data_length;
+			late_imm->instruction_address = state->current_area->data_length;
 			late_imm->base_address = state->current_area->data_length;
 			late_imm->width = 16;
 			late_imm->type = IMM_TYPE_ABSOLUTE;

@@ -23,6 +23,7 @@ typedef struct {
     tokenized_expression_t *expression;
     uint64_t width;
     uint64_t address;
+    uint64_t instruction_address;
     uint64_t base_address;
     int type;
 } late_immediate_t;

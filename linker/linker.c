@@ -80,8 +80,16 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 	for (i = 0; i < area->late_immediates->length; ++i) {
 		late_immediate_t *imm = area->late_immediates->items[i];
 		scas_log(L_DEBUG, "Resolving immediate value @0x%08X", imm->address);
+		/* Temporarily add $ to symbol list */
+		symbol_t sym_pc = {
+			.type = SYMBOL_LABEL,
+			.value = imm->instruction_address,
+			.name = "$"
+		};
+		list_add(symbols, &sym_pc);
 		int error;
 		uint64_t result = evaluate_expression(imm->expression, symbols, &error);
+		list_del(symbols, symbols->length - 1); // Remove $
 		if (error == EXPRESSION_BAD_SYMBOL) {
 			add_error_from_map(errors, ERROR_UNKNOWN_SYMBOL, area->source_map, imm->base_address);
 			continue;

@@ -78,6 +78,7 @@ void write_area(FILE *f, area_t *a) {
 		late_immediate_t *imm = a->late_immediates->items[i];
 		fputc(imm->type, f);
 		fputc(imm->width, f);
+		fwrite(&imm->instruction_address, sizeof(uint64_t), 1, f);
 		fwrite(&imm->base_address, sizeof(uint64_t), 1, f);
 		fwrite(&imm->address, sizeof(uint64_t), 1, f);
 		fwrite_tokens(f, imm->expression);
@@ -146,6 +147,7 @@ area_t *read_area(FILE *f) {
 		late_immediate_t *imm = malloc(sizeof(late_immediate_t));
 		imm->type = fgetc(f);
 		imm->width = fgetc(f);
+		fread(&imm->instruction_address, sizeof(uint64_t), 1, f);
 		fread(&imm->base_address, sizeof(uint64_t), 1, f);
 		fread(&imm->address, sizeof(uint64_t), 1, f);
 		imm->expression = fread_tokenized_expression(f);
