@@ -181,7 +181,6 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 					ERROR(ERROR_VALUE_TRUNCATED, state->column);
 				} else {
 					result = result & mask;
-					scas_log(L_ERROR, "%08X %08X %d %d", (uint32_t)instruction, (uint32_t)result, match->instruction->width, imm->shift);
 					int bits = imm->width;
 					while (bits > 0) {
 						bits -= 8;
