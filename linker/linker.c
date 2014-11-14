@@ -114,12 +114,15 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 	deindent_log();
 }
 
-void link_objects(FILE *output, list_t *objects, list_t *errors, list_t *warnings) {
+void auto_relocate_area(area_t *area) {
+	/* TODO */
+}
+
+void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	scas_log(L_INFO, "Linking %d objects together", objects->length);
 	list_t *area_states = create_list();
 	list_t *symbols = create_list();
 	int i;
-	/* TODO: Automatic relocation should take place first */
 	/* Determine how big each area is and create a state for them */
 	scas_log(L_DEBUG, "Assigning addresses for each area");
 	indent_log();
@@ -128,6 +131,9 @@ void link_objects(FILE *output, list_t *objects, list_t *errors, list_t *warning
 		int j;
 		for (j = 0; j < o->areas->length; ++j) {
 			area_t *a = o->areas->items[j];
+			if (settings->automatic_relocation) {
+				auto_relocate_area(a);
+			}
 			area_state_t *as = find_area_state(area_states, a->name);
 			if (as == NULL) {
 				as = create_area_state(a->name);
@@ -156,7 +162,7 @@ void link_objects(FILE *output, list_t *objects, list_t *errors, list_t *warning
 			area_t *a = as->areas->items[j];
 			a->final_address += as->address;
 			scas_log(L_DEBUG, "Assigned final address 0x%08X for area '%s:%d'", a->final_address, a->name, j);
-			gather_and_relocate_symbols(symbols, a, errors);
+			gather_and_relocate_symbols(symbols, a, settings->errors);
 		}
 	}
 	deindent_log();
@@ -168,7 +174,7 @@ void link_objects(FILE *output, list_t *objects, list_t *errors, list_t *warning
 		int j;
 		for (j = 0; j < as->areas->length; ++j) {
 			area_t *a = as->areas->items[j];
-			resolve_immediate_values(symbols, a, errors);
+			resolve_immediate_values(symbols, a, settings->errors);
 		}
 	}
 	deindent_log();

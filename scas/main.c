@@ -23,6 +23,7 @@ struct {
 	char *include_path;
 	char *linker_script;
 	int verbosity;
+	int automatic_relocation;
 } runtime;
 
 void init_runtime() {
@@ -42,6 +43,7 @@ void init_runtime() {
 	}
 	runtime.linker_script = NULL;
 	runtime.verbosity = L_SILENT;
+	runtime.automatic_relocation = 0;
 }
 
 void validate_runtime() {
@@ -96,6 +98,8 @@ void parse_arguments(int argc, char **argv) {
 				runtime.include_path = realloc(runtime.include_path, l + strlen(path) + 2);
 				strcat(runtime.include_path, ":");
 				strcat(runtime.include_path, path);
+			} else if (strcmp("-r", argv[i]) == 0 || strcmp("--relocatable", argv[i]) == 0) {
+				runtime.automatic_relocation = 1;
 			} else if (strcmp("-e", argv[i]) == 0 || strcmp("--export-explicit", argv[i]) == 0) {
 				runtime.explicit_export = 1;
 			} else if (strcmp("-n", argv[i]) == 0 || strcmp("--no-implicit-symbols", argv[i]) == 0) {
@@ -234,7 +238,12 @@ int main(int argc, char **argv) {
 	if ((runtime.jobs & LINK) == LINK) {
 		/* TODO: Linker scripts */
 		scas_log(L_INFO, "Passing objects to linker");
-		link_objects(out, objects, errors, warnings);
+		linker_settings_t settings = {
+			.automatic_relocation = runtime.automatic_relocation,
+			.errors = errors,
+			.warnings = warnings,
+		};
+		link_objects(out, objects, &settings);
 		scas_log(L_INFO, "Linker returned %d errors, %d warnings", errors->length, warnings->length);
 	} else {
 		/* TODO: Link all provided assembly files together, or disallow mulitple input files when assembling */
