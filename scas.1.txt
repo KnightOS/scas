@@ -73,10 +73,6 @@ Options
 	relocatable in accordance with the KnightOS kernel's relocation mechanism (see
 	_Relocation_ below).
 
-*--sdcc-compatible*::
-	Rather than using scas's own object format, instead use one compatible with
-	SDCC's sdld format. This implies *--relocatable*.
-
 *-s, --script* <script>::
 	Uses a linker script to perform linking. The default is to assemble files one
 	after the other in the order they are given on the command line. See _Linker
@@ -373,7 +369,8 @@ With:
 	call internal_call
 
 scas can automatically detect internal references during linking and modify them
-to fit the KnightOS format, if you desire.
+to fit the KnightOS format, if you desire. It's probably a good idea to do this
+stuff manually unless you have a good reason not to.
 
 Architectures
 -------------
