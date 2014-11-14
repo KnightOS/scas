@@ -79,6 +79,8 @@ void parse_arguments(int argc, char **argv) {
 				runtime.jobs = LINK;
 			} else if (strcmp("-O", argv[i]) == 0 || strcmp("--object", argv[i]) == 0) {
 				runtime.jobs = ASSEMBLE;
+			} else if (argv[i][1] == 'I' || strcmp("--include", argv[i]) == 0) {
+				/* TODO */
 			} else if (strcmp("-e", argv[i]) == 0 || strcmp("--export-explicit", argv[i]) == 0) {
 				runtime.explicit_export = 1;
 			} else if (strcmp("-n", argv[i]) == 0 || strcmp("--no-implicit-symbols", argv[i]) == 0) {

@@ -23,6 +23,7 @@ struct assembler_state {
 	list_t *equates;
 	int nolist;
 	uint64_t PC;
+	char *last_global_label;
 };
 
 object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, list_t *errors, list_t *warnings);

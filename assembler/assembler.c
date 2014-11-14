@@ -25,6 +25,31 @@
 
 struct assembler_state state;
 
+void transform_local_labels(tokenized_expression_t *expression, const char *last_global_label) {
+	int i;
+	for (i = 0; i < expression->tokens->length; ++i) {
+		expression_token_t *token = expression->tokens->items[i];
+		if (token->type == SYMBOL) {
+			if (isdigit(token->symbol[0]) 
+					&& token->symbol[strlen(token->symbol) - 1] == '$') {
+				/* ASxxxx local label */
+				const char *fmtstring = "_ASxxxx_%s@%s";
+				char *temp = malloc((strlen(fmtstring) - 4) 
+						+ strlen(token->symbol)
+						+ strlen(last_global_label) 
+						+ 1);
+				sprintf(temp, fmtstring, token->symbol, last_global_label);
+				temp[(strlen(fmtstring) - 4) 
+						+ strlen(token->symbol)
+						+ strlen(last_global_label)] = '\0';
+				scas_log(L_DEBUG, "Transformed ASxxxx label from %s to %s", token->symbol, temp);
+				free(token->symbol);
+				token->symbol = temp;
+			}
+		}
+	}
+}
+
 int try_empty_line(struct assembler_state *state, char **line) {
 	return strlen(*line) == 0;
 }
@@ -32,7 +57,7 @@ int try_empty_line(struct assembler_state *state, char **line) {
 int try_add_label(struct assembler_state *state, char **line) {
 	int i;
 	for (i = 0; (*line)[i] && (*line)[i] != ':'; ++i) {
-		int isvalid = isalnum((*line)[i]) || (*line)[i] == '_' ||
+		int isvalid = isalnum((*line)[i]) || (*line)[i] == '_' || (*line)[i] == '$' ||
 			(i == 0 && (*line)[i] == '.');
 		if (!isvalid) {
 			return 0;
@@ -41,11 +66,41 @@ int try_add_label(struct assembler_state *state, char **line) {
 	if ((*line)[i] != ':') {
 		return 0;
 	}
+	/* Check for illegal label names */
+	if (strncmp("$", *line, i) == 0) {
+		// Don't allow "$" alone, it's a special case
+		scas_log(L_ERROR, "Illegal ($)");
+		return 0;
+	}
+	if (isdigit(**line) && (*line)[i - 1] != '$') {
+		// Don't allow symbols to start with a number unless they're ASxxxx local labels
+		return 0;
+	}
 	/* Add label */
 	symbol_t *sym = malloc(sizeof(symbol_t));
-	sym->name = malloc(i + 1);
-	strncpy(sym->name, *line, i);
-	sym->name[i] = '\0';
+	if (isdigit(**line) && (*line)[i - 1] == '$') {
+		/* ASxxxx local label, give it a better name */
+		char *temp = malloc(i + 1);
+		strncpy(temp, *line, i);
+		temp[i] = '\0';
+
+		const char *fmtstring = "_ASxxxx_%s@%s";
+		sym->name = malloc((strlen(fmtstring) - 4) 
+				+ i 
+				+ strlen(state->last_global_label) 
+				+ 1);
+		sprintf(sym->name, fmtstring, temp, state->last_global_label);
+		sym->name[(strlen(fmtstring) - 4) 
+				+ i 
+				+ strlen(state->last_global_label)] = '\0';
+		scas_log(L_DEBUG, "Adding ASxxxx local label %s", sym->name);
+		free(temp);
+	} else {
+		sym->name = malloc(i + 1);
+		strncpy(sym->name, *line, i);
+		sym->name[i] = '\0';
+		state->last_global_label = sym->name;
+	}
 	sym->type = SYMBOL_LABEL;
 	sym->value = state->PC;
 	sym->defined_address = state->current_area->data_length;
@@ -54,6 +109,10 @@ int try_add_label(struct assembler_state *state, char **line) {
 	scas_log(L_DEBUG, "Added label '%s' (pre-linking value 0x%08X) from %s:%d", sym->name, sym->value,
 			(char *)stack_peek(state->file_name_stack), *(int *)stack_peek(state->line_number_stack));
 	/* Modify this line so that processing may continue */
+	if ((*line)[i + 1] == ':') {
+		/* TODO: Export this, it's an ASxxxx global label */
+		++i;
+	}
 	memmove(*line, *line + i + 1, strlen(*line + i));
 	int _;
 	*line = strip_whitespace(*line, &_);
@@ -86,6 +145,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 			if (expression == NULL) {
 				error = EXPRESSION_BAD_SYNTAX;
 			} else {
+				transform_local_labels(expression, state->last_global_label);
 				result = evaluate_expression(expression, state->equates, &error);
 			}
 			if (error == EXPRESSION_BAD_SYMBOL) {
@@ -181,6 +241,7 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		.equates = create_list(),
 		.nolist = 0,
 		.PC = 0,
+		.last_global_label = "@start",
 	};
 	int *ln = malloc(sizeof(int)); *ln = 0;
 	char *name = malloc(strlen(file_name) + 1);

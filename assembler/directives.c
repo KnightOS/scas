@@ -725,7 +725,9 @@ struct directive directives[] = {
 	{ "equ", handle_equ, 1 },
 	{ "equate", handle_equ, 1 },
 	{ "even", handle_even, 1 },
+	{ "export", handle_nop, 1 }, /* TODO: Handle this properly with explicit export */
 	{ "gblequ", handle_equ, 1 }, /* TODO: Allow users to export equates? */
+	{ "globl", handle_nop, 1 }, /* TODO: Handle this properly with explicit export */
 	{ "if", handle_if, 0 },
 	{ "ifdef", handle_ifdef, 0 },
 	{ "ifndef", handle_ifndef, 0 },

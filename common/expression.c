@@ -186,6 +186,14 @@ expression_token_t *parse_digit(const char **string) {
 		}
 		*string += 2;
 	}
+	/* Check for ASxxxx-style local labels */
+	const char *a = *string;
+	while (*a) {
+		if (*a == '$') {
+			return NULL;
+		}
+		++a;
+	}
 
 	expression_token_t *expr = malloc(sizeof(expression_token_t));
 	expr->type = NUMBER;
@@ -250,7 +258,8 @@ tokenized_expression_t *parse_expression(const char *str) {
 
 	const char *current = str;
 	while (1) {
-		while (isspace(*(current))) {
+		while (*current == '#' || isspace(*(current))) {
+			/* Note: # is used for immediate data in ASxxxx, it's somewhat superfluous */
 			current++;
 		}
 		expression_token_t *expr;
@@ -262,6 +271,10 @@ tokenized_expression_t *parse_expression(const char *str) {
 			}
 
 			expr = parse_digit(&current);
+			if (expr == NULL) {
+				expr = parse_symbol(&current);
+				list_add(list->symbols, expr->symbol);
+			}
 			tokenizer_state = STATE_VALUE;
 		} else if (*current == '(') {
 			if (tokenizer_state == STATE_VALUE) {
