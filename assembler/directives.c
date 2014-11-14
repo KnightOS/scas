@@ -303,7 +303,8 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 			late_imm->type = IMM_TYPE_ABSOLUTE;
 			late_imm->expression = expression;
 			list_add(state->current_area->late_immediates, late_imm);
-			*state->instruction_buffer = 0;
+			state->instruction_buffer[0] = 0;
+			state->instruction_buffer[1] = 0;
 		} else if (error == EXPRESSION_BAD_SYNTAX) {
 			ERROR(ERROR_INVALID_SYNTAX, state->column);
 		} else {
