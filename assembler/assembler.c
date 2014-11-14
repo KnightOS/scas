@@ -163,9 +163,14 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 			} else {
 				if (imm->type == IMM_TYPE_RELATIVE) {
 					result += state->PC;
+				} else if (imm->type == IMM_TYPE_RESTART) {
+					if ((result & ~0x07) != result || result > 0x38) {
+						/* We get an ERROR_VALUE_TRUNCATED if we just let it proceed */
+					} else {
+						result >>= 3;
+					}
 				}
 				scas_log(L_DEBUG, "Resolved '%s' early with result 0x%08X", ref->value_provided, result);
-				/* TODO: Handle IMM_TYPE_RESTART */
 				uint64_t mask = 1;
 				int shift = imm->width;
 				while (--shift) {
@@ -176,9 +181,13 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 					ERROR(ERROR_VALUE_TRUNCATED, state->column);
 				} else {
 					result = result & mask;
+					scas_log(L_ERROR, "%08X %08X %d %d", (uint32_t)instruction, (uint32_t)result, match->instruction->width, imm->shift);
 					int bits = imm->width;
-					while (bits) {
+					while (bits > 0) {
 						bits -= 8;
+						if (bits < 0) {
+							bits = 0;
+						}
 						instruction |= (result & 0xFF) << (match->instruction->width - imm->shift - imm->width) << bits;
 						result >>= 8;
 					}

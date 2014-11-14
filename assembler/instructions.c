@@ -201,7 +201,7 @@ void parse_instruction_line(const char *line, instruction_set_t *set) {
 			op->shift = shift;
 			shift += op->width;
 			inst->width += op->width;
-		} else if (value[i] == '%') /* Immediate value */ {
+		} else if (value[i] == '%' || value[i] == '^' || value[i] == '&') /* Immediate value */ {
 			char key = value[++i];
 			immediate_t *imm = find_instruction_immediate(inst, key);
 			if (imm == NULL) {
