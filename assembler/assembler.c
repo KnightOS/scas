@@ -250,6 +250,7 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 		.nolist = 0,
 		.PC = 0,
 		.last_global_label = "@start",
+		.settings = settings,
 	};
 	int *ln = malloc(sizeof(int)); *ln = 0;
 	char *name = malloc(strlen(file_name) + 1);

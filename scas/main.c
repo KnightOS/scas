@@ -36,6 +36,10 @@ void init_runtime() {
 	runtime.listing_file = NULL;
 	runtime.symbol_file = NULL;
 	runtime.include_path = getenv("SCAS_PATH");
+	if (!runtime.include_path) {
+		runtime.include_path = malloc(3);
+		strcpy(runtime.include_path, "./");
+	}
 	runtime.linker_script = NULL;
 	runtime.verbosity = L_SILENT;
 }
@@ -80,7 +84,18 @@ void parse_arguments(int argc, char **argv) {
 			} else if (strcmp("-O", argv[i]) == 0 || strcmp("--object", argv[i]) == 0) {
 				runtime.jobs = ASSEMBLE;
 			} else if (argv[i][1] == 'I' || strcmp("--include", argv[i]) == 0) {
-				/* TODO */
+				char *path;
+				if (argv[i][1] == 'I' && argv[i][2] != 0) {
+					// -I/path/goes/here
+					path = argv[i] + 2;
+				} else {
+					// [-I | --include] path/goes/here
+					path = argv[++i];
+				}
+				int l = strlen(runtime.include_path);
+				runtime.include_path = realloc(runtime.include_path, l + strlen(path) + 2);
+				strcat(runtime.include_path, ":");
+				strcat(runtime.include_path, path);
 			} else if (strcmp("-e", argv[i]) == 0 || strcmp("--export-explicit", argv[i]) == 0) {
 				runtime.explicit_export = 1;
 			} else if (strcmp("-n", argv[i]) == 0 || strcmp("--no-implicit-symbols", argv[i]) == 0) {
@@ -128,6 +143,25 @@ instruction_set_t *find_inst() {
 	return set;
 }
 
+list_t *split_include_path() {
+	list_t *list = create_list();
+	int i, j;
+	for (i = 0, j = 0; runtime.include_path[i]; ++i) {
+		if (runtime.include_path[i] == ':' || runtime.include_path[i] == ';') {
+			char *s = malloc(i - j + 1);
+			strncpy(s, runtime.include_path + j, i - j);
+			s[i - j] = '\0';
+			j = i + 1;
+			list_add(list, s);
+		}
+	}
+	char *s = malloc(i - j + 1);
+	strncpy(s, runtime.include_path + j, i - j);
+	s[i - j] = '\0';
+	list_add(list, s);
+	return list;
+}
+
 int main(int argc, char **argv) {
 	init_runtime();
 	parse_arguments(argc, argv);
@@ -135,6 +169,7 @@ int main(int argc, char **argv) {
 	validate_runtime();
 	instruction_set_t *instruction_set = find_inst();
 	scas_log(L_INFO, "Loaded instruction set: %s", instruction_set->arch);
+	list_t *include_path = split_include_path();
 	list_t *errors = create_list();
 	list_t *warnings = create_list();
 
@@ -154,7 +189,7 @@ int main(int argc, char **argv) {
 				scas_abort("Unable to open '%s' for assembly.", runtime.input_files->items[i]);
 			}
 			assembler_settings_t settings = {
-				.include_path = create_list(), // TODO
+				.include_path = include_path,
 				.set = instruction_set,
 				.errors = errors,
 				.warnings = warnings,
@@ -249,6 +284,7 @@ int main(int argc, char **argv) {
 	int ret = errors->length;
 	scas_log(L_DEBUG, "Exiting with status code %d, cleaning up", ret);
 	list_free(runtime.input_files);
+	list_free(include_path);
 	list_free(objects);
 	list_free(errors);
 	list_free(warnings);

@@ -616,7 +616,6 @@ int handle_include(struct assembler_state *state, char **argv, int argc) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
 		return 1;
 	}
-	/* TODO: Pass runtime settings down to assembler from main */
 	int len = strlen(argv[0]);
 	if ((argv[0][0] != '"' || argv[0][len - 1] != '"') && (argv[0][0] != '<' || argv[0][len - 1] != '>')) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
@@ -627,7 +626,26 @@ int handle_include(struct assembler_state *state, char **argv, int argc) {
 	len = unescape_string(argv[0] + 1);
 	char *name = malloc(strlen(argv[0] + 1));
 	strcpy(name, argv[0] + 1);
-	FILE *file = fopen(name, "r");
+	FILE *file;
+	int i;
+	for (i = -1; i < state->settings->include_path->length; ++i) {
+		if (i == -1) {
+			file = fopen(name, "r");
+		} else {
+			char *ip = state->settings->include_path->items[i];
+			char *temp = malloc(strlen(name) + strlen(ip) + 2);
+			*temp = 0;
+			strcat(temp, ip);
+			strcat(temp, "/");
+			strcat(temp, name);
+			scas_log(L_DEBUG, "Trying %s", temp);
+			file = fopen(temp, "r");
+			free(temp);
+		}
+		if (file) {
+			break;
+		}
+	}
 	if (!file) {
 		ERROR(ERROR_BAD_FILE, state->column);
 		return 1;
