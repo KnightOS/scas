@@ -153,7 +153,13 @@ int main(int argc, char **argv) {
 			if (!f) {
 				scas_abort("Unable to open '%s' for assembly.", runtime.input_files->items[i]);
 			}
-			object_t *o = assemble(f, runtime.input_files->items[i], instruction_set, errors, warnings);
+			assembler_settings_t settings = {
+				.include_path = create_list(), // TODO
+				.set = instruction_set,
+				.errors = errors,
+				.warnings = warnings,
+			};
+			object_t *o = assemble(f, runtime.input_files->items[i], &settings);
 			fclose(f);
 			list_add(objects, o);
 			deindent_log();

@@ -26,6 +26,13 @@ struct assembler_state {
 	char *last_global_label;
 };
 
-object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, list_t *errors, list_t *warnings);
+typedef struct {
+	instruction_set_t *set;
+	list_t *include_path;
+	list_t *errors;
+	list_t *warnings;
+} assembler_settings_t;
+
+object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *settings);
 
 #endif

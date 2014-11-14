@@ -227,7 +227,7 @@ char *split_line(struct assembler_state *state, char *line) {
 	return part;
 }
 
-object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, list_t *errors, list_t *warnings) {
+object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *settings) {
 	struct assembler_state state = {
 		.object = create_object(),
 		.current_area = create_area("CODE"),
@@ -236,14 +236,14 @@ object_t *assemble(FILE *file, const char *file_name, instruction_set_t *set, li
 		.file_stack = create_stack(),
 		.file_name_stack = create_stack(),
 		.line_number_stack = create_stack(),
-		.errors = errors,
-		.warnings = warnings,
+		.errors = settings->errors,
+		.warnings = settings->warnings,
 
 		.extra_lines = create_stack(),
 		.line = "",
 		.column = 0,
 
-		.instruction_set = set,
+		.instruction_set = settings->set,
 		.instruction_buffer = malloc(64 / 8),
 		.if_stack = create_stack(),
 		.equates = create_list(),
