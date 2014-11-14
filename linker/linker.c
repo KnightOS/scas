@@ -136,7 +136,7 @@ void auto_relocate_area(area_t *area) {
 			int k;
 			for (k = 0; k < area->symbols->length; ++k) {
 				symbol_t *sym = area->symbols->items[k];
-				if (sym->type == SYMBOL_LABEL && sym->value > imm->base_address) {
+				if (sym->type == SYMBOL_LABEL && sym->value > imm->instruction_address) {
 					++sym->value;
 				}
 			}
@@ -148,14 +148,6 @@ void auto_relocate_area(area_t *area) {
 					++_imm->instruction_address;
 					++_imm->address;
 					++pc;
-
-					int k;
-					for (k = 0; k < area->symbols->length; ++k) {
-						symbol_t *sym = area->symbols->items[k];
-						if (sym->type == SYMBOL_LABEL && sym->value > _imm->base_address) {
-							sym->value += pc;
-						}
-					}
 				}
 			}
 		}
