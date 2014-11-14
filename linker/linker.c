@@ -128,7 +128,7 @@ void auto_relocate_area(area_t *area) {
 	int i;
 	for (i = 0; i < area->late_immediates->length; ++i) {
 		late_immediate_t *imm = area->late_immediates->items[i];
-		if (imm->base_address != imm->address) {
+		if (imm->base_address != imm->address && imm->type != IMM_TYPE_RELATIVE) {
 			/* Relocate this */
 			scas_log(L_DEBUG, "Adding relocation instruction for immediate at 0x%08X", imm->base_address);
 			insert_in_area(area, &rst0x8, sizeof(uint8_t), imm->base_address);
