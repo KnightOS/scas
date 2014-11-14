@@ -90,7 +90,7 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 			continue;
 		} else {
 			if (imm->type == IMM_TYPE_RELATIVE) {
-				result += imm->base_address;
+				result = result - imm->base_address;
 			}
 			scas_log(L_DEBUG, "Immediate value result: 0x%08X (width %d, base address 0x%08X)", result, imm->width, imm->base_address);
 			uint64_t mask = 1;

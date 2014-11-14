@@ -152,7 +152,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 				/* TODO: Throw error if using explicit import */
 				scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", ref->value_provided);
 				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
-				late_imm->base_address = state->current_area->data_length;
+				late_imm->base_address = state->current_area->data_length + (match->instruction->width / 8);
 				late_imm->address = state->current_area->data_length + (imm->shift / 8);
 				late_imm->width = imm->width;
 				late_imm->type = imm->type;
@@ -162,7 +162,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 				ERROR(ERROR_INVALID_SYNTAX, state->column);
 			} else {
 				if (imm->type == IMM_TYPE_RELATIVE) {
-					result += state->PC;
+					result = result - (state->PC + (match->instruction->width / 8));
 				} else if (imm->type == IMM_TYPE_RESTART) {
 					if ((result & ~0x07) != result || result > 0x38) {
 						/* We get an ERROR_VALUE_TRUNCATED if we just let it proceed */

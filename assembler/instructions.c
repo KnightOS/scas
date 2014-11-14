@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "log.h"
 #include "list.h"
 #include "readline.h"
 #include "stringop.h"
@@ -164,7 +165,17 @@ void parse_instruction_line(const char *line, instruction_set_t *set) {
 			immediate_t *imm = malloc(sizeof(immediate_t));
 			imm->ref = key;
 			imm->width = width;
-			imm->type = type == '%' ? IMM_TYPE_ABSOLUTE : type == '&' ? IMM_TYPE_RESTART : IMM_TYPE_RELATIVE;
+			switch (type) {
+			case '%':
+				imm->type = IMM_TYPE_ABSOLUTE;
+				break;
+			case '^':
+				imm->type = IMM_TYPE_RELATIVE;
+				break;
+			case '&':
+				imm->type = IMM_TYPE_RESTART;
+				break;
+			}
 			/* Note: immediate value shift is not populated yet */
 			list_add(inst->immediate, imm);
 		}
