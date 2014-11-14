@@ -81,4 +81,5 @@ void add_error_from_map(list_t *errors, int code, list_t *maps, uint64_t address
 		error->line = NULL;
 	}
 	list_add(errors, error);
+	scas_log(L_ERROR, "Added error '%s' at %s:%d:%d", get_error_string(error), error->file_name, error->line_number, error->column);
 }

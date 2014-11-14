@@ -79,7 +79,6 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 	int i;
 	for (i = 0; i < area->late_immediates->length; ++i) {
 		late_immediate_t *imm = area->late_immediates->items[i];
-		scas_log(L_DEBUG, "Resolving immediate value @0x%08X", imm->address);
 		/* Temporarily add $ to symbol list */
 		symbol_t sym_pc = {
 			.type = SYMBOL_LABEL,
@@ -100,7 +99,7 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 			if (imm->type == IMM_TYPE_RELATIVE) {
 				result = result - imm->base_address;
 			}
-			scas_log(L_DEBUG, "Immediate value result: 0x%08X (width %d, base address 0x%08X)", result, imm->width, imm->base_address);
+			scas_log(L_DEBUG, "Immediate value result: 0x%08X (width %d, base address 0x%08X, %02X)", result, imm->width, imm->instruction_address);
 			uint64_t mask = 1;
 			int shift = imm->width;
 			while (--shift) {
@@ -130,8 +129,8 @@ void auto_relocate_area(area_t *area) {
 		late_immediate_t *imm = area->late_immediates->items[i];
 		if (imm->base_address != imm->address && imm->type != IMM_TYPE_RELATIVE) {
 			/* Relocate this */
-			scas_log(L_DEBUG, "Adding relocation instruction for immediate at 0x%08X", imm->base_address);
-			insert_in_area(area, &rst0x8, sizeof(uint8_t), imm->base_address);
+			scas_log(L_DEBUG, "Adding relocation instruction for immediate at 0x%08X (inserting at 0x%08X)", imm->address, imm->instruction_address);
+			insert_in_area(area, &rst0x8, sizeof(uint8_t), imm->instruction_address);
 			++imm->address;
 			/* Move everything that comes after */
 			int k;
@@ -145,8 +144,9 @@ void auto_relocate_area(area_t *area) {
 			for (j = 0; j < area->late_immediates->length; ++j) {
 				late_immediate_t *_imm = area->late_immediates->items[j];
 				if (_imm->base_address > imm->base_address) {
-					_imm->base_address += pc;
-					_imm->address += pc;
+					++_imm->base_address;
+					++_imm->instruction_address;
+					++_imm->address;
 					++pc;
 
 					int k;
