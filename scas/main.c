@@ -216,6 +216,8 @@ int main(int argc, char **argv) {
 					fprintf(stderr, ".");
 				}
 				fprintf(stderr, "^\n");
+			} else {
+				fprintf(stderr, "\n");
 			}
 		}
 		remove(runtime.output_file);
