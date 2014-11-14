@@ -218,6 +218,7 @@ int main(int argc, char **argv) {
 				fprintf(stderr, "^\n");
 			}
 		}
+		remove(runtime.output_file);
 	}
 	if (warnings->length != 0) {
 		int i;
