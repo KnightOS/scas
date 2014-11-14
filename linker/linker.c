@@ -115,7 +115,43 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 }
 
 void auto_relocate_area(area_t *area) {
-	/* TODO */
+	// Note: This is z80-specific, how should we handle that
+	uint8_t rst0x8 = 0xCF;
+	int i;
+	for (i = 0; i < area->late_immediates->length; ++i) {
+		late_immediate_t *imm = area->late_immediates->items[i];
+		if (imm->base_address != imm->address) {
+			/* Relocate this */
+			scas_log(L_DEBUG, "Adding relocation instruction for immediate at 0x%08X", imm->base_address);
+			insert_in_area(area, &rst0x8, sizeof(uint8_t), imm->base_address);
+			++imm->address;
+			/* Move everything that comes after */
+			int k;
+			for (k = 0; k < area->symbols->length; ++k) {
+				symbol_t *sym = area->symbols->items[k];
+				if (sym->type == SYMBOL_LABEL && sym->value > imm->base_address) {
+					++sym->value;
+				}
+			}
+			int j, pc = 1;
+			for (j = 0; j < area->late_immediates->length; ++j) {
+				late_immediate_t *_imm = area->late_immediates->items[j];
+				if (_imm->base_address > imm->base_address) {
+					_imm->base_address += pc;
+					_imm->address += pc;
+					++pc;
+
+					int k;
+					for (k = 0; k < area->symbols->length; ++k) {
+						symbol_t *sym = area->symbols->items[k];
+						if (sym->type == SYMBOL_LABEL && sym->value > _imm->base_address) {
+							sym->value += pc;
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {

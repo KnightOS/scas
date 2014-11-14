@@ -41,6 +41,18 @@ void append_to_area(area_t *area, uint8_t *data, size_t length) {
 	scas_log(L_DEBUG, "Added %d bytes to area '%s' (now %d bytes total)", length, area->name, area->data_length);
 }
 
+void insert_in_area(area_t *area, uint8_t *data, size_t length, size_t index) {
+	if ((area->data_capacity - area->data_length) < length) {
+		/* Expand capacity */
+		area->data = realloc(area->data, area->data_capacity + 1024);
+		area->data_capacity += 1024;
+	}
+	memmove(area->data + index + length, area->data + index, area->data_length - index);
+	memcpy(area->data + index, data, length);
+	area->data_length += length;
+	scas_log(L_DEBUG, "Inserted %d bytes in area '%s' (now %d bytes total)", length, area->name, area->data_length);
+}
+
 void write_area(FILE *f, area_t *a) {
 	uint32_t len;
 	uint64_t len64;
