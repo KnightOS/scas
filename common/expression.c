@@ -167,8 +167,8 @@ uint64_t evaluate_expression(tokenized_expression_t *expression, list_t *symbols
 }
 
 expression_token_t *parse_digit(const char **string) {
-	int base = 0;
-	if ((*string)[0] != 0 && !isdigit((*string)[1])) {
+	int base = 10;
+	if ((*string)[0] != 0 && (*string)[0] == '0') {
 		switch ((*string)[1]) {
 		case 'b':
 			base = 2;

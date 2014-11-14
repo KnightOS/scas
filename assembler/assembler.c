@@ -231,7 +231,7 @@ char *split_line(struct assembler_state *state, char *line) {
 object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *settings) {
 	struct assembler_state state = {
 		.object = create_object(),
-		.current_area = create_area("CODE"),
+		.current_area = create_area("_CODE"),
 		.source_map_stack = create_stack(),
 
 		.file_stack = create_stack(),
