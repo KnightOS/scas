@@ -67,6 +67,27 @@ int try_empty_line(struct assembler_state *state, char **line) {
 	return strlen(*line) == 0;
 }
 
+int try_parse_inside_macro(struct assembler_state *state, char **line) {
+	if (!state->current_macro) {
+		// Not in a macro, ignore
+		return 0;
+	}
+
+	scas_log(L_DEBUG, "Got line %s inside macro!", *line);
+
+	if ((**line == '.' || **line == '#') && strcmp((*line) + 1, "endmacro") == 0) {
+		scas_log(L_DEBUG, "Ending macro!");
+		list_add(state->macros, state->current_macro);
+		state->current_macro = 0;
+		return 1;
+	}
+
+	char *new_line = malloc(strlen(*line) + 1);
+	strcpy(new_line, *line);
+	list_add(state->current_macro->macro_lines, new_line);
+	return 1;
+}
+
 int try_add_label(struct assembler_state *state, char **line) {
 	int i;
 	for (i = 0; (*line)[i] && (*line)[i] != ':'; ++i) {
@@ -280,6 +301,8 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 		.instruction_buffer = malloc(64 / 8),
 		.if_stack = create_stack(),
 		.equates = create_list(),
+		.macros = create_list(),
+		.current_macro = 0,
 		.nolist = 0,
 		.PC = 0,
 		.last_global_label = "@start",
@@ -297,6 +320,7 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 	int(*const line_ops[])(struct assembler_state *, char **) = {
 		try_empty_line,
 		try_add_label,
+		try_parse_inside_macro,
 		try_handle_directive,
 		try_match_instruction,
 	};

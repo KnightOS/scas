@@ -12,6 +12,12 @@ typedef struct {
 	list_t *warnings;
 } assembler_settings_t;
 
+typedef struct {
+	char *name;
+	list_t/*char **/ *macro_lines;
+	list_t/*char **/ *parameters;
+} macro_t;
+
 struct assembler_state {
 	object_t *object;
 	area_t *current_area;
@@ -28,6 +34,8 @@ struct assembler_state {
 	uint8_t *instruction_buffer;
 	stack_t *if_stack;
 	list_t *equates;
+	list_t *macros;
+	macro_t *current_macro;
 	int nolist;
 	uint64_t PC;
 	char *last_global_label;

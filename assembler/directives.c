@@ -21,10 +21,22 @@
 		*(int*)stack_peek(state->line_number_stack), state->line, \
 		state->current_area->data_length, LENGTH);
 
+enum {
+	DELIM_COMMAS = 1,
+	DELIM_WHITESPACE = 2,
+};
+
+const char *delimiters_list[] = {
+	"",     // 0
+	",",    // DELIM_COMMAS
+	" \t",  // DELIM_WHITESPACE
+	", \t", // DELIM_COMMAS | DELIM_WHITESPACE
+};
+
 struct directive {
 	char *match;
 	int(*function)(struct assembler_state *state, char **argv, int argc);
-	int allow_space_delimiter;
+	int delimiter;
 };
 
 char *join_args(char **argv, int argc) {
@@ -673,6 +685,57 @@ int handle_list(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_macro(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 1) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	char *location = strchr(argv[0], '(');
+
+	if (location == argv[0]) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+
+	macro_t *macro = malloc(sizeof(macro_t));
+	macro->parameters = create_list();
+	macro->macro_lines = create_list();
+
+	if (location) {
+		macro->name = malloc(location - argv[0] + 1);
+		strncpy(macro->name, argv[0], location - argv[0]);
+		macro->name[location - argv[0]] = 0;
+		location++;
+		scas_log(L_DEBUG, "Parsing parameters...");
+		while(*location) {
+			char *end = strchr(location, ',');
+
+			if (!end) {
+				end = strchr(location, ')');
+			}
+
+			if (!end || end == location) {
+				ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+				return 1;
+				// TODO: Free everything
+			}
+			char *parameter = malloc(end - location + 1);
+			strncpy(parameter, location, end - location);
+			parameter[end - location] = 0;
+			list_add(macro->parameters, parameter);
+			if (*end == ')') {
+				break;
+			}
+			location = end + 1;
+		}
+	} else {
+		macro->name = malloc(strlen(argv[0]) + 1);
+		strcpy(macro->name, argv[0]);
+	}
+	state->current_macro = macro;
+	return 1;
+}	
+
 int handle_nolist(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
@@ -705,9 +768,7 @@ int handle_org(struct assembler_state *state, char **argv, int argc) {
 	}
 	int error;
 	uint64_t result;
-	char *args = join_args(argv, argc);
-	tokenized_expression_t *expression = parse_expression(args);
-	free(args);
+	tokenized_expression_t *expression = parse_expression(argv[0]);
 	if (!expression) {
 		ERROR(ERROR_INVALID_SYNTAX, state->column);
 		return 1;
@@ -727,46 +788,47 @@ int handle_org(struct assembler_state *state, char **argv, int argc) {
 
 /* Keep these alphabetized */
 struct directive directives[] = {
-	{ "area", handle_area, 1 },
-	{ "ascii", handle_ascii, 1 },
-	{ "asciip", handle_asciip, 1 },
-	{ "asciiz", handle_asciiz, 1 },
-	{ "blkb", handle_block, 0 },
-	{ "block", handle_block, 0 },
-	{ "bndry", handle_bndry, 1 },
-	{ "byte", handle_db, 0 },
-	{ "db", handle_db, 0 },
-	{ "ds", handle_block, 0 },
-	{ "dw", handle_dw, 0 },
-	{ "echo", handle_echo, 1 },
+	{ "area", handle_area, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "ascii", handle_ascii, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "asciip", handle_asciip, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "asciiz", handle_asciiz, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "blkb", handle_block, DELIM_COMMAS },
+	{ "block", handle_block, DELIM_COMMAS },
+	{ "bndry", handle_bndry, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "byte", handle_db, DELIM_COMMAS },
+	{ "db", handle_db, DELIM_COMMAS },
+	{ "ds", handle_block, DELIM_COMMAS },
+	{ "dw", handle_dw, DELIM_COMMAS },
+	{ "echo", handle_echo, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "elif", handle_elseif, 0 },
 	{ "else", handle_else, 0 },
 	{ "elseif", handle_elseif, 0 },
 	{ "end", handle_end, 0 },
 	{ "endif", handle_endif, 0 },
-	{ "equ", handle_equ, 1 },
-	{ "equate", handle_equ, 1 },
-	{ "even", handle_even, 1 },
-	{ "export", handle_nop, 1 }, /* TODO: Handle this properly with explicit export */
-	{ "gblequ", handle_equ, 1 }, /* TODO: Allow users to export equates? */
-	{ "globl", handle_nop, 1 }, /* TODO: Handle this properly with explicit export */
+	{ "equ", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "equate", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "even", handle_even, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "export", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE }, /* TODO: Handle this properly with explicit export */
+	{ "gblequ", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE }, /* TODO: Allow users to export equates? */
+	{ "globl", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE }, /* TODO: Handle this properly with explicit export */
 	{ "if", handle_if, 0 },
 	{ "ifdef", handle_ifdef, 0 },
 	{ "ifndef", handle_ifndef, 0 },
-	{ "incbin", handle_incbin, 1 },
-	{ "include", handle_include, 1 },
-	{ "lclequ", handle_equ, 1 },
-	{ "list", handle_list, 1 },
-	{ "local", handle_nop, 1 },
-	{ "module", handle_nop, 1 },
-	{ "nolist", handle_nolist, 1 },
-	{ "odd", handle_odd, 1 },
-	{ "optsdcc", handle_nop, 1 },
+	{ "incbin", handle_incbin, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "include", handle_include, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "lclequ", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "list", handle_list, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "local", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "macro", handle_macro, 0 },
+	{ "module", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "nolist", handle_nolist, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "odd", handle_odd, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "optsdcc", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "org", handle_org, 0 },
-	{ "rmb", handle_block, 1 },
-	{ "rs", handle_block, 1 },
-	{ "section", handle_area, 1 },
-	{ "strs", handle_ascii, 1 },
+	{ "rmb", handle_block, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "rs", handle_block, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "section", handle_area, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "strs", handle_ascii, DELIM_COMMAS | DELIM_WHITESPACE },
 };
 
 struct directive if_directives[] = {
@@ -805,7 +867,7 @@ struct directive *find_directive(struct directive dirs[], int l, char *line) {
 	return res;
 }
 
-char **split_directive(char *line, int *argc, int allow_space_delimiter) {
+char **split_directive(char *line, int *argc, int delimiter) {
 	*argc = 0;
 	while (isspace(*line) && *line) ++line;
 	/*
@@ -815,11 +877,11 @@ char **split_directive(char *line, int *argc, int allow_space_delimiter) {
 	int capacity = 10;
 	char **parts = malloc(sizeof(char *) * capacity);
 	if (!*line) return parts;
-	char *delimiters;
-	if (code_strchr(line, ',') == NULL && allow_space_delimiter) {
-		delimiters = "\t ";
+	const char *delimiters;
+	if (code_strchr(line, ',') != NULL && delimiter & DELIM_COMMAS) {
+		delimiters = delimiters_list[DELIM_COMMAS];
 	} else {
-		delimiters = ",";
+		delimiters = delimiters_list[delimiter];
 	}
 	int in_string = 0, in_character = 0;
 	int i, j, _;
@@ -920,7 +982,7 @@ int try_handle_directive(struct assembler_state *state, char **line) {
 		scas_log(L_DEBUG, "Matched directive '%s' at %s:%d", d->match,
 				(char *)stack_peek(state->file_name_stack), *(int *)stack_peek(state->line_number_stack));
 		int argc;
-		char **argv = split_directive(*line + strlen(d->match) + 1, &argc, d->allow_space_delimiter);
+		char **argv = split_directive(*line + strlen(d->match) + 1, &argc, d->delimiter);
 		indent_log();
 		int ret = d->function(state, argv, argc);
 		deindent_log();
