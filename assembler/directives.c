@@ -908,7 +908,7 @@ char **split_directive(char *line, int *argc, int delimiter) {
 			}
 		}
 	}
-	char *item = malloc(i - j);
+	char *item = malloc(i - j + 1);
 	strncpy(item, line + j, i - j);
 	item[i - j] = '\0';
 	item = strip_whitespace(item, &_);

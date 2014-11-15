@@ -67,36 +67,128 @@ int try_empty_line(struct assembler_state *state, char **line) {
 	return strlen(*line) == 0;
 }
 
-int try_parse_inside_macro(struct assembler_state *state, char **line) {
-	if (!state->current_macro) {
-		int i;
-		for (i = 0; i < state->macros->length; i++) {
-			macro_t *macro = state->macros->items[i];
-			if (macro->parameters->length == 0) {
-				int name_length = strlen(macro->name);
-				int line_length = strlen(*line);
-				if (
-					(name_length == line_length &&
-						strcmp(*line, macro->name) == 0) ||
-					(name_length == line_length - 2 &&
-						strncmp(*line, macro->name, name_length) == 0 &&
-						strcmp(*line + name_length, "()") == 0)) {
-					for (i = 0; i < macro->macro_lines->length; i++) {
-						char *line = malloc(strlen(macro->macro_lines->items[i]) + 1);
-						strcpy(line, macro->macro_lines->items[i]);
-						list_add(state->extra_lines, line);
-					}
-					return 1;
-				}
-			} else {
-
+char *extract_macro_parameters(char *str, list_t *params) {
+	int i, j, _;
+	int in_character = 0, in_string = 0;
+	for (i = 0, j = 0; str[i] && str[i] != ')'; ++i) {
+		if (str[i] == '"' && !in_character) {
+			in_string = !in_string;
+		} else if (str[i] == '\'' && !in_string) {
+			in_character = !in_character;
+		} else if (!in_character && !in_string) {
+			if (str[i] == ',') {
+				char *param = malloc(i - j + 1);
+				strncpy(param, str + j, i - j);
+				param[i - j] = '\0';
+				param = strip_whitespace(param, &_);
+				list_add(params, param);
+				j = i + 1;
 			}
 		}
+	}
+	if (!str[i]) {
+		return 0;
+	} else {
+		char *param = malloc(i - j + 1);
+		strncpy(param, str + j, i - j);
+		param[i - j] = '\0';
+		param = strip_whitespace(param, &_);
+		list_add(params, param);
+		return str + i + 1;
+	}
+}
+
+void substitute_parameter(char **line, char *param, char *value) {
+	char *match;
+	while ((match = strstr(*line, param))) {
+		char *new = malloc(
+			(strlen(*line) - strlen(param)) +
+			strlen(value) + 1);
+		strncpy(new, *line, match - *line);
+		new[match - *line] = '\0';
+		strcat(new, value);
+		strcat(new, match + strlen(param));
+		free(*line);
+		*line = new;
+	}
+}
+
+int try_expand_macro(struct assembler_state *state, char **line) {
+	int i;
+	for (i = 0; i < state->macros->length; i++) {
+		macro_t *macro = state->macros->items[i];
+		int name_length = strlen(macro->name);
+		char *match = strstr(*line, macro->name);
+		if (match == NULL) {
+			continue;
+		}
+		scas_log(L_DEBUG, "Expanding macro '%s' at %s:%d:%d",
+			macro->name,
+			(char *)stack_peek(state->file_name_stack),
+			*(int *)stack_peek(state->line_number_stack),
+			match - *line);
+
+		list_t *userparams = create_list();
+		char *endmatch;
+		if (match[name_length] == '(') {
+			if (!(endmatch = extract_macro_parameters(match + name_length + 1, userparams))) {
+				free_flat_list(userparams);
+				continue;
+			}
+		} else {
+			endmatch = match + name_length;
+		}
+
+		list_t *newlines = create_list();
+		int j;
+		for (j = 0; j < macro->macro_lines->length; ++j) {
+			char *mline = macro->macro_lines->items[j];
+			if (j == 0) {
+				/* Replacing **line */
+				char *newline = malloc(
+					(strlen(*line) - (endmatch - match)) +
+					strlen(mline) + 1);
+				strncpy(newline, *line, match - *line);
+				newline[match - *line] = '\0';
+				strcat(newline, mline);
+				strcat(newline, endmatch);
+				list_add(newlines, newline);
+			} else {
+				/* Adding to extra_lines */
+				list_add(newlines, mline);
+			}
+		}
+
+		for (j = 0; j < newlines->length; ++j) {
+			int k;
+			for (k = 0; k < macro->parameters->length; ++k) {
+				char *p = macro->parameters->items[k];
+				substitute_parameter((char **)&newlines->items[j], p, (char *)userparams->items[k]);
+			}
+		}
+
+		/* Replace **line with first expanded line... */
+		free(*line);
+		*line = newlines->items[0];
+		list_del(newlines, 0);
+		/* ...and add additional lines to extra_lines */
+		for (j = 0; j < newlines->length; ++j) {
+			list_add(state->extra_lines, newlines->items[j]);
+		}
+		free_flat_list(newlines);
+		free_flat_list(userparams);
+	}
+	return 0;
+}
+
+int try_parse_inside_macro(struct assembler_state *state, char **line) {
+	if (!state->current_macro) {
 		return 0;
 	}
 
 	if ((**line == '.' || **line == '#') && strcmp((*line) + 1, "endmacro") == 0) {
 		list_add(state->macros, state->current_macro);
+		scas_log(L_DEBUG, "Added macro '%s', with %d parameters", state->current_macro->name, state->current_macro->parameters->length);
 		state->current_macro = 0;
 		return 1;
 	}
@@ -338,6 +430,7 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 
 	int(*const line_ops[])(struct assembler_state *, char **) = {
 		try_empty_line,
+		try_expand_macro,
 		try_add_label,
 		try_parse_inside_macro,
 		try_handle_directive,
