@@ -423,16 +423,13 @@ int handle_endif(struct assembler_state *state, char **argv, int argc) {
 }
 
 int handle_equ(struct assembler_state *state, char **argv, int argc) {
-	/* TODO: Rewrite these forms somewhere higher up:
-	 * key = value
-	 * key .equ value
-	 * Also, concat all the args into one string (except for the key)
-	 */
-	if (argc != 2) {
+	if (argc < 2) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
 		return 1;
 	}
-	tokenized_expression_t *expression = parse_expression(argv[1]);
+	char *args = join_args(argv + 1, argc - 1);
+	tokenized_expression_t *expression = parse_expression(args);
+	free(args);
 	int error;
 	uint64_t result;
 	if (expression == NULL) {
