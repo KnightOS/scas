@@ -544,7 +544,12 @@ int handle_ifdef(struct assembler_state *state, char **argv, int argc) {
 			*r = 1;
 		}
 	}
-	/* TODO: Also search macros */
+	for (i = 0; !*r && i < state->current_area->symbols->length; ++i) {
+		macro_t *m = state->macros->items[i];
+		if (strcasecmp(m->name, argv[0]) == 0) {
+			*r = 1;
+		}
+	}
 	stack_push(state->if_stack, r);
 	scas_log(L_DEBUG, "IFDEF directive evaluated to %d", *r);
 	return 1;
@@ -579,7 +584,12 @@ int handle_ifndef(struct assembler_state *state, char **argv, int argc) {
 			*r = 1;
 		}
 	}
-	/* TODO: Also search macros */
+	for (i = 0; !*r && i < state->current_area->symbols->length; ++i) {
+		macro_t *m = state->macros->items[i];
+		if (strcasecmp(m->name, argv[0]) == 0) {
+			*r = 1;
+		}
+	}
 	*r = !*r;
 	stack_push(state->if_stack, r);
 	scas_log(L_DEBUG, "IFNDEF directive evaluated to %d", *r);
