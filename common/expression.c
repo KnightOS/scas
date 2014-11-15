@@ -306,7 +306,7 @@ tokenized_expression_t *parse_expression(const char *str) {
 			stack_pop(stack);
 			free(expr);
 			current++;
-			tokenizer_state = STATE_OPERATOR;
+			tokenizer_state = STATE_VALUE;
 			continue;
 		} else if(strchr(operator_cache, *current)) {
 			expr = parse_operator(&current, tokenizer_state == STATE_OPERATOR);

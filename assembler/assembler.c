@@ -214,17 +214,20 @@ char *split_line(struct assembler_state *state, char *line) {
 		if (line[i] == '\\') {
 			char *part = malloc(i - j + 1);
 			strncpy(part, line + j, i - j);
-			part[i - j + 1] = '\0';
+			part[i - j] = '\0';
 			part = strip_whitespace(part, &_);
-			stack_push(state->extra_lines, part);
+			list_add(state->extra_lines, part);
 			j = i + 1;
 		}
 	}
 	char *part = malloc(i - j + 1);
 	strncpy(part, line + j, i - j);
-	part[i - j + 1] = '\0';
+	part[i - j] = '\0';
 	part = strip_whitespace(part, &_);
+	list_add(state->extra_lines, part);
 	free(line);
+	part = state->extra_lines->items[0];
+	list_del(state->extra_lines, 0);
 	return part;
 }
 
@@ -240,7 +243,7 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 		.errors = settings->errors,
 		.warnings = settings->warnings,
 
-		.extra_lines = create_stack(),
+		.extra_lines = create_list(),
 		.line = "",
 		.column = 0,
 
@@ -281,7 +284,8 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 				++*(int*)stack_peek(state.line_number_stack);
 				line = read_line(cur);
 			} else {
-				line = stack_pop(state.extra_lines);
+				line = state.extra_lines->items[0];
+				list_del(state.extra_lines, 0);
 			}
 			state.line = malloc(strlen(line) + 1);
 			strcpy(state.line, line);
@@ -324,7 +328,7 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 	stack_free(state.if_stack);
 	stack_free(state.file_name_stack);
 	stack_free(state.line_number_stack);
-	stack_free(state.extra_lines);
+	list_free(state.extra_lines);
 	stack_free(state.source_map_stack);
 	free(state.instruction_buffer);
 

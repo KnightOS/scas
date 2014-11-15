@@ -21,7 +21,7 @@ struct assembler_state {
 	stack_t *line_number_stack;
 	list_t *errors;
 	list_t *warnings;
-	stack_t *extra_lines;
+	list_t *extra_lines;
 	char *line;
 	int column;
 	instruction_set_t *instruction_set;
