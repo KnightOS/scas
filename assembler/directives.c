@@ -5,6 +5,7 @@
 #include "objects.h"
 #include "list.h"
 #include "log.h"
+#include <limits.h>
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
@@ -862,7 +863,44 @@ char **split_directive(char *line, int *argc, int allow_space_delimiter) {
 	return parts;
 }
 
+void correct_equates(char **line) {
+	if (**line == '.') {
+		return; // Already valid form
+	}
+	if (code_strchr(*line, '=')) {
+		/* TODO */
+	} else {
+		int space = code_strchr(*line, ' ') - *line;
+		if (space < 0) space = INT_MAX;
+		int tab = code_strchr(*line, '\t') - *line;
+		if (tab < 0) tab = INT_MAX;
+		if (tab < space) space = tab;
+		if (space == INT_MAX) return;
+		char *name = malloc(space + 1);
+		strncpy(name, *line, space);
+		name[space] = '\0';
+		/* Skip to value */
+		while ((*line)[space] && isspace((*line)[space])) space++;
+		while ((*line)[space] && !isspace((*line)[space])) space++;
+		while ((*line)[space] && isspace((*line)[space])) space++;
+		const char *fmtstring = ".equ %s %s";
+		char *new_line = malloc(
+			(strlen(fmtstring) - 4) +
+			strlen(*line + space) +
+			strlen(name) +
+			1);
+		sprintf(new_line, fmtstring, name, *line + space);
+		scas_log(L_DEBUG, "Rewrote '%s' to '%s'", *line, new_line);
+		free(*line);
+		*line = new_line;
+	}
+}
+
 int try_handle_directive(struct assembler_state *state, char **line) {
+	/* Handle alternate forms of .equ */
+	if (code_strstr(*line, ".equ") || code_strchr(*line, '=')) {
+		correct_equates(line);
+	}
 	if (**line == '.' || **line == '#') {
 		struct directive *dir = directives;
 		int len = sizeof(directives) / sizeof(struct directive);

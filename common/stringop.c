@@ -76,6 +76,11 @@ void free_flat_list(list_t *list) {
 	list_free(list);
 }
 
+char *code_strstr(const char *haystack, const char *needle) {
+	/* TODO */
+	return strstr(haystack, needle);
+}
+
 char *code_strchr(const char *str, char delimiter) {
 	int in_string = 0, in_character = 0;
 	int i = 0;
