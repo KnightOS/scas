@@ -45,6 +45,19 @@ void transform_local_labels(tokenized_expression_t *expression, const char *last
 				scas_log(L_DEBUG, "Transformed ASxxxx label from %s to %s", token->symbol, temp);
 				free(token->symbol);
 				token->symbol = temp;
+			} else if (token->symbol[0] == '.') {
+				const char *fmtstring = "%s@%s";
+				char *temp = malloc((strlen(fmtstring) - 4) 
+						+ (strlen(token->symbol) - 1)
+						+ strlen(last_global_label) 
+						+ 1);
+				sprintf(temp, fmtstring, token->symbol + 1, last_global_label);
+				temp[(strlen(fmtstring) - 4) 
+						+ (strlen(token->symbol) - 1)
+						+ strlen(last_global_label)] = '\0';
+				scas_log(L_DEBUG, "Transformed local label from %s to %s", token->symbol, temp);
+				free(token->symbol);
+				token->symbol = temp;
 			}
 		}
 	}
@@ -86,14 +99,30 @@ int try_add_label(struct assembler_state *state, char **line) {
 
 		const char *fmtstring = "_ASxxxx_%s@%s";
 		sym->name = malloc((strlen(fmtstring) - 4) 
-				+ i 
+				+ i
 				+ strlen(state->last_global_label) 
 				+ 1);
 		sprintf(sym->name, fmtstring, temp, state->last_global_label);
 		sym->name[(strlen(fmtstring) - 4) 
-				+ i 
+				+ i
 				+ strlen(state->last_global_label)] = '\0';
 		scas_log(L_DEBUG, "Adding ASxxxx local label %s", sym->name);
+		free(temp);
+	} else if (**line == '.') {
+		char *temp = malloc(i + 1);
+		strncpy(temp, *line, i);
+		temp[i] = '\0';
+
+		const char *fmtstring = "%s@%s";
+		sym->name = malloc((strlen(fmtstring) - 4) 
+				+ (i - 1)
+				+ strlen(state->last_global_label) 
+				+ 1);
+		sprintf(sym->name, fmtstring, temp + 1, state->last_global_label);
+		sym->name[(strlen(fmtstring) - 4) 
+				+ (i - 1)
+				+ strlen(state->last_global_label)] = '\0';
+		scas_log(L_DEBUG, "Adding local label %s", sym->name);
 		free(temp);
 	} else {
 		sym->name = malloc(i + 1);
