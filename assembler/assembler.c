@@ -69,14 +69,33 @@ int try_empty_line(struct assembler_state *state, char **line) {
 
 int try_parse_inside_macro(struct assembler_state *state, char **line) {
 	if (!state->current_macro) {
-		// Not in a macro, ignore
+		int i;
+		for (i = 0; i < state->macros->length; i++) {
+			macro_t *macro = state->macros->items[i];
+			if (macro->parameters->length == 0) {
+				int name_length = strlen(macro->name);
+				int line_length = strlen(*line);
+				if (
+					(name_length == line_length &&
+						strcmp(*line, macro->name) == 0) ||
+					(name_length == line_length - 2 &&
+						strncmp(*line, macro->name, name_length) == 0 &&
+						strcmp(*line + name_length, "()") == 0)) {
+					for (i = 0; i < macro->macro_lines->length; i++) {
+						char *line = malloc(strlen(macro->macro_lines->items[i]) + 1);
+						strcpy(line, macro->macro_lines->items[i]);
+						list_add(state->extra_lines, line);
+					}
+					return 1;
+				}
+			} else {
+
+			}
+		}
 		return 0;
 	}
 
-	scas_log(L_DEBUG, "Got line %s inside macro!", *line);
-
 	if ((**line == '.' || **line == '#') && strcmp((*line) + 1, "endmacro") == 0) {
-		scas_log(L_DEBUG, "Ending macro!");
 		list_add(state->macros, state->current_macro);
 		state->current_macro = 0;
 		return 1;

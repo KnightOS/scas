@@ -706,7 +706,6 @@ int handle_macro(struct assembler_state *state, char **argv, int argc) {
 		strncpy(macro->name, argv[0], location - argv[0]);
 		macro->name[location - argv[0]] = 0;
 		location++;
-		scas_log(L_DEBUG, "Parsing parameters...");
 		while(*location) {
 			char *end = strchr(location, ',');
 
