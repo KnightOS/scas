@@ -835,13 +835,17 @@ char **split_directive(char *line, int *argc, int allow_space_delimiter) {
 				strncpy(item, line + j, i - j);
 				item[i - j] = '\0';
 				item = strip_whitespace(item, &_);
-				if (*argc == capacity) {
-					capacity *= 2;
-					parts = realloc(parts, sizeof(char *) * capacity);
+				if (item[0] == '\0') {
+					free(item);
+				} else {
+					if (*argc == capacity) {
+						capacity *= 2;
+						parts = realloc(parts, sizeof(char *) * capacity);
+					}
+					parts[*argc] = item;
+					j = i + 1;
+					++*argc;
 				}
-				parts[*argc] = item;
-				j = i + 1;
-				++*argc;
 			}
 		}
 	}
