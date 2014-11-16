@@ -135,7 +135,15 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 				free_flat_list(userparams);
 				continue;
 			}
+			if (userparams->length != macro->parameters->length) {
+				free_flat_list(userparams);
+				continue;
+			}
 		} else {
+			if (macro->parameters->length != 0) {
+				free_flat_list(userparams);
+				continue;
+			}
 			endmatch = match + name_length;
 		}
 
