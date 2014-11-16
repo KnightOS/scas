@@ -175,7 +175,7 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 		for (j = 0; j < newlines->length; ++j) {
 			list_add(state->extra_lines, newlines->items[j]);
 		}
-		free_flat_list(newlines);
+		list_free(newlines);
 		free_flat_list(userparams);
 	}
 	return 0;
