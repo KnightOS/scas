@@ -2,6 +2,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef EMSCRIPTEN
+#include <emscripten.h>
+#endif
 
 int v = 0;
 int indent = 0;
@@ -34,7 +37,13 @@ void scas_abort(char *format, ...) {
 	vfprintf(stderr, format, args);
 	va_end(args);
 	fprintf(stderr, "\n");
+#ifdef EMSCRIPTEN
+	EM_ASM(
+			throw 'aborting';
+		);
+#else
 	exit(1);
+#endif
 }
 
 void scas_log(int verbosity, char* format, ...) {
