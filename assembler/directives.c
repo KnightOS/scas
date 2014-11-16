@@ -294,7 +294,7 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
 		return 1;
 	}
-	uint64_t olen;
+	uint64_t olen = 0;
 	int i;
 	for (i = 0; i < argc; ++i) {
 		int error;
@@ -619,7 +619,7 @@ int handle_incbin(struct assembler_state *state, char **argv, int argc) {
 	}
 	scas_log(L_INFO, "Including binary file '%s' from '%s'", name, (char *)stack_peek(state->file_name_stack));
 	uint8_t *buf = malloc(1024);
-	uint64_t olen;
+	uint64_t olen = 0;
 	int l;
 	while ((l = fread(buf, sizeof(uint8_t), 1024, file))) {
 		append_to_area(state->current_area, buf, l);

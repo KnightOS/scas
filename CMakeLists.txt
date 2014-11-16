@@ -5,6 +5,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "bin/")
 add_definitions("-Wall")
 set(CMAKE_BUILD_TYPE Debug)
 
+if(EMSCRIPTEN)
+    set(CMAKE_EXE_LINKER_FLAGS "-O2")
+    set(CMAKE_C_FLAGS "-O2")
+endif()
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(INSTRUCTION_SET_PATH "${PROJECT_SOURCE_DIR}/tables/" CACHE PATH "Location to install instruction set tables.")
 else()
