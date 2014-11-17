@@ -5,19 +5,22 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "bin/")
 add_definitions("-Wall")
 set(CMAKE_BUILD_TYPE Debug)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(INSTRUCTION_SET_PATH "${PROJECT_SOURCE_DIR}/tables/" CACHE PATH "Location to install instruction set tables.")
+if(EMSCRIPTEN)
+    message("Building for emscripten")
+    set(INSTRUCTION_SET_PATH "/" CACHE PATH "Location to install instruction set tables.")
 else()
-    set(INSTRUCTION_SET_PATH "/usr/share/scas/instruction_sets/" CACHE PATH "Location to install instruction set tables.")
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(INSTRUCTION_SET_PATH "${PROJECT_SOURCE_DIR}/tables/" CACHE PATH "Location to install instruction set tables.")
+    else()
+        set(INSTRUCTION_SET_PATH "/usr/share/scas/instruction_sets/" CACHE PATH "Location to install instruction set tables.")
+    endif()
 endif()
 
 if(EMSCRIPTEN)
     set(CMAKE_EXE_LINKER_FLAGS "-O2")
-    set(CMAKE_C_FLAGS "-O2")
-    set(INSTRUCTION_SET_PATH "/" CACHE PATH "Location to install instruction set tables.")
 endif()
 
-add_definitions(-DINSTRUCTION_SET_PATH="${INSTRUCTION_SET_PATH}/")
+add_definitions(-DINSTRUCTION_SET_PATH="${INSTRUCTION_SET_PATH}")
 
 include_directories(
     assembler/

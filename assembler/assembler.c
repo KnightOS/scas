@@ -163,7 +163,9 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 				list_add(newlines, newline);
 			} else {
 				/* Adding to extra_lines */
-				list_add(newlines, mline);
+				char *newline = malloc(strlen(mline) + 1);
+				strcpy(newline, mline);
+				list_add(newlines, newline);
 			}
 		}
 
@@ -468,7 +470,11 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 				line = split_line(&state, line);
 			}
 			int i;
-			for (i = 0; i < sizeof(line_ops) / sizeof(void*); ++i) {
+			int l = sizeof(line_ops) / sizeof(void*);
+			if (state.nolist || (state.if_stack->length && !*(int*)stack_peek(state.if_stack))) {
+				l = sizeof(nolist_line_ops) / sizeof(void*);
+			}
+			for (i = 0; i < l; ++i) {
 				if (state.nolist || (state.if_stack->length && !*(int*)stack_peek(state.if_stack))) {
 					if (nolist_line_ops[i](&state, &line)) {
 						break;

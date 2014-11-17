@@ -80,7 +80,13 @@ instruction_match_t *try_match(instruction_set_t *set, instruction_t *inst, cons
 				j--;
 			}
 		} else if (inst->match[i] == '%' || inst->match[i] == '^' || inst->match[i] == '&') /* Immediate value */ {
-			char key = inst->match[++i]; while (inst->match[++i] != '>'); ++i;
+			char type = inst->match[i];
+			char key = inst->match[++i];
+			if (type != '&') {
+				while (inst->match[++i] != '>'); ++i;
+			} else {
+				++i;
+			}
 			char *value = get_operand_string(inst, &i, str, j);
 			if (value == NULL) {
 				match = 0;
