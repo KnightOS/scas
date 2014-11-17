@@ -69,8 +69,8 @@ int try_empty_line(struct assembler_state *state, char **line) {
 
 char *extract_macro_parameters(char *str, list_t *params) {
 	int i, j, _;
-	int in_character = 0, in_string = 0;
-	for (i = 0, j = 0; str[i] && str[i] != ')'; ++i) {
+	int in_character = 0, in_string = 0, nested = 0;
+	for (i = 0, j = 0; str[i]; ++i) {
 		if (str[i] == '"' && !in_character) {
 			in_string = !in_string;
 		} else if (str[i] == '\'' && !in_string) {
@@ -83,6 +83,14 @@ char *extract_macro_parameters(char *str, list_t *params) {
 				param = strip_whitespace(param, &_);
 				list_add(params, param);
 				j = i + 1;
+			} else if (str[i] == '(') {
+				++nested;
+			} else if (str[i] == ')') {
+				if (nested) {
+					--nested;
+				} else {
+					break;
+				}
 			}
 		}
 	}
