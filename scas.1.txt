@@ -63,6 +63,9 @@ Options
 	plaintext file that can help you find out more about how the file was
 	assembled. Its format is described in _Listings_ below.
 
+*-m, --merge*::
+	Link several objects into a single object file.
+
 *-n, --no-implicit-symbols*::
 	By default, scas does not require you to use the *import* directive to use
 	external symbols, and instead resolves them when linking. If you do not desire

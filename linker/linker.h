@@ -5,6 +5,7 @@
 
 typedef struct {
     int automatic_relocation;
+    int merge_only;
     list_t *errors;
     list_t *warnings;
 } linker_settings_t;

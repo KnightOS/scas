@@ -24,6 +24,7 @@ struct {
 	char *linker_script;
 	int verbosity;
 	int automatic_relocation;
+	int merge_only;
 } runtime;
 
 void init_runtime() {
@@ -85,6 +86,8 @@ void parse_arguments(int argc, char **argv) {
 				runtime.jobs = LINK;
 			} else if (strcmp("-O", argv[i]) == 0 || strcmp("--object", argv[i]) == 0) {
 				runtime.jobs = ASSEMBLE;
+			} else if (strcmp("-m", argv[i]) == 0 || strcmp("--merge", argv[i]) == 0) {
+				runtime.merge_only = 1;
 			} else if (argv[i][1] == 'I' || strcmp("--include", argv[i]) == 0) {
 				char *path;
 				if (argv[i][1] == 'I' && argv[i][2] != 0) {
@@ -240,6 +243,7 @@ int main(int argc, char **argv) {
 		scas_log(L_INFO, "Passing objects to linker");
 		linker_settings_t settings = {
 			.automatic_relocation = runtime.automatic_relocation,
+			.merge_only = runtime.merge_only,
 			.errors = errors,
 			.warnings = warnings,
 		};
