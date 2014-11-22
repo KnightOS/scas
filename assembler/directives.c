@@ -482,6 +482,16 @@ int handle_even(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_function(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 3) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	scas_log(L_INFO, "Warning: function directive is unimplemented");
+	// TODO
+	return 1;
+}
+
 int handle_if(struct assembler_state *state, char **argv, int argc) {
 	if (state->if_stack->length != 0 && !*(int *)stack_peek(state->if_stack)) {
 		/* Push up another falsy if if we're already in a falsy if */
@@ -815,6 +825,7 @@ struct directive directives[] = {
 	{ "equate", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "even", handle_even, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "export", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE }, /* TODO: Handle this properly with explicit export */
+	{ "function", handle_function, DELIM_COMMAS },
 	{ "gblequ", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE }, /* TODO: Allow users to export equates? */
 	{ "globl", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE }, /* TODO: Handle this properly with explicit export */
 	{ "if", handle_if, 0 },
