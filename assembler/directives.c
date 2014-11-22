@@ -842,6 +842,7 @@ struct directive directives[] = {
 	{ "odd", handle_odd, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "optsdcc", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "org", handle_org, 0 },
+	{ "ref", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE }, /* TODO */
 	{ "rmb", handle_block, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "rs", handle_block, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "section", handle_area, DELIM_COMMAS | DELIM_WHITESPACE },
