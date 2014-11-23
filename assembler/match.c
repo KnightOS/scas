@@ -30,6 +30,9 @@ char *get_operand_string(instruction_t *inst, int *i, const char *code, int j) {
 		strcpy(res, code + j);
 		return res;
 	}
+	if (delimiter == '%' || delimiter == '@' || delimiter == '&' || delimiter == '^') {
+		delimiter = ' '; // TODO: Support tabs?
+	}
 	char *end = code_strchr(code + j, delimiter);
 	if (end == NULL) {
 		return NULL;
