@@ -295,13 +295,13 @@ INS ADC_A-,-%A<8>                       11001110 %A
 INS ADD_A-,-@A<g3>                      10000@A
     INS ADD_-@A<g3>-,-A                 10000@A
     INS ADD_@A<g3>                      10000@A
-INS ADD_A-,-%A<8>                       11000110 %A
 INS ADD_A-,-(-@A<g8>_%B<8>-)          @A 10000110 %B
     INS ADD_A-,-(-%B<8>-+-@A<g8>-)      @A 10000110 %B
     INS ADD_A-,-(-@A<g8>-)              @A 10000110 00000000
     INS ADD_-(-@A<g8>-+-%B<8>-)          @A 10000110 %B
     INS ADD_-(-%B<8>-+-@A<g8>-)      @A 10000110 %B
     INS ADD_-(-@A<g8>-)              @A 10000110 00000000
+INS ADD_A-,-%A<8>                       11000110 %A
 INS ADD_HL-,-@A<g6>                     00@A1001
 INS ADD_IX-,-@A<g9>                     11011101 00@A1001
 INS ADD_IY-,-@A<g10>                    11111101 00@A1001
@@ -348,11 +348,11 @@ INS NEG                                 11101101 01000100
 INS SBC_HL-,-@A<g6>                     11101101 01@A0010
 INS SBC_A-,-@A<g3>                      10011@A
     INS SBC_@A<g3>                      10011@A
-INS SBC_A-,-%A<8>                       11011110 %A
-    INS SBC_%A<8>                       11011110 %A
 INS SBC_A-,-(-@A<g8>_%B<8>-)          @A 10011110 %B
     INS SBC_A-,-(-%B<8>-+-@A<g8>-)      @A 10011110 %B
     INS SBC_A-,-(-@A<g8>-)              @A 10011110 00000000
+INS SBC_A-,-%A<8>                       11011110 %A
+    INS SBC_%A<8>                       11011110 %A
 
 INS SUB_A-,-@A<g3>                      10010@A
     INS SUB_@A<g3>                      10010@A

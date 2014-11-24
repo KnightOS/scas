@@ -108,6 +108,8 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 			}
 			if ((result & mask) != result && ~result >> imm->width) {
 				add_error_from_map(errors, ERROR_VALUE_TRUNCATED, area->source_map, imm->base_address);
+				print_tokenized_expression(stderr, imm->expression);
+				fprintf(stderr, "\n");
 			} else {
 				result = result & mask;
 				int j;

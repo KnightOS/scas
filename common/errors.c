@@ -53,7 +53,8 @@ void add_error_from_map(list_t *errors, int code, list_t *maps, uint64_t address
 	source_map_entry_t *entry;
 	int found = 0;
 	int i;
-	for (i = 0; i < maps->length; ++i) {
+	// TODO: Fix this crap
+	/*for (i = 0; i < maps->length; ++i) {
 		map = maps->items[i];
 		int j;
 		for (j = 0; j < map->entries->length; ++j) {
@@ -66,7 +67,7 @@ void add_error_from_map(list_t *errors, int code, list_t *maps, uint64_t address
 		if (found) {
 			break;
 		}
-	}
+	}*/
 	error_t *error = malloc(sizeof(error_t));
 	error->code = code;
 	error->column = 0;
