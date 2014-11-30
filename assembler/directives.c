@@ -738,6 +738,8 @@ int handle_macro(struct assembler_state *state, char **argv, int argc) {
 			char *parameter = malloc(end - location + 1);
 			strncpy(parameter, location, end - location);
 			parameter[end - location] = 0;
+			int _;
+			parameter = strip_whitespace(parameter, &_);
 			list_add(macro->parameters, parameter);
 			if (*end == ')') {
 				break;

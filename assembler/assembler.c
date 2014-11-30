@@ -141,14 +141,17 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 		if (match[name_length] == '(') {
 			if (!(endmatch = extract_macro_parameters(match + name_length + 1, userparams))) {
 				free_flat_list(userparams);
+				scas_log(L_DEBUG, "Not a perfect match, skipping");
 				continue;
 			}
 			if (userparams->length != macro->parameters->length) {
+				scas_log(L_DEBUG, "Not a perfect match, skipping");
 				free_flat_list(userparams);
 				continue;
 			}
 		} else {
 			if (macro->parameters->length != 0) {
+				scas_log(L_DEBUG, "Not a perfect match, skipping");
 				free_flat_list(userparams);
 				continue;
 			}
@@ -195,6 +198,7 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 		}
 		list_free(newlines);
 		free_flat_list(userparams);
+		return -1;
 	}
 	return 0;
 }
@@ -448,9 +452,9 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 
 	int(*const line_ops[])(struct assembler_state *, char **) = {
 		try_empty_line,
+		try_parse_inside_macro,
 		try_expand_macro,
 		try_add_label,
-		try_parse_inside_macro,
 		try_handle_directive,
 		try_match_instruction,
 	};
@@ -483,14 +487,17 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 				l = sizeof(nolist_line_ops) / sizeof(void*);
 			}
 			for (i = 0; i < l; ++i) {
+				int res;
 				if (state.nolist || (state.if_stack->length && !*(int*)stack_peek(state.if_stack))) {
-					if (nolist_line_ops[i](&state, &line)) {
-						break;
-					}
+					res = nolist_line_ops[i](&state, &line);
 				} else {
-					if (line_ops[i](&state, &line)) {
-						break;
-					}
+					res = line_ops[i](&state, &line);
+				}
+				if (res == 1) {
+					break;
+				} else if (res == -1) {
+					// Start over
+					i = 0;
 				}
 			}
 			free(state.line);
