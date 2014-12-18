@@ -13,5 +13,7 @@ void scas_log(int verbosity, char* format, ...);
 void scas_abort(char* format, ...);
 void indent_log();
 void deindent_log();
+void enable_colors();
+void disable_colors();
 
 #endif
