@@ -33,8 +33,9 @@ include_directories(
 FILE(GLOB common ${PROJECT_SOURCE_DIR}/common/*.c)
 FILE(GLOB assembler ${PROJECT_SOURCE_DIR}/assembler/*.c)
 FILE(GLOB linker ${PROJECT_SOURCE_DIR}/linker/*.c)
-FILE(GLOB scas ${PROJECT_SOURCE_DIR}/scas/*.c)
 FILE(GLOB tables ${PROJECT_SOURCE_DIR}/tables/*)
+FILE(GLOB scas ${PROJECT_SOURCE_DIR}/scas/*.c)
+FILE(GLOB scasdump ${PROJECT_SOURCE_DIR}/scasdump/*.c)
 
 add_executable(scas
     ${common}
@@ -43,9 +44,15 @@ add_executable(scas
     ${scas}
 )
 
+add_executable(scasdump
+    ${common}
+    ${scasdump}
+)
+
 ADD_CUSTOM_TARGET(
     man ALL
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/bin/scas.1
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/bin/scasdump.1
 )
 
 ADD_CUSTOM_COMMAND(
@@ -56,9 +63,22 @@ ADD_CUSTOM_COMMAND(
     VERBATIM
 )
 set_directory_properties(${CMAKE_CURRENT_BINARY_DIR} ADDITIONAL_MAKE_CLEAN_FILES scas.1)
+ADD_CUSTOM_COMMAND(
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/scasdump.1.txt
+    COMMAND a2x --no-xmllint --doctype manpage --format manpage ${CMAKE_CURRENT_SOURCE_DIR}/scasdump.1.txt
+    COMMAND test "${CMAKE_CURRENT_SOURCE_DIR}" != "${CMAKE_CURRENT_BINARY_DIR}/bin" && mv -f ${CMAKE_CURRENT_SOURCE_DIR}/scasdump.1 ${CMAKE_CURRENT_BINARY_DIR}/bin || true
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/bin/scasdump.1
+    VERBATIM
+)
+set_directory_properties(${CMAKE_CURRENT_BINARY_DIR} ADDITIONAL_MAKE_CLEAN_FILES scasdump.1)
 
 INSTALL(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/scas.1
+    DESTINATION man/man1
+)
+
+INSTALL(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/scasdump.1
     DESTINATION man/man1
 )
 
@@ -69,5 +89,10 @@ INSTALL(
 
 INSTALL(
     TARGETS scas
+    RUNTIME DESTINATION bin
+)
+
+INSTALL(
+    TARGETS scasdump
     RUNTIME DESTINATION bin
 )
