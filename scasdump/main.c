@@ -92,6 +92,28 @@ void dump_area(area_t *a) {
 			deindent_log();
 		}
 	}
+	if (runtime.dump_private_symbols || runtime.dump_public_symbols) {
+		/* TODO: Distinguish between private/public */
+		scas_log(L_INFO, "Symbols defined:");
+		indent_log();
+		int i;
+		for (i = 0; i < a->symbols->length; ++i) {
+			symbol_t *sym = a->symbols->items[i];
+			scas_log(L_INFO, "'%s' == %08X (%s)", sym->name, sym->value,
+					sym->type == SYMBOL_LABEL ? "Label" : "Equate");
+		}
+		deindent_log();
+	}
+	if (runtime.dump_references) {
+		scas_log(L_INFO, "Unresolved references:");
+		int i;
+		for (i = 0; i < a->late_immediates->length; ++i) {
+			late_immediate_t *imm = a->late_immediates->items[i];
+			printf("  [%04X] ", (uint16_t)imm->address);
+			print_tokenized_expression(stdout, imm->expression);
+			printf("\n");
+		}
+	}
 }
 
 area_t *find_area(const char *name, object_t *o) {
