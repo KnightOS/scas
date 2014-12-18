@@ -99,7 +99,7 @@ void dump_area(area_t *a) {
 		int i;
 		for (i = 0; i < a->symbols->length; ++i) {
 			symbol_t *sym = a->symbols->items[i];
-			scas_log(L_INFO, "'%s' == %08X (%s)", sym->name, sym->value,
+			scas_log(L_INFO, "'%s' == 0x%08X (%s)", sym->name, sym->value,
 					sym->type == SYMBOL_LABEL ? "Label" : "Equate");
 		}
 		deindent_log();
@@ -109,7 +109,7 @@ void dump_area(area_t *a) {
 		int i;
 		for (i = 0; i < a->late_immediates->length; ++i) {
 			late_immediate_t *imm = a->late_immediates->items[i];
-			printf("  [%04X] ", (uint16_t)imm->address);
+			printf("  [0x%04X] ", (uint16_t)imm->address);
 			print_tokenized_expression(stdout, imm->expression);
 			printf("\n");
 		}
