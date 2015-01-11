@@ -235,6 +235,7 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	uint64_t olen = 0;
+	uint64_t dlen = state->current_area->data_length;
 	int i;
 	for (i = 0; i < argc; ++i) {
 		int len = strlen(argv[i]);
@@ -280,12 +281,11 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 			}
 			++olen;
 			append_to_area(state->current_area, state->instruction_buffer, 1);
-			state->PC++;
+			++state->PC;
 		}
 	}
 	add_source_map((source_map_t *)stack_peek(state->source_map_stack),
-		*(int*)stack_peek(state->line_number_stack), state->line,
-		state->current_area->data_length, olen);
+		*(int*)stack_peek(state->line_number_stack), state->line, dlen, olen);
 	return 1;
 }
 

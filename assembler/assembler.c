@@ -19,10 +19,6 @@
 		*(int*)stack_peek(state->line_number_stack), \
 		state->line, COLUMN, stack_peek(state->file_name_stack));
 
-#define MAP_SOURCE(LENGTH) add_source_map((source_map_t *)stack_peek(state->source_map_stack), \
-		*(int*)stack_peek(state->line_number_stack), state->line, \
-		state->current_area->data_length, LENGTH);
-
 struct assembler_state state;
 
 void transform_local_labels(tokenized_expression_t *expression, const char *last_global_label) {
@@ -383,7 +379,9 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 			instruction >>= 8;
 		}
 		/* Add completed instruction */
-		MAP_SOURCE(bytes_width);
+		add_source_map((source_map_t *)stack_peek(state->source_map_stack),
+			*(int *)stack_peek(state->line_number_stack), state->line,
+			state->current_area->data_length, bytes_width);
 		append_to_area(state->current_area, state->instruction_buffer, bytes_width);
 		state->PC += bytes_width;
 		deindent_log();
