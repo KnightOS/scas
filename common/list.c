@@ -28,3 +28,10 @@ void list_del(list_t *list, int index) {
 	list->length--;
 	memmove(&list->items[index], &list->items[index + 1], sizeof(void*) * (list->capacity - index - 1));
 }
+
+void list_cat(list_t *list, list_t *source) {
+	int i;
+	for (i = 0; i < source->length; ++i) {
+		list_add(list, source->items[i]);
+	}
+}

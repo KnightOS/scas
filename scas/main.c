@@ -8,6 +8,7 @@
 #include "errors.h"
 #include "assembler.h"
 #include "linker.h"
+#include "merge.h"
 #include "expression.h"
 
 struct {
@@ -45,6 +46,7 @@ void init_runtime() {
 	runtime.linker_script = NULL;
 	runtime.verbosity = L_SILENT;
 	runtime.automatic_relocation = 0;
+	runtime.merge_only = 0;
 }
 
 void validate_runtime() {
@@ -247,7 +249,11 @@ int main(int argc, char **argv) {
 			.errors = errors,
 			.warnings = warnings,
 		};
-		link_objects(out, objects, &settings);
+		if (runtime.merge_only) {
+			merge_objects(out, objects, &settings);
+		} else {
+			link_objects(out, objects, &settings);
+		}
 		scas_log(L_INFO, "Linker returned %d errors, %d warnings", errors->length, warnings->length);
 	} else {
 		/* TODO: Link all provided assembly files together, or disallow mulitple input files when assembling */

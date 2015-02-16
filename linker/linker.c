@@ -156,33 +156,10 @@ void auto_relocate_area(area_t *area) {
 	}
 }
 
-void merge_areas(area_t *target, area_t* source) {
-	int i;
-	for (i = 0; i < source->late_immediates->length; ++i) {
-		late_immediate_t *imm = source->late_immediates->items[i];
-		imm->address += source->final_address;
-		imm->base_address += source->final_address;
-		imm->instruction_address += source->final_address;
-		list_add(target->late_immediates, imm);
-	}
-	for (i = 0; i < source->symbols->length; ++i) {
-		symbol_t *sym = source->symbols->items[i];
-		list_add(target->symbols, sym);
-	}
-	for (i = 0; i < source->source_map->length; ++i) {
-		source_map_t *map = source->source_map->items[i];
-		list_add(target->source_map, map);
-	}
-}
-
 void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	scas_log(L_INFO, "Linking %d objects together", objects->length);
 	list_t *area_states = create_list();
 	list_t *symbols = create_list();
-	object_t *merged;
-	if (settings->merge_only) {
-		merged = create_object();
-	}
 	int i;
 	/* Determine how big each area is and create a state for them */
 	scas_log(L_DEBUG, "Assigning addresses for each area");
@@ -228,49 +205,27 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	}
 	deindent_log();
 	/* Resolve all late immediate values */
-	if (settings->merge_only) {
-		scas_log(L_DEBUG, "Skipping immediate values due to --merge flag");
-	} else {
-		scas_log(L_DEBUG, "Resolving immediate values in each area");
-		indent_log();
-		for (i = 0; i < area_states->length; ++i) {
-			area_state_t *as = area_states->items[i];
-			int j;
-			for (j = 0; j < as->areas->length; ++j) {
-				area_t *a = as->areas->items[j];
-				resolve_immediate_values(symbols, a, settings->errors);
-			}
+	scas_log(L_DEBUG, "Resolving immediate values in each area");
+	indent_log();
+	for (i = 0; i < area_states->length; ++i) {
+		area_state_t *as = area_states->items[i];
+		int j;
+		for (j = 0; j < as->areas->length; ++j) {
+			area_t *a = as->areas->items[j];
+			resolve_immediate_values(symbols, a, settings->errors);
 		}
-		deindent_log();
 	}
-	if (settings->merge_only) {
-		scas_log(L_DEBUG, "Merging final objects into one");
-		for (i = 0; i < area_states->length; ++i) {
-			area_state_t *as = area_states->items[i];
-			area_t *ma = create_area(as->name);
-			int j;
-			for (j = 0; j < as->areas->length; ++j) {
-				area_t *a = as->areas->items[j];
-				scas_log(L_DEBUG, "Writing %d bytes for section %s", a->data_length, a->name);
-				append_to_area(ma, a->data, a->data_length);
-				merge_areas(ma, a);
-			}
-			list_add(merged->areas, ma);
+	deindent_log();
+	scas_log(L_DEBUG, "Writing final linked output file");
+	for (i = 0; i < area_states->length; ++i) {
+		area_state_t *as = area_states->items[i];
+		int j;
+		for (j = 0; j < as->areas->length; ++j) {
+			area_t *a = as->areas->items[j];
+			scas_log(L_DEBUG, "Writing %d bytes for section %s", a->data_length, a->name);
+			fwrite(a->data, sizeof(uint8_t), (int)a->data_length, output);
 		}
-		scas_log(L_DEBUG, "Writing merged object file");
-		fwriteobj(output, merged);
-	} else {
-		scas_log(L_DEBUG, "Writing final linked output file");
-		for (i = 0; i < area_states->length; ++i) {
-			area_state_t *as = area_states->items[i];
-			int j;
-			for (j = 0; j < as->areas->length; ++j) {
-				area_t *a = as->areas->items[j];
-				scas_log(L_DEBUG, "Writing %d bytes for section %s", a->data_length, a->name);
-				fwrite(a->data, sizeof(uint8_t), (int)a->data_length, output);
-			}
-		}
-		scas_log(L_DEBUG, "Wrote %d bytes to output file.", ftell(output));
 	}
+	scas_log(L_DEBUG, "Wrote %d bytes to output file.", ftell(output));
 	list_free(area_states);
 }
