@@ -79,6 +79,8 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 	int i;
 	for (i = 0; i < area->late_immediates->length; ++i) {
 		late_immediate_t *imm = area->late_immediates->items[i];
+		imm->instruction_address += area->final_address;
+		imm->base_address += area->final_address;
 		/* Temporarily add $ to symbol list */
 		symbol_t sym_pc = {
 			.type = SYMBOL_LABEL,
@@ -108,8 +110,6 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 			}
 			if ((result & mask) != result && ~result >> imm->width) {
 				add_error_from_map(errors, ERROR_VALUE_TRUNCATED, area->source_map, imm->instruction_address);
-				print_tokenized_expression(stderr, imm->expression);
-				fprintf(stderr, "\n");
 			} else {
 				result = result & mask;
 				int j;
