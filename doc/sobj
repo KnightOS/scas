@@ -36,7 +36,7 @@ specified. All multi-octet values are little-endian unless specified otherwise.
 
 "SCASOBJ" is the literal ASCII string "SCASOBJ", without a length prefix. The
 version is an unsigned 8-bit integer that specifies what version of the SCASOBJ
-specification is in use. The current version is 1.
+specification is in use. The current version is 2.
 
 ## Areas
 
@@ -50,12 +50,12 @@ code, late immediate values, imports, etc.
 The area count is a 32-bit unsigned integer that refers to the total number of
 areas in this object file. Each area takes the following form:
 
-+===========+============+============+================+=================+
-| Area name | Symbols... | Imports... | Expressions... | Machine code... | ->
-+===========+============+============+================+=================+
-+============+
-| Source Map |
-+============+
++===========+============+================+=================+
+| Area name | Symbols... | Expressions... | Machine code... | ->
++===========+============+================+=================+
++==========+============+
+| Metadata | Source Map |
++==========+============+
 
 ## Symbols
 
@@ -169,10 +169,29 @@ This example would be assembled to the following machine code:
     21 EF BE
     18 00
 
+## Metadata
+
+The metadata is a list of key/value pairs with arbitrary data for various
+purposes. Keys that begin with "scas." are reserved.
+
++===========+=========+
+| Key count | Keys... |
++===========+=========+
+
+The count is a 64-bit unsigned integer. The keys themselves take this format:
+
++------------+============+==============+=======+
+| Key length | Key string | Value length | Value |
++------------+============+==============+=======+
+
+The key string is an ASCII string whose length is defined by the unsigned 8-bit
+integer "Key length". The value is an arbitrary payload of octets whose length
+is defined by the unsigned 64-bit integer "Value length".
+
 ## Source Map
 
-Following the expression list is the assembly code that produced the machine code.
-It contains each line of code, minus whitespace. For example, with the following
+The source map includes the assembly code that produced the machine code.  It
+contains each line of code, minus whitespace. For example, with the following
 code segment:
 
     ; This is an example
