@@ -71,6 +71,15 @@ void gather_and_relocate_symbols(list_t *symbols, area_t *area, list_t *errors) 
 		}
 	}
 	deindent_log();
+	scas_log(L_DEBUG, "Relocating soure map for area '%s' (at 0x%08X)", area->name, area->final_address);
+	for (i = 0; i < area->source_map->length; ++i) {
+		source_map_t *map = area->source_map->items[i];
+		int j;
+		for (j = 0; j < map->entries->length; ++j) {
+			source_map_entry_t *entry = map->entries->items[j];
+			entry->address += area->final_address;
+		}
+	}
 }
 
 void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
