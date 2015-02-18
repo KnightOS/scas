@@ -1,5 +1,6 @@
 #include "directives.h"
 #include "errors.h"
+#include "functions.h"
 #include "expression.h"
 #include "stringop.h"
 #include "objects.h"
@@ -487,8 +488,30 @@ int handle_function(struct assembler_state *state, char **argv, int argc) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
 		return 1;
 	}
-	scas_log(L_INFO, "Warning: function directive is unimplemented");
-	// TODO
+	metadata_t *meta = get_area_metadata(state->current_area, "scas.functions");
+	if (meta == NULL) {
+		meta = malloc(sizeof(metadata_t));
+		meta->value = malloc(sizeof(uint32_t));
+		meta->value_length = sizeof(uint32_t);
+		*(uint32_t *)meta->value = 0;
+	}
+	list_t *functions = decode_function_metadata(meta->value, meta->value_length);
+	function_metadata_t *new_function = malloc(sizeof(function_metadata_t));
+
+	new_function->name = malloc(strlen(argv[0]) + 1);
+	strcpy(new_function->name, argv[0]);
+	new_function->start_symbol = malloc(strlen(argv[1]) + 1);
+	strcpy(new_function->start_symbol, argv[1]);
+	new_function->end_symbol = malloc(strlen(argv[2]) + 1);
+	strcpy(new_function->end_symbol, argv[2]);
+	scas_log(L_DEBUG, "Added function declaration %s from %s to %s",
+			new_function->name, new_function->start_symbol, new_function->end_symbol);
+
+	list_add(functions, new_function);
+	free(meta->value);
+	meta->value = encode_function_metadata(functions, &meta->value_length);
+	list_free(functions);
+	set_area_metadata(state->current_area, "scas.functions", meta->value, meta->value_length);
 	return 1;
 }
 

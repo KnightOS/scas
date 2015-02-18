@@ -58,6 +58,8 @@ void set_area_metadata(area_t *area, const char *key, char *value, uint64_t valu
 	strcpy(newmeta->key, key);
 	newmeta->value_length = value_length;
 	newmeta->value = value;
+	scas_log(L_DEBUG, "Set area metadata '%s' to new value with length %d", newmeta->key, newmeta->value_length);
+	list_add(area->metadata, newmeta);
 }
 
 void append_to_area(area_t *area, uint8_t *data, size_t length) {
@@ -200,6 +202,7 @@ area_t *read_area(FILE *f) {
 
 	uint64_t meta_length, meta_key;
 	fread(&meta_length, sizeof(uint64_t), 1, f);
+	scas_log(L_DEBUG, "Reading %d metadata entries", meta_length);
 	for (i = 0; i < (int)meta_length; ++i) {
 		metadata_t *meta = malloc(sizeof(metadata_t));
 		meta_key = fgetc(f);
@@ -208,6 +211,8 @@ area_t *read_area(FILE *f) {
 		fread(&meta->value_length, sizeof(uint64_t), 1, f);
 		meta->value = malloc(meta->value_length);
 		fread(meta->value, sizeof(char), meta->value_length, f);
+		list_add(area->metadata, meta);
+		scas_log(L_DEBUG, "Read metadata %s with value length %d", meta->key, meta->value_length);
 	}
 
 	uint64_t fileno, lineno;
