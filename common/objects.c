@@ -7,6 +7,8 @@
 #include <string.h>
 #include <errno.h>
 
+#define SCASOBJ_VERSION 2
+
 object_t *create_object() {
 	object_t *o = malloc(sizeof(object_t));
 	o->areas = create_list();
@@ -24,10 +26,38 @@ area_t *create_area(const char *name) {
 	a->late_immediates = create_list();
 	a->symbols = create_list();
 	a->source_map = create_list();
+	a->metadata = create_list();
 	a->data_length = 0;
 	a->data_capacity = 1024;
 	a->data = malloc(a->data_capacity);
 	return a;
+}
+
+metadata_t *get_area_metadata(area_t *area, const char *key) {
+	int i;
+	for (i = 0; i < area->metadata->length; ++i) {
+		metadata_t *meta = area->metadata->items[i];
+		if (strcmp(meta->key, key) == 0) {
+			return meta;
+		}
+	}
+	return NULL;
+}
+
+void set_area_metadata(area_t *area, const char *key, char *value, uint64_t value_length) {
+	int i;
+	for (i = 0; i < area->metadata->length; ++i) {
+		metadata_t *meta = area->metadata->items[i];
+		if (strcmp(meta->key, key) == 0) {
+			list_del(area->metadata, i);
+			break;
+		}
+	}
+	metadata_t *newmeta = malloc(sizeof(metadata_t));
+	newmeta->key = malloc(strlen(key) + 1);
+	strcpy(newmeta->key, key);
+	newmeta->value_length = value_length;
+	newmeta->value = value;
 }
 
 void append_to_area(area_t *area, uint8_t *data, size_t length) {
@@ -70,8 +100,6 @@ void write_area(FILE *f, area_t *a) {
 		fwrite(&sym->defined_address, sizeof(uint64_t), 1, f);
 	}
 	/* Imports (TODO) */
-	len = 0;
-	fwrite(&len, sizeof(uint32_t), 1, f);
 	/* Expressions */
 	fwrite(&a->late_immediates->length, sizeof(uint32_t), 1, f);
 	for (i = 0; i < a->late_immediates->length; ++i) {
@@ -86,6 +114,15 @@ void write_area(FILE *f, area_t *a) {
 	/* Machine code */
 	fwrite(&a->data_length, sizeof(uint64_t), 1, f);
 	fwrite(a->data, sizeof(uint8_t), a->data_length, f);
+	/* Metadata */
+	fwrite(&a->metadata->length, sizeof(uint64_t), 1, f);
+	for (i = 0; i < a->metadata->length; ++i) {
+		metadata_t *meta = a->metadata->items[i];
+		fputc((uint8_t)strlen(meta->key), f);
+		fwrite(meta->key, sizeof(char), strlen(meta->key), f);
+		fwrite(&meta->value_length, sizeof(uint64_t), 1, f);
+		fwrite(meta->value, sizeof(char), meta->value_length, f);
+	}
 	/* Source map */
 	fwrite(&a->source_map->length, sizeof(uint64_t), 1, f);
 	for (i = 0; i < a->source_map->length; ++i) {
@@ -108,7 +145,8 @@ void write_area(FILE *f, area_t *a) {
 
 void fwriteobj(FILE *f, object_t *o) {
 	/* Header */
-	fprintf(f, "SCASOBJ\x01");
+	fprintf(f, "SCASOBJ");
+	fputc(SCASOBJ_VERSION, f);
 	/* Areas */
 	uint32_t a_len = o->areas->length;
 	fwrite(&a_len, sizeof(uint32_t), 1, f);
@@ -124,7 +162,7 @@ area_t *read_area(FILE *f) {
 	char *name = read_line(f);
 	area_t *area = create_area(name);
 	scas_log(L_DEBUG, "Reading area '%s' from file", name);
-	uint32_t symbols, imports, immediates;
+	uint32_t symbols, immediates;
 	fread(&symbols, sizeof(uint32_t), 1, f);
 	uint32_t len;
 	int i;
@@ -140,7 +178,6 @@ area_t *read_area(FILE *f) {
 		list_add(area->symbols, sym);
 		scas_log(L_DEBUG, "Read symbol '%s' with value 0x%08X%08X", sym->name, (uint32_t)(sym->value >> 32), (uint32_t)sym->value);
 	}
-	fread(&imports, sizeof(uint32_t), 1, f);
 	/* TODO: Imports */
 	fread(&immediates, sizeof(uint32_t), 1, f);
 	for (i = 0; i < immediates; ++i) {
@@ -160,6 +197,18 @@ area_t *read_area(FILE *f) {
 	area->data = malloc((int)area->data_length);
 	fread(area->data, sizeof(uint8_t), (int)area->data_length, f);
 	scas_log(L_DEBUG, "Read %d bytes of machine code", area->data_length);
+
+	uint64_t meta_length, meta_key;
+	fread(&meta_length, sizeof(uint64_t), 1, f);
+	for (i = 0; i < (int)meta_length; ++i) {
+		metadata_t *meta = malloc(sizeof(metadata_t));
+		meta_key = fgetc(f);
+		meta->key = malloc(meta_key);
+		fread(meta->key, sizeof(char), meta_key, f);
+		fread(&meta->value_length, sizeof(uint64_t), 1, f);
+		meta->value = malloc(meta->value_length);
+		fread(meta->value, sizeof(char), meta->value_length, f);
+	}
 
 	uint64_t fileno, lineno;
 	fread(&fileno, sizeof(uint64_t), 1, f);
@@ -192,7 +241,7 @@ object_t *freadobj(FILE *f, const char *name) {
 		scas_abort("'%s' is not a valid object file.", name);
 	}
 	int ver = fgetc(f);
-	if (ver != 1) {
+	if (ver != SCASOBJ_VERSION) {
 		scas_abort("'%s' was built with an incompatible version of scas.", name);
 	}
 	uint32_t area_count;

@@ -12,6 +12,12 @@ enum {
 };
 
 typedef struct {
+    char *key;
+    char *value;
+    uint64_t value_length;
+} metadata_t;
+
+typedef struct {
     int type;
     char *name;
     uint64_t value;
@@ -45,6 +51,7 @@ typedef struct {
     list_t *late_immediates;
     list_t *symbols;
     list_t *source_map;
+    list_t *metadata;
     uint8_t *data;
     uint64_t data_length;
     uint64_t data_capacity;
@@ -59,6 +66,8 @@ typedef struct {
 object_t *create_object();
 void object_free(object_t *object);
 area_t *create_area(const char *name);
+metadata_t *get_area_metadata(area_t *area, const char *key);
+void set_area_metadata(area_t *area, const char *key, char *value, uint64_t value_length);
 void append_to_area(area_t *area, uint8_t *data, size_t length);
 void insert_in_area(area_t *area, uint8_t *data, size_t length, size_t index);
 void fwriteobj(FILE *file, object_t *object);
