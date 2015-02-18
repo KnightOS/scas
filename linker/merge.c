@@ -61,6 +61,7 @@ void merge_areas(object_t *merged, object_t *source) {
 		append_to_area(merged_area, source_area->data, source_area->data_length);
 		list_cat(merged_area->symbols, source_area->symbols);
 		list_cat(merged_area->late_immediates, source_area->late_immediates);
+		list_cat(merged_area->metadata, source_area->metadata);
 		list_cat(merged_area->source_map, source_area->source_map);
 	}
 }
