@@ -4,6 +4,7 @@
 #include "list.h"
 #include "expression.h"
 #include "instructions.h"
+#include "functions.h"
 #include "merge.h"
 #include "log.h"
 #include <stdint.h>
@@ -46,6 +47,8 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 		uint64_t result = evaluate_expression(imm->expression, symbols, &error);
 		list_del(symbols, symbols->length - 1); // Remove $
 		if (error == EXPRESSION_BAD_SYMBOL) {
+			scas_log(L_ERROR, "Unable to find symbol for expression");
+			print_tokenized_expression(stderr, imm->expression);
 			add_error_from_map(errors, ERROR_UNKNOWN_SYMBOL, area->source_map, imm->instruction_address);
 			continue;
 		} else if (error == EXPRESSION_BAD_SYNTAX) {
@@ -96,14 +99,13 @@ void auto_relocate_area(area_t *area) {
 					++sym->value;
 				}
 			}
-			int j, pc = 1;
+			int j;
 			for (j = 0; j < area->late_immediates->length; ++j) {
 				late_immediate_t *_imm = area->late_immediates->items[j];
 				if (_imm->base_address > imm->base_address) {
 					++_imm->base_address;
 					++_imm->instruction_address;
 					++_imm->address;
-					++pc;
 				}
 			}
 		}
@@ -124,7 +126,6 @@ void gather_symbols(list_t *symbols, area_t *area, linker_settings_t *settings) 
 }
 
 void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
-	scas_log(L_INFO, "Linking %d objects together", objects->length);
 	list_t *symbols = create_list(); // TODO: Use a hash table
 	object_t *merged = merge_objects(objects);
 
@@ -136,6 +137,7 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	for (i = 0; i < merged->areas->length; ++i) {
 		area_t *area = merged->areas->items[i];
 		scas_log(L_DEBUG, "Linking area %s", area->name);
+		remove_unused_functions(area, merged->areas); // TODO: Add options for this sort of thing
 		if (settings->automatic_relocation) {
 			auto_relocate_area(area);
 		}

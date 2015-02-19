@@ -1,10 +1,187 @@
 #include "functions.h"
+#include "objects.h"
 #include "list.h"
+#include "hashtable.h"
+#include "expression.h"
 #include "log.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <strings.h>
+
+unsigned int hash(void *data) {
+	unsigned int hash = 5381;
+	char *str = data;
+	int c;
+	while ((c = *str++)) {
+		hash = ((hash << 5) + hash) + c;
+	}
+	return hash;
+}
+
+symbol_t *get_symbol_by_name(area_t *area, const char *name) {
+	int i;
+	for (i = 0; i < area->symbols->length; ++i) {
+		symbol_t *sym = area->symbols->items[i];
+		if (strcasecmp(sym->name, name) == 0) {
+			return sym;
+		}
+	}
+	return NULL;
+}
+
+function_metadata_t *get_function_for_address(list_t *functions, uint32_t address) {
+	int i;
+	for (i = 0; i < functions->length; ++i) {
+		function_metadata_t *func = functions->items[i];
+		if (func->start_address <= address && func->end_address >= address) {
+			return func;
+		}
+	}
+	return NULL;
+}
+
+function_metadata_t *get_function_by_name(list_t *functions, const char *name) {
+	int i;
+	for (i = 0; i < functions->length; ++i) {
+		function_metadata_t *func = functions->items[i];
+		if (strcasecmp(func->name, name) == 0) {
+			return func;
+		}
+	}
+	return NULL;
+}
+
+void mark_dependencies_precious(function_metadata_t *parent, list_t *functions, area_t *area);
+
+void mark_precious(list_t *functions, late_immediate_t *imm, area_t *area, int recurse) {
+	int j;
+	for (j = 0; j < imm->expression->tokens->length; ++j) {
+		expression_token_t *tok = imm->expression->tokens->items[j];
+		if (tok->type == SYMBOL) {
+			function_metadata_t *func = get_function_by_name(functions, tok->symbol);
+			if (func) {
+				if (!func->precious) {
+					scas_log(L_DEBUG, "Marked %s as precious", func->name);
+					func->precious = 1;
+					if (recurse) {
+						mark_dependencies_precious(func, functions, area);
+					}
+				}
+			}
+		}
+	}
+}
+
+void mark_dependencies_precious(function_metadata_t *parent, list_t *functions, area_t *area) {
+	scas_log(L_DEBUG, "Marking dependencies of %s as precious", parent->name);
+	int i;
+	for (i = 0; i < area->late_immediates->length; ++i) {
+		late_immediate_t *imm = area->late_immediates->items[i];
+		if (imm->base_address >= parent->start_address && imm->base_address <= parent->end_address) {
+			mark_precious(functions, imm, area, 1);
+		}
+	}
+}
+
+int compare_functions(const void *a, const void *b) {
+	const function_metadata_t *func_a = a;
+	const function_metadata_t *func_b = b;
+	return func_a->start_address - func_b->start_address;
+}
+
+void remove_unused_functions(area_t *area, list_t *areas) {
+	scas_log(L_INFO, "Optimizing out unused functions for area %s", area->name);
+	list_t *functions = create_list();
+	metadata_t *meta = get_area_metadata(area, "scas.functions");
+	if (meta) {
+		list_cat(functions, decode_function_metadata(meta->value, meta->value_length));
+	}
+	int i;
+	for (i = 0; i < functions->length; ++i) {
+		function_metadata_t *meta = functions->items[i];
+		meta->precious = 0;
+		symbol_t *start = get_symbol_by_name(area, meta->start_symbol);
+		symbol_t *end = get_symbol_by_name(area, meta->end_symbol);
+		if (!start || !end) {
+			scas_log(L_ERROR, "Warning: function %s has unknown start and end symbols", meta->name);
+			list_del(functions, i);
+			--i;
+		} else {
+			scas_log(L_DEBUG, "Function %s is located at %08X-%08X", meta->name, start->value, end->value);
+			meta->start_address = start->value;
+			meta->end_address = end->value;
+		}
+	}
+	scas_log(L_DEBUG, "Found %d functions, building dependency map", functions->length);
+	for (i = 0; i < areas->length; ++i) {
+		area_t *a = areas->items[i];
+		int j;
+		for (j = 0; j < a->late_immediates->length; ++j) {
+			late_immediate_t *imm = a->late_immediates->items[j];
+			function_metadata_t *meta = get_function_for_address(functions, imm->address);
+			if (meta == NULL) { // Precious code
+				mark_precious(functions, imm, area, 0);
+			}
+		}
+	}
+	for (i = 0; i < functions->length; ++i) {
+		function_metadata_t *func = functions->items[i];
+		if (func->precious) {
+			mark_dependencies_precious(func, functions, area);
+		}
+	}
+	qsort(functions->items, functions->length, sizeof(function_metadata_t *), compare_functions);
+	for (i = 0; i < functions->length; ++i) {
+		function_metadata_t *func = functions->items[i];
+		if (!func->precious) {
+			scas_log(L_DEBUG, "Removing unused function %s (at %08X - %08X)", func->name, func->start_address, func->end_address);
+			int length = func->end_address - func->start_address;
+			delete_from_area(area, func->start_address, length);
+			int k;
+			for (k = 0; k < area->symbols->length; ++k) {
+				symbol_t *sym = area->symbols->items[k];
+				if (sym->type == SYMBOL_LABEL) {
+					if (sym->value >= func->start_address && sym->value < func->end_address) {
+						list_del(area->symbols, k--);
+					} else if (sym->value >= func->end_address) {
+						sym->value -= length;
+					}
+				}
+			}
+			int j;
+			for (j = 0; j < area->late_immediates->length; ++j) {
+				late_immediate_t *_imm = area->late_immediates->items[j];
+				if (_imm->address >= func->start_address && _imm->address < func->end_address) {
+					list_del(area->late_immediates, j--);
+				} else if (_imm->address >= func->end_address) {
+					_imm->base_address -= length;
+					_imm->instruction_address -= length;
+					_imm->address -= length;
+				}
+			}
+			for (j = 0; j < area->source_map->length; ++j) {
+				source_map_t *map = area->source_map->items[j];
+				for (k = 0; k < map->entries->length; ++k) {
+					source_map_entry_t *entry = map->entries->items[k];
+					if (entry->address >= func->start_address && entry->address < func->end_address) {
+						list_del(map->entries, k--);
+					} else if (entry->address >= func->end_address) {
+						entry->address -= length;
+					}
+				}
+			}
+			for (k = 0; k < functions->length; ++k) {
+				function_metadata_t *_func = functions->items[k];
+				if (_func->start_address >= func->end_address) {
+					_func->start_address -= length;
+					_func->end_address -= length;
+				}
+			}
+		}
+	}
+	list_free(functions);
+}
 
 list_t *decode_function_metadata(char *value, uint64_t value_length) {
 	uint32_t total;
@@ -13,10 +190,11 @@ list_t *decode_function_metadata(char *value, uint64_t value_length) {
 	value += sizeof(uint32_t);
 	result = create_list();
 
+	scas_log(L_DEBUG, "Decoding metadata for %d functions", total);
 	int i;
 	for (i = 0; i < total; ++i) {
 		uint32_t len;
-		function_metadata_t *meta = malloc(sizeof(function_metadata_t));
+		function_metadata_t *meta = calloc(1, sizeof(function_metadata_t));
 		len = *(uint32_t *)value;
 		value += sizeof(uint32_t);
 		meta->name = malloc(len + 1);

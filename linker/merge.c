@@ -2,6 +2,7 @@
 #include "linker.h"
 #include "objects.h"
 #include "errors.h"
+#include "functions.h"
 #include "list.h"
 #include "log.h"
 #include <stdint.h>
@@ -52,7 +53,6 @@ void merge_areas(object_t *merged, object_t *source) {
 		area_t *source_area = source->areas->items[i];
 		area_t *merged_area = get_area_by_name(merged, source_area->name);
 		if (merged_area == NULL) {
-			scas_log(L_DEBUG, "Creating new area for '%s'", source_area->name);
 			merged_area = create_area(source_area->name);
 			list_add(merged->areas, merged_area);
 		}
@@ -62,7 +62,22 @@ void merge_areas(object_t *merged, object_t *source) {
 		append_to_area(merged_area, source_area->data, source_area->data_length);
 		list_cat(merged_area->symbols, source_area->symbols);
 		list_cat(merged_area->late_immediates, source_area->late_immediates);
-		list_cat(merged_area->metadata, source_area->metadata);
+		// NOTE: I know this is not very good SoC
+		metadata_t *new_functions = get_area_metadata(source_area, "scas.functions");
+		metadata_t *old_functions = get_area_metadata(merged_area, "scas.functions");
+		if (new_functions) {
+			list_t *decoded = decode_function_metadata(new_functions->value, new_functions->value_length);
+			list_t *merged;
+			if (old_functions) {
+				merged = decode_function_metadata(old_functions->value, old_functions->value_length);
+			} else {
+				merged = create_list();
+			}
+			list_cat(merged, decoded);
+			uint64_t len;
+			char *merged_metadata = encode_function_metadata(merged, &len);
+			set_area_metadata(merged_area, "scas.functions", merged_metadata, len);
+		}
 		list_cat(merged_area->source_map, source_area->source_map);
 	}
 }

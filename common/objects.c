@@ -1,5 +1,6 @@
 #include "objects.h"
 #include "log.h"
+#include "functions.h"
 #include "readline.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,7 +75,7 @@ void append_to_area(area_t *area, uint8_t *data, size_t length) {
 }
 
 void insert_in_area(area_t *area, uint8_t *data, size_t length, size_t index) {
-	if ((area->data_capacity - area->data_length) < length) {
+	while (area->data_capacity < length + index) {
 		/* Expand capacity */
 		area->data = realloc(area->data, area->data_capacity + 1024);
 		area->data_capacity += 1024;
@@ -83,6 +84,12 @@ void insert_in_area(area_t *area, uint8_t *data, size_t length, size_t index) {
 	memcpy(area->data + index, data, length);
 	area->data_length += length;
 	scas_log(L_DEBUG, "Inserted %d bytes in area '%s' (now %d bytes total)", length, area->name, area->data_length);
+}
+
+void delete_from_area(area_t *area, size_t index, size_t length) {
+	scas_log(L_DEBUG, "Removing %d bytes at %08X from area '%s'", length, index, area->name);
+	memmove(area->data + index, area->data + index + length, area->data_length - (index + length));
+	area->data_length -= length;
 }
 
 void write_area(FILE *f, area_t *a) {

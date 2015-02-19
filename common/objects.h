@@ -70,6 +70,7 @@ metadata_t *get_area_metadata(area_t *area, const char *key);
 void set_area_metadata(area_t *area, const char *key, char *value, uint64_t value_length);
 void append_to_area(area_t *area, uint8_t *data, size_t length);
 void insert_in_area(area_t *area, uint8_t *data, size_t length, size_t index);
+void delete_from_area(area_t *area, size_t index, size_t length);
 void fwriteobj(FILE *file, object_t *object);
 object_t *freadobj(FILE *file, const char *name);
 void add_source_map(source_map_t *map, int line_number, const char *line, uint64_t address, uint64_t length);
