@@ -131,8 +131,11 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	int i;
 	for (i = 0; i < merged->areas->length; ++i) {
 		area_t *area = merged->areas->items[i];
-		scas_log(L_DEBUG, "Linking area %s", area->name);
 		gather_symbols(symbols, area, settings);
+	}
+	for (i = 0; i < merged->areas->length; ++i) {
+		area_t *area = merged->areas->items[i];
+		scas_log(L_DEBUG, "Linking area %s", area->name);
 		if (settings->automatic_relocation) {
 			auto_relocate_area(area);
 		}
