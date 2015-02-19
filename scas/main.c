@@ -250,7 +250,8 @@ int main(int argc, char **argv) {
 			.warnings = warnings,
 		};
 		if (runtime.merge_only) {
-			merge_objects(out, objects, &settings);
+			object_t *merged = merge_objects(objects);
+			fwriteobj(out, merged);
 		} else {
 			link_objects(out, objects, &settings);
 		}

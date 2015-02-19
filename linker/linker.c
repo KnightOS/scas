@@ -4,6 +4,7 @@
 #include "list.h"
 #include "expression.h"
 #include "instructions.h"
+#include "merge.h"
 #include "log.h"
 #include <stdint.h>
 #include <stdlib.h>
@@ -15,33 +16,6 @@
  * A hashtable could also be used to handle dupes and have fast lookup
  */
 
-typedef struct {
-	char *name;
-	uint64_t address;
-	uint64_t length;
-	list_t *areas;
-} area_state_t;
-
-area_state_t *find_area_state(list_t *areas, char *name) {
-	int i;
-	for (i = 0; i < areas->length; ++i) {
-		area_state_t *a = areas->items[i];
-		if (strcasecmp(a->name, name) == 0) {
-			return a;
-		}
-	}
-	return NULL;
-}
-
-area_state_t *create_area_state(char *name) {
-	area_state_t *as = malloc(sizeof(area_state_t));
-	as->name = name;
-	as->length = 0;
-	as->address = 0;
-	as->areas = create_list();
-	return as;
-}
-
 symbol_t *find_symbol(list_t *symbols, char *name) {
 	int i;
 	for (i = 0; i < symbols->length; ++i) {
@@ -51,35 +25,6 @@ symbol_t *find_symbol(list_t *symbols, char *name) {
 		}
 	}
 	return NULL;
-}
-
-void gather_and_relocate_symbols(list_t *symbols, area_t *area, list_t *errors) {
-	scas_log(L_DEBUG, "Relocating symbols for area '%s' (at 0x%08X)", area->name, area->final_address);
-	indent_log();
-	int i;
-	for (i = 0; i < area->symbols->length; ++i) {
-		symbol_t *sym = area->symbols->items[i];
-		symbol_t *existing = find_symbol(symbols, sym->name);
-		if (existing) {
-			add_error_from_map(errors, ERROR_DUPLICATE_SYMBOL, area->source_map, ~0);
-			continue;
-		}
-		if (sym->type == SYMBOL_LABEL) {
-			sym->value += area->final_address;
-			scas_log(L_DEBUG, "Assigned symbol '%s' value 0x%08X", sym->name, sym->value);
-			list_add(symbols, sym);
-		}
-	}
-	deindent_log();
-	scas_log(L_DEBUG, "Relocating soure map for area '%s' (at 0x%08X)", area->name, area->final_address);
-	for (i = 0; i < area->source_map->length; ++i) {
-		source_map_t *map = area->source_map->items[i];
-		int j;
-		for (j = 0; j < map->entries->length; ++j) {
-			source_map_entry_t *entry = map->entries->items[j];
-			entry->address += area->final_address;
-		}
-	}
 }
 
 void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
@@ -165,76 +110,37 @@ void auto_relocate_area(area_t *area) {
 	}
 }
 
+void gather_symbols(list_t *symbols, area_t *area, linker_settings_t *settings) {
+	int i;
+	for (i = 0; i < area->symbols->length; ++i) {
+		symbol_t *sym = area->symbols->items[i];
+		if (find_symbol(symbols, sym->name)) {
+			add_error_from_map(settings->errors, ERROR_UNKNOWN_SYMBOL,
+					area->source_map, sym->defined_address);
+		} else {
+			list_add(symbols, sym);
+		}
+	}
+}
+
 void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	scas_log(L_INFO, "Linking %d objects together", objects->length);
-	list_t *area_states = create_list();
-	list_t *symbols = create_list();
+	list_t *symbols = create_list(); // TODO: Use a hash table
+	object_t *merged = merge_objects(objects);
+
 	int i;
-	/* Determine how big each area is and create a state for them */
-	scas_log(L_DEBUG, "Assigning addresses for each area");
-	indent_log();
-	for (i = 0; i < objects->length; ++i) {
-		object_t *o = objects->items[i];
-		int j;
-		for (j = 0; j < o->areas->length; ++j) {
-			area_t *a = o->areas->items[j];
-			if (settings->automatic_relocation) {
-				auto_relocate_area(a);
-			}
-			area_state_t *as = find_area_state(area_states, a->name);
-			if (as == NULL) {
-				as = create_area_state(a->name);
-				list_add(area_states, as);
-			}
-			a->final_address = as->length;
-			as->length += a->data_length;
-			scas_log(L_DEBUG, "Added %d bytes to section %s, total %d bytes", a->data_length, as->name, as->length);
-			list_add(as->areas, a);
-			scas_log(L_DEBUG, "Assigned address 0x%08X to area '%s' from object %d",
-					a->final_address, a->name, i);
+	for (i = 0; i < merged->areas->length; ++i) {
+		area_t *area = merged->areas->items[i];
+		scas_log(L_DEBUG, "Linking area %s", area->name);
+		gather_symbols(symbols, area, settings);
+		if (settings->automatic_relocation) {
+			auto_relocate_area(area);
 		}
+		scas_log(L_DEBUG, "Resolving immediate values in each area");
+		resolve_immediate_values(symbols, area, settings->errors);
+		scas_log(L_DEBUG, "Writing final linked area to output file");
+		fwrite(area->data, sizeof(uint8_t), (int)area->data_length, output);
 	}
-	deindent_log();
-	/* Find a final address for all areas and relocate their symbols */
-	scas_log(L_DEBUG, "Assigning final address to each area in final executable");
-	indent_log();
-	uint64_t offset_addr = 0;
-	for (i = 0; i < area_states->length; ++i) {
-		area_state_t *as = area_states->items[i];
-		as->address = offset_addr;
-		offset_addr += as->length;
-		scas_log(L_DEBUG, "Assigned area %s to address %08X (%d bytes)", as->name, as->address, as->length);
-		int j;
-		for (j = 0; j < as->areas->length; ++j) {
-			area_t *a = as->areas->items[j];
-			a->final_address += as->address;
-			scas_log(L_DEBUG, "Assigned final address 0x%08X for area '%s:%d'", a->final_address, a->name, j);
-			gather_and_relocate_symbols(symbols, a, settings->errors);
-		}
-	}
-	deindent_log();
-	/* Resolve all late immediate values */
-	scas_log(L_DEBUG, "Resolving immediate values in each area");
-	indent_log();
-	for (i = 0; i < area_states->length; ++i) {
-		area_state_t *as = area_states->items[i];
-		int j;
-		for (j = 0; j < as->areas->length; ++j) {
-			area_t *a = as->areas->items[j];
-			resolve_immediate_values(symbols, a, settings->errors);
-		}
-	}
-	deindent_log();
-	scas_log(L_DEBUG, "Writing final linked output file");
-	for (i = 0; i < area_states->length; ++i) {
-		area_state_t *as = area_states->items[i];
-		int j;
-		for (j = 0; j < as->areas->length; ++j) {
-			area_t *a = as->areas->items[j];
-			scas_log(L_DEBUG, "Writing %d bytes for section %s", a->data_length, a->name);
-			fwrite(a->data, sizeof(uint8_t), (int)a->data_length, output);
-		}
-	}
-	scas_log(L_DEBUG, "Wrote %d bytes to output file.", ftell(output));
-	list_free(area_states);
+	scas_log(L_DEBUG, "Final binary written: %d bytes", ftell(output));
+	list_free(symbols);
 }

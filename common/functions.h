@@ -1,6 +1,7 @@
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 #include "list.h"
+#include "objects.h"
 #include <stdint.h>
 
 typedef struct {

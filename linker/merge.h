@@ -4,6 +4,7 @@
 #include "objects.h"
 #include "linker.h"
 
-void merge_objects(FILE *output, list_t *objects, linker_settings_t *settings);
+object_t *merge_objects(list_t *objects);
+void merge_areas(object_t *merged, object_t *source);
 
 #endif

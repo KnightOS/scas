@@ -21,6 +21,7 @@ area_t *get_area_by_name(object_t *object, char *name) {
 
 void relocate_area(area_t *area, uint64_t address) {
 	int i;
+	area->final_address = address;
 	for (i = 0; i < area->symbols->length; ++i) {
 		symbol_t *sym = area->symbols->items[i];
 		if (sym->type != SYMBOL_LABEL) {
@@ -66,7 +67,7 @@ void merge_areas(object_t *merged, object_t *source) {
 	}
 }
 
-void merge_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
+object_t *merge_objects(list_t *objects) {
 	scas_log(L_INFO, "Merging %d objects into one", objects->length);
 	object_t *merged = create_object();
 	int i;
@@ -76,5 +77,5 @@ void merge_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 		merge_areas(merged, o);
 	}
 	scas_log(L_INFO, "Writing merged object to output");
-	fwriteobj(output, merged);
+	return merged;
 }
