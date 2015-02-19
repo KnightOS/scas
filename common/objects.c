@@ -21,7 +21,7 @@ void object_free(object_t *o) {
 
 area_t *create_area(const char *name) {
 	area_t *a = malloc(sizeof(area_t));
-	a->name = malloc(sizeof(name) + 1);
+	a->name = malloc(strlen(name) + 1);
 	strcpy(a->name, name);
 	a->late_immediates = create_list();
 	a->symbols = create_list();
@@ -63,7 +63,7 @@ void set_area_metadata(area_t *area, const char *key, char *value, uint64_t valu
 }
 
 void append_to_area(area_t *area, uint8_t *data, size_t length) {
-	if ((area->data_capacity - area->data_length) < length) {
+	while ((area->data_capacity - area->data_length) < length) {
 		/* Expand capacity */
 		area->data = realloc(area->data, area->data_capacity + 1024);
 		area->data_capacity += 1024;

@@ -51,7 +51,6 @@ list_t *split_string(const char *str, const char *delims) {
 	for (i = 0, j = 0; i < strlen(str) + 1; ++i) {
 		if (strchr(delims, str[i]) || i == strlen(str)) {
 			if (i - j == 0) {
-				j = i;
 				continue;
 			}
 			char *left = malloc(i - j + 1);
@@ -59,7 +58,7 @@ list_t *split_string(const char *str, const char *delims) {
 			left[i - j] = 0;
 			list_add(res, left);
 			j = i + 1;
-			while (strchr(delims, str[j]) && str[j]) {
+			while (str[j] && strchr(delims, str[j])) {
 				j++;
 				i++;
 			}
