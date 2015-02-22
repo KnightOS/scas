@@ -48,7 +48,6 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 		list_del(symbols, symbols->length - 1); // Remove $
 		if (error == EXPRESSION_BAD_SYMBOL) {
 			scas_log(L_ERROR, "Unable to find symbol for expression");
-			print_tokenized_expression(stderr, imm->expression);
 			add_error_from_map(errors, ERROR_UNKNOWN_SYMBOL, area->source_map, imm->instruction_address);
 			continue;
 		} else if (error == EXPRESSION_BAD_SYNTAX) {
