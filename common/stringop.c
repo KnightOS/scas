@@ -5,14 +5,19 @@
 #include "strings.h"
 #include "list.h"
 
+/* Note: This returns 8 characters for trimmed_start per tab character. */
 char *strip_whitespace(char *_str, int *trimmed_start) {
 	*trimmed_start = 0;
 	if (*_str == '\0')
 		return _str;
 	char *strold = _str;
 	while (*_str == ' ' || *_str == '\t') {
+		if (*_str == '\t') {
+			*trimmed_start += 8;
+		} else {
+			*trimmed_start += 1;
+		}
 		_str++;
-		*trimmed_start += 1;
 	}
 	char *str = malloc(strlen(_str) + 1);
 	strcpy(str, _str);
