@@ -22,6 +22,7 @@ area_t *get_area_by_name(object_t *object, char *name) {
 
 void relocate_area(area_t *area, uint64_t address) {
 	int i;
+	scas_log(L_DEBUG, "Assigning final address %08X to area %s", address, area->name);
 	area->final_address = address;
 	for (i = 0; i < area->symbols->length; ++i) {
 		symbol_t *sym = area->symbols->items[i];

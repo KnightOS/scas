@@ -29,7 +29,7 @@ symbol_t *find_symbol(list_t *symbols, char *name) {
 }
 
 void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
-	scas_log(L_DEBUG, "Resolving immediate values for area '%s'", area->name);
+	scas_log(L_DEBUG, "Resolving immediate values for area '%s' at %08X", area->name, area->final_address);
 	indent_log();
 	int i;
 	for (i = 0; i < area->late_immediates->length; ++i) {
@@ -140,7 +140,6 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 		if (settings->automatic_relocation) {
 			auto_relocate_area(area);
 		}
-		scas_log(L_DEBUG, "Resolving immediate values in each area");
 		resolve_immediate_values(symbols, area, settings->errors);
 		scas_log(L_DEBUG, "Writing final linked area to output file");
 		fwrite(area->data, sizeof(uint8_t), (int)area->data_length, output);

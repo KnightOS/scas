@@ -28,6 +28,7 @@ area_t *create_area(const char *name) {
 	a->symbols = create_list();
 	a->source_map = create_list();
 	a->metadata = create_list();
+	a->final_address = 0;
 	a->data_length = 0;
 	a->data_capacity = 1024;
 	a->data = malloc(a->data_capacity);
