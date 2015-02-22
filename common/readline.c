@@ -13,6 +13,9 @@ char *read_line(FILE *file) {
 		if (c == EOF || c == '\n' || c == '\0') {
 			break;
 		}
+		if (c == '\r') {
+			continue;
+		}
 		if (i == size) {
 			string = realloc(string, length *= 2);
 			if (!string) {
