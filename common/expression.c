@@ -176,6 +176,9 @@ expression_token_t *parse_digit(const char **string) {
 		case 'x':
 			base = 16;
 			break;
+		case 'o':
+			base = 16;
+			break;
 		case 0:
 			// It's probably a single digit number
 			--*string;
@@ -185,8 +188,27 @@ expression_token_t *parse_digit(const char **string) {
 			break;
 		}
 		*string += 2;
+
+		expression_token_t *expr = malloc(sizeof(expression_token_t));
+		expr->type = NUMBER;
+		char *end;
+		expr->number = strtol(*string, &end, base);
+		*string = end;
+		return expr;
 	}
-	/* Check for ASxxxx-style local labels */
+
+	/* Character literals */
+	if ((*string)[0] == '\'') {
+		if (strlen(*string) >= 3 && (*string)[2] == '\'') {
+			expression_token_t *expr = malloc(sizeof(expression_token_t));
+			expr->type = NUMBER;
+			expr->number = (uint64_t)(*string)[1];
+			*string = *string + 3;
+			return expr;
+		}
+	}
+
+	/* ASxxxx-style local labels */
 	const char *a = *string;
 	while (*a) {
 		if (*a == '$') {
@@ -195,10 +217,11 @@ expression_token_t *parse_digit(const char **string) {
 		++a;
 	}
 
+	/* Plain decimal number */
 	expression_token_t *expr = malloc(sizeof(expression_token_t));
 	expr->type = NUMBER;
 	char *end;
-	expr->number = strtol(*string, &end, base);
+	expr->number = strtol(*string, &end, 10);
 	*string = end;
 	return expr;
 }
@@ -265,7 +288,7 @@ tokenized_expression_t *parse_expression(const char *str) {
 		expression_token_t *expr;
 		if (*current == 0) {
 			break;
-		} else if (isdigit(*current)) {
+		} else if (isdigit(*current) || *current == '\'') {
 			if (tokenizer_state == STATE_VALUE) {
 				return 0;
 			}
