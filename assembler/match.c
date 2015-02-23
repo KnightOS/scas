@@ -31,9 +31,19 @@ char *get_operand_string(instruction_t *inst, int *i, const char *code, int j) {
 		return res;
 	}
 	if (delimiter == '%' || delimiter == '@' || delimiter == '&' || delimiter == '^') {
-		delimiter = ' '; // TODO: Support tabs?
+		delimiter = '*';
 	}
-	char *end = code_strchr(code + j, delimiter);
+	char *end;
+	if (delimiter == '*') {
+		const char *toks = " \t-+"; // Valid delimiters in this scenario
+		int k;
+		for (k = 0; k < strlen(toks); ++k) {
+			end = code_strchr(code + j, toks[k]);
+			if (end) break;
+		}
+	} else {
+		end = code_strchr(code + j, delimiter);
+	}
 	if (end == NULL) {
 		return NULL;
 	}
