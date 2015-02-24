@@ -58,7 +58,6 @@ void add_error_from_map(list_t *errors, int code, list_t *maps, uint64_t address
 		int j;
 		for (j = 0; j < map->entries->length; ++j) {
 			entry = map->entries->items[j];
-			scas_log(L_ERROR, "Checking source map %s at %08X:%08X for match with %08X", entry->source_code, entry->address, entry->length, address);
 			if (address >= entry->address && address < entry->address + entry->length) {
 				found = 1;
 				break;
