@@ -11,28 +11,28 @@
 #include "objects.h"
 
 static operator_t operators[] = {
-	{ "+", OP_PLUS, 0, 0, 0, operator_add },
-	{ "-", OP_MINUS, 0, 0, 0, operator_subtract },
-	{ "+", OP_UNARY_PLUS, 1, 99, 1, operator_unary_plus },
-	{ "-", OP_UNARY_MINUS, 1, 99, 1, operator_unary_minus },
-	{ "~", OP_NEGATE, 1, 99, 1, operator_negate },
-	{ "!", OP_LOGICAL_NOT, 1, 99, 1, operator_logical_not },
-	{ "*", OP_MULTIPLY, 0, 1, 0, operator_multiply },
-	{ "/", OP_DIVIDE, 0, 1, 0, operator_divide },
-	{ "%", OP_MODULO, 0, 1, 0, operator_modulo },
-	{ "<<", OP_LEFT_SHIFT, 0, 2, 0, operator_left_shift },
-	{ ">>", OP_RIGHT_SHIFT, 0, 2, 0, operator_right_shift },
-	{ "<=", OP_LESS_THAN_OR_EQUAL_TO, 0, 3, 0, operator_less_than_or_equal_to },
-	{ ">=", OP_GREATER_THAN_OR_EQUAL_TO, 0, 3, 0, operator_greater_than_or_equal_to },
-	{ "<", OP_LESS_THAN, 0, 3, 0, operator_less_than },
-	{ ">", OP_GREATER_THAN, 0, 3, 0, operator_greater_than },
-	{ "==", OP_EQUAL_TO, 0, 4, 0, operator_equal_to },
-	{ "!=", OP_NOT_EQUAL_TO, 0, 4, 0, operator_not_equal_to },
-	{ "&&", OP_LOGICAL_AND, 0, 5, 0, operator_logical_and },
-	{ "||", OP_LOGICAL_OR, 0, 6, 0, operator_logical_or },
-	{ "&", OP_BITWISE_AND, 0, 7, 0, operator_bitwise_and },
-	{ "^", OP_BITWISE_XOR, 0, 8, 0, operator_bitwise_xor },
-	{ "|", OP_BITWISE_OR, 0, 9, 0, operator_bitwise_or },
+	{ "+", OP_UNARY_PLUS, 1, 3, 1, operator_unary_plus },
+	{ "-", OP_UNARY_MINUS, 1, 3, 1, operator_unary_minus },
+	{ "~", OP_NEGATE, 1, 3, 1, operator_negate },
+	{ "!", OP_LOGICAL_NOT, 1, 3, 1, operator_logical_not },
+	{ "*", OP_MULTIPLY, 0, 5, 0, operator_multiply },
+	{ "/", OP_DIVIDE, 0, 5, 0, operator_divide },
+	{ "%", OP_MODULO, 0, 5, 0, operator_modulo },
+	{ "+", OP_PLUS, 0, 6, 0, operator_add },
+	{ "-", OP_MINUS, 0, 6, 0, operator_subtract },
+	{ "<<", OP_LEFT_SHIFT, 0, 7, 0, operator_left_shift },
+	{ ">>", OP_RIGHT_SHIFT, 0, 7, 0, operator_right_shift },
+	{ "<=", OP_LESS_THAN_OR_EQUAL_TO, 0, 8, 0, operator_less_than_or_equal_to },
+	{ ">=", OP_GREATER_THAN_OR_EQUAL_TO, 0, 8, 0, operator_greater_than_or_equal_to },
+	{ "<", OP_LESS_THAN, 0, 8, 0, operator_less_than },
+	{ ">", OP_GREATER_THAN, 0, 8, 0, operator_greater_than },
+	{ "==", OP_EQUAL_TO, 0, 9, 0, operator_equal_to },
+	{ "!=", OP_NOT_EQUAL_TO, 0, 9, 0, operator_not_equal_to },
+	{ "&", OP_BITWISE_AND, 0, 10, 0, operator_bitwise_and },
+	{ "^", OP_BITWISE_XOR, 0, 11, 0, operator_bitwise_xor },
+	{ "|", OP_BITWISE_OR, 0, 12, 0, operator_bitwise_or },
+	{ "&&", OP_LOGICAL_AND, 0, 13, 0, operator_logical_and },
+	{ "||", OP_LOGICAL_OR, 0, 14, 0, operator_logical_or },
 };
 
 void print_tokenized_expression(FILE *f, tokenized_expression_t *expression) {
@@ -354,7 +354,7 @@ tokenized_expression_t *parse_expression(const char *str) {
 			operator_t *operator = &operators[expr->operator];
 			expression_token_t *expr2 = stack->length ? stack_peek(stack) : 0;
 			operator_t *operator2 = expr2 ? &operators[expr2->operator] : 0;
-			while (expr2 && expr2->type == OPERATOR && ((!operator->right_assocative && operator2->precedence == operator->precedence) || operator->precedence < operator2->precedence)) {
+			while (expr2 && expr2->type == OPERATOR && ((!operator->right_assocative && operator2->precedence == operator->precedence) || operator->precedence > operator2->precedence)) {
 				stack_pop(stack);
 				list_add(list->tokens, expr2);
 				if (!stack->length) {
