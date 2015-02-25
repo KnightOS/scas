@@ -261,6 +261,7 @@ int main(int argc, char **argv) {
 		scas_log(L_INFO, "Skipping linking - writing to object file");
 		object_t *o = objects->items[0];
 		fwriteobj(out, o);
+		fflush(out);
 		fclose(out);
 	}
 	if (errors->length != 0) {

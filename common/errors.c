@@ -22,6 +22,8 @@ const char *get_error_string(error_t *error) {
 			return "Unable to open file for reading";
 		case ERROR_TRAILING_END:
 			return "No matching if directive";
+		case ERROR_DUPLICATE_SYMBOL:
+			return "Duplicate symbol";
 		default:
 			return NULL;
 	}

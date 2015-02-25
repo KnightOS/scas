@@ -116,7 +116,7 @@ void gather_symbols(list_t *symbols, area_t *area, linker_settings_t *settings) 
 	for (i = 0; i < area->symbols->length; ++i) {
 		symbol_t *sym = area->symbols->items[i];
 		if (find_symbol(symbols, sym->name)) {
-			add_error_from_map(settings->errors, ERROR_UNKNOWN_SYMBOL,
+			add_error_from_map(settings->errors, ERROR_DUPLICATE_SYMBOL,
 					area->source_map, sym->defined_address);
 		} else {
 			list_add(symbols, sym);
