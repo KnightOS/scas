@@ -3,7 +3,8 @@
 
 typedef enum {
     ASSEMBLE = 1,
-    LINK = 2
+    LINK = 2,
+    MERGE = 4,
 } jobs_t;
 
 typedef enum {

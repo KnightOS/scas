@@ -177,7 +177,7 @@ expression_token_t *parse_digit(const char **string) {
 			base = 16;
 			break;
 		case 'o':
-			base = 16;
+			base = 8;
 			break;
 		case 0:
 			// It's probably a single digit number

@@ -15,11 +15,8 @@ Synopsis
 Description
 -----------
 
-Assembles and/or links assembly code for various architectures. Specifying a
-single input file _FILE.asm_ will guess the output as _FILE.bin_ unless -o is
-specified. Specifying several files will treat all but the last file as input, and
-the final file as output, unless -o is specified, in which case all files are
-input and the file given at -o is output.
+scas assembles and optionally links any number of assembly and object files into a
+single output file. Specify "-" as an input file name to read from stdin.
 
 Options
 -------
@@ -30,14 +27,15 @@ Options
 	it will be matched against scas's internal list of instruction sets. See
 	_Architectures_ below for additional information.
 
+*-c, --compile*::
+	Compile, but do not link, the assembly sources into an object file.
+
 *-D <MACRO>, -D<MACRO>, \--define* <MACRO>::
 	Defines _MACRO_ as 1. You may also use *-D MACRO=STRING* to set a macro to a
 	specific value, as if writing *#define MACRO STRING* into your code.
 
-*-e, --export-explicit*::
-	By default, scas exports all global symbols in symbol files. This option
-	instead requires the source code to export symbols explicitly via the
-	*export* directive.
+*-f<option>[=value]*::
+	Enables an assembler flag. See _Flags_ below.
 
 *-i, --input* <file>::
 	Uses the specified file, or - for stdin, as input.
@@ -45,41 +43,15 @@ Options
 *-I, --include* <directories>::
 	Adds the specified directories to the include path, delimited by commas. By
 	default, the include path is the working directory plus anything in the
-	*SCAS_INCLUDE_PATH* enviornment variable.
+	*SCAS_PATH* enviornment variable.
 
 *-o, --output* <file>::
 	Uses the specified file, or - for stdout, as the output.
-
-*-O, --object*::
-	Instructs scas to produce an unlinked object file instead of directly
-	producing machine code.
-
-*-l, --link*::
-	Instructs scas to operate as a linker. The input file(s) should be object
-	files and the output will be machine code.
 
 *-L, --listing* <file>::
 	Outputs a listing file to _file_, or - for stdout. This is a human-readable
 	plaintext file that can help you find out more about how the file was
 	assembled. Its format is described in _Listings_ below.
-
-*-m, --merge*::
-	Link several objects into a single object file.
-
-*-n, --no-implicit-symbols*::
-	By default, scas does not require you to use the *import* directive to use
-	external symbols, and instead resolves them when linking. If you do not desire
-	this behavior, specify *-n* to raise errors when using undefined symbols.
-
-*-r, --relocatable*::
-	Instructs scas to automatically detect internal references and make them
-	relocatable in accordance with the KnightOS kernel's relocation mechanism (see
-	_Relocation_ below).
-
-*-s, --script* <script>::
-	Uses a linker script to perform linking. The default is to assemble files one
-	after the other in the order they are given on the command line. See _Linker
-	Scripts_ below for details on these scripts.
 
 *-S, --symbols* <file>::
 	Outputs symbols as assembly source to the specified file, or - for stdout. See
@@ -87,17 +59,6 @@ Options
 
 *-v[vv...]*::
 	Specifies different levels of log verbosity.
-
-Compatability
--------------
-
-scas is compatible with:
-
-* Sass
-* Spasm
-* TASM
-* ASxxxx (mostly)
-* Brass (mostly)
 
 Examples
 --------
@@ -109,11 +70,54 @@ scas input1.asm input2.asm input3.asm output.bin::
 	Assembles and links three input files and produces output.bin as machine code.
 	The default behavior with several files is to arrange their output in order.
 
-scas -O screen.asm screen.obj::
+scas -c screen.asm screen.o::
 	Assembles input1.asm and produces an unlinked object file.
 
-scas -l screen.obj keyboard.obj main.obj game.bin::
+scas -o game.bin screen.o keyboard.o main.o::
 	Links three object files together and produces game.bin as machine code.
+
+Flags
+-----
+
+Flags are enabled with the *-f* option. You may _disable_ any of these flags by
+using *-fno-[flag]* (for example: -fno-remove-unused-funcs to disable the removal
+of unused functions).
+
+*-fexplicit-export*::
+	*Disabled* by default.
+
+	Instead of exporting all symbols implicitly, require that all symbols for
+	export are explicitly declared as such through the export directive.
+
+*-fexplicit-import*::
+	*Disabled* by default.
+
+	Instead of postponing all unresolved symbol errors to the linker, this flag
+	instructs scas to raise errors during assembly if any external symbols are
+	referenced without an import directive.
+
+*-fauto-relocation*::
+	*Disabled* by default.
+
+	Enabling this flag will insert KnightOS relocation instructions before all
+	local references during linking. This is generally not reccommended because it
+	fails to handle more complex scenarios.
+
+*-fremove-unused-funcs*::
+	*Enabled* by default.
+
+	Enabling this flag instructs scas to remove all unused functions during
+	linking to reduce the size of the final executable. Functions can be declared
+	with the function directive. All code that does not belong to a function is
+	considered precious and will not be optimized out.
+
+*-forigin=<address>*::
+	*0* by default.
+
+	Sets the origin address to <value>. All symbols and references will be
+	adjusted as if the executable is loaded at address. Note that this does not
+	take special action in combination with the origin directive. When both are
+	used, the actual origin will be the value of both origins added together.
 
 Preprocessor Directives
 -----------------------
@@ -125,17 +129,11 @@ If you use a directive that takes several inputs, such as *db*, you may seperate
 them with spaces. If your input would use a space, instead seperate inputs with
 commas. For example:
 
-	.db 0 1 2 3 4 ; Spaces OK
-	.db 2 + 2, 4 + 4, 6 + 6 ; Spaces not OK
+	.db 0 1 2 3 4			; Spaces OK
+	.db 2 + 2, 4 + 4, 6 + 6	; Spaces not OK
 
-For compatability reasons, *equ* and *define* use the first input as the first
-input, and the second to final inputs as one input (when specified with spaces).
-That is, the following:
-
-	.equ symbol 2 + 2
-
-This equates *symbol* with the expression *2 + 2*, and considers *2 + 2* a single
-input.
+This feature is designed as such for compatability reasons. The reccommended style
+is with commas.
 
 *area* <name>::
 	Defines the following code as code included in the area _name_. By default,
@@ -181,8 +179,7 @@ input.
 	used.
 
 *export* <symbol>::
-	Explicitly exports _symbol_. This is not required unless *-e* is specified at
-	the command line.
+	Indicates that _symbol_ is to be exported from this module.
 
 *fill* <size> <value>::
 	Inserts _size_ number of bytes into the output, whose value is _value_. If
@@ -192,8 +189,7 @@ input.
 	See _Conditionals_.
 
 *import* <symbol>::
-	Explicitly imports _symbol_ for use. This is not required unless *-n* is
-	specified at the command line.
+	Imports the external _symbol_ for use in this module.
 
 *include* "<path>"::
 	Inserts the specified file's contents into the assembly source directly.
@@ -222,16 +218,8 @@ input.
 *!*::
 	! directives are ignored.
 
-The *equate* directive has additional syntaxes for compatabiltiy. The following
-lines are all equivalent:
-
-	.equ foo 10
-	foo .equ 10
-	foo=10
-
-A number of undocumented directives are also present that provide compatability
-with a number of other assemblers. They are intentionally undocumented - please
-make use of this set of directives for your needs.
+Some preprocessor directives are supported to maintain compatability with other
+assemblers, but their use is discouraged and they are not documented here.
 
 Macros versus Equates
 ---------------------
@@ -253,32 +241,25 @@ opposite of *ifdef*.
 
 *elseif* and *end* are synonomous with *elif* and *endif*, respectively.
 
-Assembly Syntax
----------------
+Literals
+--------
 
-scas aims to be as flexible as possible with its assembly syntax. It supports many
-syntaxes so that you might be able to easily drop in arbituary snippets, but
-encourages a single format. The encouraged format looks something like this:
+Several kinds of literals are supported:
 
-	; Comments begin with a ; and extend to the end of the line
-	label_name:
-		ld hl, 0x1234
-		ld a, 0b11011
-		call foobar
-	.local:
-		jp label_name
-	string:
-		.asciiz "This is a string"
+*10*:
+	Decimal literals may be specified with no decorators.
 
-scas also supports a number of other syntaxes for compatability reasons. You may
-use either # or . to precede a preprocessor directive. You may also declare
-hexadecimal literals with the 0xHEX, $HEX, or HEXh syntaxes. Binary literals may
-be defined with 0bBINARY, %BINARY, or BINARYb. Octal is supported only via
-0oOCTAL.
+*0x1A*::
+	Hexadecimal literals are prefixed with "0x".
 
-Labels should be placed alone on a line (whitespace and comments are OK) and end
-with a colon. Valid labels begin with a letter or an underscore and contain only
-letters, numbers, and underscores.
+*0o17*::
+	Octal literals are prefixed with "0o".
+
+*0b11011*::
+	Binary literals are prefixed with "0b".
+
+*\'z'*::
+	ASCII characters may be enclosed with single quotes.
 
 Expressions
 -----------
@@ -351,62 +332,11 @@ provided wherever they appear. You can use these macros like so:
 
 	example(1, 2) ; Expands to ld a, 1 \ ld b, 2
 
-
-Linker Scripts
---------------
-
-TODO
-
-Relocation
-----------
-
-scas supports automatic relocation for the KnightOS kernel. KnightOS will load
-your executable in an undefined place in memory and absolute internal references
-will not work. This is addressed via the "kcall" mechanic, which would replace
-
-	call internal_call
-
-With:
-
-	rst 0x08
-	call internal_call
-
-scas can automatically detect internal references during linking and modify them
-to fit the KnightOS format, if you desire. It's probably a good idea to do this
-stuff manually unless you have a good reason not to.
-
 Architectures
 -------------
 
 Out of the box, scas only supports z80. You may specify an alternate instruction
-set by means of _--architecture_. The instruction set format is documented in
-_/usr/share/scas/instruction-sets_ or somewhere similar.
-
-Listings
---------
-
-Listing files take a format similar to this:
-
-	[0x0000] 21 EF BE        LD HL, 0xBEEF          test.asm:1
-	[0x0003] C9              RET                    test.asm:2
-	[0x0004]                label:                  test.asm:3
-	[0x0004] CD 04 00        CALL label             test.asm:4
-
-It simply shows the address and machine code for each line of code assembled.
-
-Symbol Files
-------------
-
-The -S option produces symbol files that are meant to be included directly as
-assembly source in other files. You may accomplish your goals more easily with
-linking.
-
-	; This file was generated by a tool
-	.equ SYMBOL1 0x0001
-	.equ SYMBOL2 0x0002
-	.equ SYMBOL3 0x0003
-
-This includes all global labels specified in the code.
+set by using the _--architecture_ option.
 
 String Escape Codes
 -------------------
@@ -414,11 +344,14 @@ String Escape Codes
 In string or character constants, you may use \ to indicate an escape code. C
 escape codes are supported.
 
-String Encodings
-----------------
+Compatability
+-------------
 
-scas assembles strings as UTF-8. UTF-8 is compatible with ASCII. All input files
-should be either ASCII or UTF-8.
+scas is (mostly) compatible with:
+
+* Sass
+* Spasm
+* TASM
 
 Authors
 -------
