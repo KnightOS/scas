@@ -64,6 +64,26 @@ void validate_scas_runtime() {
 	}
 }
 
+void parse_flag(const char *flag) {
+	bool value = true;
+	flag += 2;
+	if (strstr(flag, "no-") == flag) {
+		value = false;
+		flag += 3;
+	}
+	if (strcmp("explicit-export", flag) == 0) {
+		scas_runtime.options.explicit_export = value;
+	} else if (strcmp("explicit-import", flag) == 0) {
+		scas_runtime.options.explicit_import = value;
+	} else if (strcmp("auto-relocation", flag) == 0) {
+		scas_runtime.options.auto_relocation = value;
+	} else if (strcmp("remove-unused-funcs", flag) == 0) {
+		scas_runtime.options.remove_unused_functions = value;
+	} else {
+		scas_abort("Unknown flag %s", flag);
+	}
+}
+
 void parse_arguments(int argc, char **argv) {
 	int i;
 	for (i = 1; i < argc; ++i) {
@@ -72,12 +92,10 @@ void parse_arguments(int argc, char **argv) {
 				scas_runtime.output_file = argv[++i];
 			} else if (strcmp("-i", argv[i]) == 0 || strcmp("--input", argv[i]) == 0) {
 				list_add(scas_runtime.input_files, argv[++i]);
-			} else if (strcmp("-l", argv[i]) == 0 || strcmp("--link", argv[i]) == 0) {
-				scas_runtime.jobs = LINK;
-			} else if (strcmp("-O", argv[i]) == 0 || strcmp("--object", argv[i]) == 0) {
-				scas_runtime.jobs = ASSEMBLE;
-			} else if (strcmp("-m", argv[i]) == 0 || strcmp("--merge", argv[i]) == 0) {
-				scas_runtime.jobs = LINK | MERGE;
+			} else if (strcmp("-c", argv[i]) == 0 || strcmp("--merge", argv[i]) == 0) {
+				scas_runtime.jobs &= LINK;
+			} else if (argv[i][1] == 'f') {
+				parse_flag(argv[i]);
 			} else if (argv[i][1] == 'I' || strcmp("--include", argv[i]) == 0) {
 				char *path;
 				if (argv[i][1] == 'I' && argv[i][2] != 0) {
@@ -91,12 +109,6 @@ void parse_arguments(int argc, char **argv) {
 				scas_runtime.include_path = realloc(scas_runtime.include_path, l + strlen(path) + 2);
 				strcat(scas_runtime.include_path, ":");
 				strcat(scas_runtime.include_path, path);
-			} else if (strcmp("-r", argv[i]) == 0 || strcmp("--relocatable", argv[i]) == 0) {
-				scas_runtime.options.auto_relocation = true;
-			} else if (strcmp("-e", argv[i]) == 0 || strcmp("--export-explicit", argv[i]) == 0) {
-				scas_runtime.options.explicit_export = true;
-			} else if (strcmp("-n", argv[i]) == 0 || strcmp("--no-implicit-symbols", argv[i]) == 0) {
-				scas_runtime.options.explicit_import = false;
 			} else if (argv[i][1] == 'v') {
 				int j;
 				for (j = 1; argv[i][j] != '\0'; ++j) {

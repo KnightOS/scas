@@ -6,6 +6,7 @@
 #include "instructions.h"
 #include "functions.h"
 #include "merge.h"
+#include "runtime.h"
 #include "log.h"
 #include <stdint.h>
 #include <stdlib.h>
@@ -136,7 +137,9 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	for (i = 0; i < merged->areas->length; ++i) {
 		area_t *area = merged->areas->items[i];
 		scas_log(L_DEBUG, "Linking area %s", area->name);
-		remove_unused_functions(area, merged->areas); // TODO: Add options for this sort of thing
+		if (scas_runtime.options.remove_unused_functions) {
+			remove_unused_functions(area, merged->areas);
+		}
 		if (settings->automatic_relocation) {
 			auto_relocate_area(area);
 		}
