@@ -93,7 +93,7 @@ void parse_arguments(int argc, char **argv) {
 			} else if (strcmp("-i", argv[i]) == 0 || strcmp("--input", argv[i]) == 0) {
 				list_add(scas_runtime.input_files, argv[++i]);
 			} else if (strcmp("-c", argv[i]) == 0 || strcmp("--merge", argv[i]) == 0) {
-				scas_runtime.jobs &= LINK;
+				scas_runtime.jobs &= ~LINK;
 			} else if (argv[i][1] == 'f') {
 				parse_flag(argv[i]);
 			} else if (argv[i][1] == 'I' || strcmp("--include", argv[i]) == 0) {
@@ -183,50 +183,46 @@ int main(int argc, char **argv) {
 	list_t *warnings = create_list();
 
 	list_t *objects = create_list();
-	if ((scas_runtime.jobs & ASSEMBLE) == ASSEMBLE) {
-		int i;
-		for (i = 0; i < scas_runtime.input_files->length; ++i) {
-			scas_log(L_INFO, "Assembling input file: '%s'", scas_runtime.input_files->items[i]);
-			indent_log();
-			FILE *f;
-			if (strcasecmp(scas_runtime.input_files->items[i], "-") == 0) {
-				f = stdin;
-			} else {
-				f = fopen(scas_runtime.input_files->items[i], "r");
+	int i;
+	for (i = 0; i < scas_runtime.input_files->length; ++i) {
+		scas_log(L_INFO, "Assembling input file: '%s'", scas_runtime.input_files->items[i]);
+		indent_log();
+		FILE *f;
+		if (strcasecmp(scas_runtime.input_files->items[i], "-") == 0) {
+			f = stdin;
+		} else {
+			f = fopen(scas_runtime.input_files->items[i], "r");
+		}
+		if (!f) {
+			scas_abort("Unable to open '%s' for assembly.", scas_runtime.input_files->items[i]);
+		}
+		char magic[7];
+		bool is_object = false;
+		if (fread(magic, sizeof(char), 7, f) == 7) {
+			if (strncmp("SCASOBJ", magic, 7) == 0) {
+				is_object = true;
 			}
-			if (!f) {
-				scas_abort("Unable to open '%s' for assembly.", scas_runtime.input_files->items[i]);
-			}
+		}
+		fseek(f, 0L, SEEK_SET);
+
+		object_t *o;
+		if (is_object) {
+			scas_log(L_INFO, "Loading object file '%s'", scas_runtime.input_files->items[i]);
+			o = freadobj(f, scas_runtime.input_files->items[i]);
+		} else {
 			assembler_settings_t settings = {
 				.include_path = include_path,
 				.set = instruction_set,
 				.errors = errors,
 				.warnings = warnings,
 			};
-			object_t *o = assemble(f, scas_runtime.input_files->items[i], &settings);
+			o = assemble(f, scas_runtime.input_files->items[i], &settings);
 			fclose(f);
-			list_add(objects, o);
-			deindent_log();
 			scas_log(L_INFO, "Assembler returned %d errors, %d warnings for '%s'",
 					errors->length, warnings->length, scas_runtime.input_files->items[i]);
 		}
-	} else {
-		int i;
-		for (i = 0; i < scas_runtime.input_files->length; ++i) {
-			FILE *f;
-			if (strcasecmp(scas_runtime.input_files->items[i], "-") == 0) {
-				f = stdin;
-			} else {
-				f = fopen(scas_runtime.input_files->items[i], "r");
-			}
-			if (!f) {
-				scas_abort("Unable to open '%s' for linking.", scas_runtime.input_files->items[i]);
-			}
-			scas_log(L_INFO, "Loading object from file '%s'", scas_runtime.input_files->items[i]);
-			list_add(objects, freadobj(f, scas_runtime.input_files->items[i]));
-			/* TODO: Check for incompatible architectures */
-			fclose(f);
-		}
+		list_add(objects, o);
+		deindent_log();
 	}
 
 	scas_log(L_DEBUG, "Opening output file for writing: %s", scas_runtime.output_file);
@@ -241,7 +237,6 @@ int main(int argc, char **argv) {
 	}
 
 	if ((scas_runtime.jobs & LINK) == LINK) {
-		/* TODO: Linker scripts */
 		scas_log(L_INFO, "Passing objects to linker");
 		linker_settings_t settings = {
 			.automatic_relocation = scas_runtime.options.auto_relocation,
