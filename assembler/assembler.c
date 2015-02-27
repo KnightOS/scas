@@ -108,17 +108,21 @@ void substitute_parameter(char **line, char *param, char *value) {
 		char *new = malloc(
 			(strlen(*line) - strlen(param)) +
 			strlen(value) + 1);
-		strncpy(new, *line, match - *line);
+		int n = match - *line;
+		strncpy(new, *line, n);
 		new[match - *line] = '\0';
 		strcat(new, value);
 		strcat(new, match + strlen(param));
 		free(*line);
 		*line = new;
-		match = match + strlen(value);
+		match = *line + n + strlen(value);
 	}
 }
 
 int try_expand_macro(struct assembler_state *state, char **line) {
+	if (strstr(*line, "macro") == *line + 1) { // Cannot expand macros while defining them
+		return 0;
+	}
 	int i;
 	for (i = 0; i < state->macros->length; i++) {
 		macro_t *macro = state->macros->items[i];
