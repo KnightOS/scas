@@ -4,6 +4,7 @@
 #include <strings.h>
 #include <stdbool.h>
 #include "log.h"
+#include "stringop.h"
 #include "list.h"
 #include "enums.h"
 #include "errors.h"
@@ -300,7 +301,7 @@ int main(int argc, char **argv) {
 	int ret = errors->length;
 	scas_log(L_DEBUG, "Exiting with status code %d, cleaning up", ret);
 	list_free(scas_runtime.input_files);
-	list_free(include_path);
+	free_flat_list(include_path);
 	list_free(objects);
 	list_free(errors);
 	list_free(warnings);

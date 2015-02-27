@@ -382,5 +382,6 @@ tokenized_expression_t *parse_expression(const char *str) {
 	}
 
 	stack_free(stack);
+	free(operator_cache);
 	return list;
 }
