@@ -103,8 +103,8 @@ char *extract_macro_parameters(char *str, list_t *params) {
 }
 
 void substitute_parameter(char **line, char *param, char *value) {
-	char *match;
-	while ((match = strstr(*line, param))) {
+	char *match = *line;
+	while ((match = strstr(match, param))) {
 		char *new = malloc(
 			(strlen(*line) - strlen(param)) +
 			strlen(value) + 1);
@@ -114,6 +114,7 @@ void substitute_parameter(char **line, char *param, char *value) {
 		strcat(new, match + strlen(param));
 		free(*line);
 		*line = new;
+		match = match + strlen(value);
 	}
 }
 
@@ -180,6 +181,8 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 			int k;
 			for (k = 0; k < macro->parameters->length; ++k) {
 				char *p = macro->parameters->items[k];
+				scas_log(L_DEBUG, "Replacing '%s' with '%s' for line '%s'", 
+					p, (char *)userparams->items[k], (char *)newlines->items[j]);
 				substitute_parameter((char **)&newlines->items[j], p, (char *)userparams->items[k]);
 			}
 		}

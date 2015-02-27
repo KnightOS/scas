@@ -268,7 +268,7 @@ object_t *freadobj(FILE *f, const char *name) {
 
 source_map_t *create_source_map(area_t *area, const char *file_name) {
 	source_map_t *map = malloc(sizeof(source_map_t));
-	map->file_name = malloc(strlen(file_name));
+	map->file_name = malloc(strlen(file_name) + 1);
 	strcpy(map->file_name, file_name);
 	map->entries = create_list();
 	list_add(area->source_map, map);

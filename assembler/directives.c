@@ -680,7 +680,7 @@ int handle_include(struct assembler_state *state, char **argv, int argc) {
 	argv[0][len - 1] = '\0';
 	len -= 2;
 	len = unescape_string(argv[0] + 1);
-	char *name = malloc(strlen(argv[0] + 1));
+	char *name = malloc(strlen(argv[0] + 1) + 1);
 	strcpy(name, argv[0] + 1);
 	FILE *file;
 	int i;

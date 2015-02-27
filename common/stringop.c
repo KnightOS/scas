@@ -26,7 +26,7 @@ char *strip_whitespace(char *_str, int *trimmed_start) {
 	for (i = 0; str[i] != '\0'; ++i);
 	do {
 		i--;
-	} while (str[i] == ' ' || str[i] == '\t');
+	} while (i >= 0 && (str[i] == ' ' || str[i] == '\t'));
 	str[i + 1] = '\0';
 	return str;
 }
@@ -63,7 +63,7 @@ list_t *split_string(const char *str, const char *delims) {
 			left[i - j] = 0;
 			list_add(res, left);
 			j = i + 1;
-			while (str[j] && strchr(delims, str[j])) {
+			while (j <= strlen(str) && str[j] && strchr(delims, str[j])) {
 				j++;
 				i++;
 			}

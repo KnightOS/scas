@@ -48,7 +48,7 @@ char *get_operand_string(instruction_t *inst, int *i, const char *code, int j) {
 	if (end == NULL) {
 		return NULL;
 	}
-	res = malloc(end - (code + j));
+	res = malloc(end - (code + j) + 1);
 	strncpy(res, code + j, end - (code + j));
 	res[end - (code + j)] = '\0';
 	int _;
