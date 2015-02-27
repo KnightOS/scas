@@ -199,12 +199,19 @@ expression_token_t *parse_digit(const char **string) {
 
 	/* Character literals */
 	if ((*string)[0] == '\'') {
-		if (strlen(*string) >= 3 && (*string)[2] == '\'') {
-			expression_token_t *expr = malloc(sizeof(expression_token_t));
-			expr->type = NUMBER;
-			expr->number = (uint64_t)(*string)[1];
-			*string = *string + 3;
-			return expr;
+		if (strlen(*string) >= 3) {
+			char *end = strchr(*string + 1, '\''); // Note: this doesn't work with '\'' etc
+			if (end) {
+				char *temp = malloc(end - *string + 1);
+				strncpy(temp, *string, end - *string);
+				temp[end - *string] = '\0';
+				unescape_string(temp);
+				expression_token_t *expr = malloc(sizeof(expression_token_t));
+				expr->type = NUMBER;
+				expr->number = (uint64_t)temp[1];
+				*string = end + 1;
+				return expr;
+			}
 		}
 	}
 
