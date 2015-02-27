@@ -352,6 +352,7 @@ scas is (mostly) compatible with:
 * Sass
 * Spasm
 * TASM
+* ASxxxx
 
 Authors
 -------
