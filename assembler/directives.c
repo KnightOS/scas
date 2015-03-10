@@ -915,6 +915,7 @@ struct directive *find_directive(struct directive dirs[], int l, char *line) {
 }
 
 char **split_directive(char *line, int *argc, int delimiter) {
+	const char *delimiters;
 	*argc = 0;
 	while (isspace(*line) && *line) ++line;
 	/*
@@ -924,7 +925,6 @@ char **split_directive(char *line, int *argc, int delimiter) {
 	int capacity = 10;
 	char **parts = malloc(sizeof(char *) * capacity);
 	if (!*line) return parts;
-	char *delimiters;
 	if (code_strchr(line, ',') != NULL && delimiter & DELIM_COMMAS) {
 		delimiters = delimiters_list[DELIM_COMMAS];
 	} else {
