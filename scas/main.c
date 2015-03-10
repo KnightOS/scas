@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
 #include <stdbool.h>
 #include "log.h"
 #include "stringop.h"
@@ -13,6 +12,11 @@
 #include "merge.h"
 #include "expression.h"
 #include "runtime.h"
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <strings.h>
+#endif
 
 struct runtime scas_runtime;
 

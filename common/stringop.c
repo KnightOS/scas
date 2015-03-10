@@ -2,8 +2,28 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "string.h"
-#include "strings.h"
 #include "list.h"
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <strings.h>
+#endif
+
+#ifdef _WIN32
+int strcasecmp(const char* s1, const char* s2)
+{
+	int c1, c2;
+	while (*s1 && *s2) {
+		c1 = tolower((int)*s1);
+		c2 = tolower((int)*s2);
+		if(c1 != c2)
+			return (c1 - c2);
+		s1++;
+		s2++;
+	}
+	return (int)(*s1 - *s2);
+}
+#endif
 
 /* Note: This returns 8 characters for trimmed_start per tab character. */
 char *strip_whitespace(char *_str, int *trimmed_start) {

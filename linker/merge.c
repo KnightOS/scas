@@ -7,7 +7,11 @@
 #include "log.h"
 #include <stdint.h>
 #include <stdlib.h>
+#ifdef _WIN32
+#include <Windows.h>
+#else
 #include <strings.h>
+#endif
 
 area_t *get_area_by_name(object_t *object, char *name) {
 	int i;

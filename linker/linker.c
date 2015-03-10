@@ -10,7 +10,11 @@
 #include "log.h"
 #include <stdint.h>
 #include <stdlib.h>
+#ifdef _WIN32
+#include <Windows.h>
+#else
 #include <strings.h>
+#endif
 
 /*
  * Notes on how this could be improved:

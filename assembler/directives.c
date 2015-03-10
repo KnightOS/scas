@@ -8,11 +8,15 @@
 #include "log.h"
 #include <limits.h>
 #include <string.h>
-#include <strings.h>
 #include <ctype.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <strings.h>
+#endif
 
 #define ERROR(ERROR_CODE, COLUMN) add_error(state->errors, ERROR_CODE, \
 		*(int*)stack_peek(state->line_number_stack), \
@@ -920,7 +924,7 @@ char **split_directive(char *line, int *argc, int delimiter) {
 	int capacity = 10;
 	char **parts = malloc(sizeof(char *) * capacity);
 	if (!*line) return parts;
-	const char *delimiters;
+	char *delimiters;
 	if (code_strchr(line, ',') != NULL && delimiter & DELIM_COMMAS) {
 		delimiters = delimiters_list[DELIM_COMMAS];
 	} else {

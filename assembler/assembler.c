@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
 #include <ctype.h>
 #include "list.h"
 #include "log.h"
@@ -14,6 +13,11 @@
 #include "errors.h"
 #include "expression.h"
 #include "directives.h"
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <strings.h>
+#endif
 
 #define ERROR(ERROR_CODE, COLUMN) add_error(state->errors, ERROR_CODE, \
 		*(int*)stack_peek(state->line_number_stack), \

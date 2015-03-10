@@ -7,7 +7,7 @@
 #include "readline.h"
 #include "stringop.h"
 
-static inline uint64_t swapbits(uint64_t p, uint64_t m, int k) {
+static __inline uint64_t swapbits(uint64_t p, uint64_t m, int k) {
 	uint64_t q = ((p>>k)^p)&m;
 	return p^q^(q<<k);
 }
