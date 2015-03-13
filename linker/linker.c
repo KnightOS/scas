@@ -69,15 +69,22 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 				mask <<= 1;
 				mask |= 1;
 			}
-			if ((result & mask) != result && ~result >> imm->width) {
-				add_error_from_map(errors, ERROR_VALUE_TRUNCATED, area->source_map, imm->instruction_address);
-			} else {
-				result = result & mask;
-				int j;
-				for (j = 0; j < imm->width / 8; ++j) {
-					area->data[imm->address + j] |= (result & 0xFF);
-					result >>= 8;
+			if (imm->type == IMM_TYPE_RELATIVE) { // Signed
+				if ((result & (mask >> 1)) != result) {
+					if (!(result & (1 << imm->width)) || (result & ~mask) != ~mask) {
+						add_error_from_map(errors, ERROR_VALUE_TRUNCATED, area->source_map, imm->instruction_address);
+					}
 				}
+			} else {
+				if ((result & mask) != result && ~result >> imm->width) {
+					add_error_from_map(errors, ERROR_VALUE_TRUNCATED, area->source_map, imm->instruction_address);
+				}
+			}
+			result = result & mask;
+			int j;
+			for (j = 0; j < imm->width / 8; ++j) {
+				area->data[imm->address + j] |= (result & 0xFF);
+				result >>= 8;
 			}
 		}
 	}
