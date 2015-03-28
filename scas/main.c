@@ -257,10 +257,9 @@ int main(int argc, char **argv) {
 		}
 		scas_log(L_INFO, "Linker returned %d errors, %d warnings", errors->length, warnings->length);
 	} else {
-		/* TODO: Link all provided assembly files together, or disallow mulitple input files when assembling */
 		scas_log(L_INFO, "Skipping linking - writing to object file");
-		object_t *o = objects->items[0];
-		fwriteobj(out, o);
+		object_t *merged = merge_objects(objects);
+		fwriteobj(out, merged);
 		fflush(out);
 		fclose(out);
 	}
