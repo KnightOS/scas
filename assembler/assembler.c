@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include "privatize.h"
 #include "list.h"
 #include "log.h"
 #include "objects.h"
@@ -534,6 +535,8 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 	list_free(state.extra_lines);
 	stack_free(state.source_map_stack);
 	free(state.instruction_buffer);
+
+	privatize_symbols(state.object);
 
 	return state.object;
 }

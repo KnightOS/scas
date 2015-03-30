@@ -4,6 +4,7 @@
 #include "expression.h"
 #include "stringop.h"
 #include "objects.h"
+#include "runtime.h"
 #include "list.h"
 #include "log.h"
 #include <limits.h>
@@ -519,6 +520,23 @@ int handle_function(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_export(struct assembler_state *state, char **argv, int argc) {
+	if (!scas_runtime.options.explicit_export) {
+		scas_log(L_INFO, "Implicitly enabling -fexplicit-export due to use of export directive");
+		scas_runtime.options.explicit_export = 1;
+	}
+	int i;
+	for (i = 0; i < argc; ++i) {
+		scas_log(L_INFO, "Exporting '%s' via %s:%d", argv[i],
+				stack_peek(state->file_name_stack),
+				*(int*)stack_peek(state->line_number_stack));
+		char *exported = malloc(strlen(argv[i]) + 1);
+		strcpy(exported, argv[i]);
+		list_add(state->current_area->exports, exported);
+	}
+	return 1;
+}
+
 int handle_if(struct assembler_state *state, char **argv, int argc) {
 	if (state->if_stack->length != 0 && !*(int *)stack_peek(state->if_stack)) {
 		/* Push up another falsy if if we're already in a falsy if */
@@ -853,16 +871,18 @@ struct directive directives[] = {
 	{ "equ", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "equate", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "even", handle_even, DELIM_COMMAS | DELIM_WHITESPACE },
-	{ "export", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE }, /* TODO: Handle this properly with explicit export */
+	{ "export", handle_export, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "function", handle_function, DELIM_COMMAS },
 	{ "gblequ", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE }, /* TODO: Allow users to export equates? */
-	{ "globl", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE }, /* TODO: Handle this properly with explicit export */
+	{ "global", handle_export, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "globl", handle_export, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "if", handle_if, 0 },
 	{ "ifdef", handle_ifdef, 0 },
 	{ "ifndef", handle_ifndef, 0 },
 	{ "incbin", handle_incbin, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "include", handle_include, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "lclequ", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "import", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE }, /* TODO */
 	{ "list", handle_list, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "local", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "macro", handle_macro, 0 },
@@ -878,7 +898,7 @@ struct directive directives[] = {
 	{ "strs", handle_ascii, DELIM_COMMAS | DELIM_WHITESPACE },
 };
 
-struct directive if_directives[] = {
+struct directive if_directives[] = { /* The only directives parsed during a falsey if stack */
 	{ "elif", handle_elseif, 0 },
 	{ "else", handle_else, 0 },
 	{ "elseif", handle_elseif, 0 },
