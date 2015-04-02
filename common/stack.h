@@ -5,14 +5,14 @@ typedef struct {
 	int capacity;
 	int length;
 	void **items;
-} stack_t;
+} stack_type;
 
-stack_t *create_stack();
-void stack_free(stack_t *stack);
-void stack_push(stack_t *stack, void *item);
-void *stack_pop(stack_t *stack);
-void *stack_peek(stack_t *stack);
-void stack_shrink_to_fit(stack_t *stack);
+stack_type *create_stack();
+void stack_free(stack_type *stack);
+void stack_push(stack_type *stack, void *item);
+void *stack_pop(stack_type *stack);
+void *stack_peek(stack_type *stack);
+void stack_shrink_to_fit(stack_type *stack);
 
 #define STACK_GROWTH_RATE 16
 
