@@ -111,13 +111,13 @@ of unused functions).
 	bin - Binary machine code
 	8xp - TI-OS 8xp file
 
-*-fprog-name=<name>*::
+*-f8xp-name=<name>*::
 	*SCAS* by default.
 
 	When using the 8xp format, this sets the name of the variable. This can be up
 	to 8 characters, all uppercase.
 
-*-fprog-protected*::
+*-f8xp-protected*::
 	*Enabled* by default.
 
 	When using the 8xp format, this sets the protected flag so that the varaible

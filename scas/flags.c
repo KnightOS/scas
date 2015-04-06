@@ -68,21 +68,21 @@ void parse_flag(const char *flag) {
 			scas_abort("Unknown output format %s", value);
 		}
 		scas_runtime.options.output_format = res->writer;
-	} else if (strcmp("prog-name", name) == 0) {
+	} else if (strcmp("8xp-name", name) == 0) {
 		if (strlen(value) > 8) {
-			scas_abort("-fprog-name must be 8 characters or fewer.");
+			scas_abort("-f8xp-name must be 8 characters or fewer.");
 		}
 		char *v = value;
 		while (*v) {
 			if (!isupper(*v) || !isascii(*v)) {
-				scas_abort("-fprog-name must be all uppercase ASCII.");
+				scas_abort("-f8xp-name must be all uppercase ASCII.");
 			}
 			v++;
 		}
 		scas_runtime.options.prog_name_8xp = value;
-	} else if (strcmp("prog-protected", name) == 0) {
+	} else if (strcmp("8xp-protected", name) == 0) {
 		scas_runtime.options.prog_protected_8xp = yes;
-	} else if (strcmp("no-prog-protected", name) == 0) {
+	} else if (strcmp("no-8xp-protected", name) == 0) {
 		scas_runtime.options.prog_protected_8xp = !yes;
 	} else {
 		scas_abort("Unknown flag %s", name);
