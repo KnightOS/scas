@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 #include "log.h"
 #include "stringop.h"
 #include "list.h"
@@ -12,11 +13,24 @@
 #include "merge.h"
 #include "expression.h"
 #include "runtime.h"
+#include "bin.h"
+#include "8xp.h"
 #ifdef _WIN32
 #include <Windows.h>
 #else
 #include <strings.h>
 #endif
+
+struct output_format {
+	char *name;
+	format_writer writer;
+};
+
+/* Keep alphabetized */
+struct output_format output_formats[] = {
+	{ "bin", output_bin },
+	{ "8xp", output_8xp }
+};
 
 struct runtime scas_runtime;
 
@@ -40,6 +54,9 @@ void init_scas_runtime() {
 	scas_runtime.options.explicit_import = true;
 	scas_runtime.options.auto_relocation = false;
 	scas_runtime.options.remove_unused_functions = true;
+	scas_runtime.options.output_format = output_bin;
+	scas_runtime.options.prog_name_8xp = "SCAS";
+	scas_runtime.options.prog_protected_8xp = true;
 }
 
 void validate_scas_runtime() {
@@ -69,24 +86,79 @@ void validate_scas_runtime() {
 	}
 }
 
+int format_compare(const void *_a, const void *_b) {
+	const struct output_format *a = _a;
+	const struct output_format *b = _b;
+	return strcasecmp(a->name, b->name);
+}
+
 void parse_flag(const char *flag) {
-	bool value = true;
 	flag += 2;
-	if (strstr(flag, "no-") == flag) {
-		value = false;
-		flag += 3;
-	}
-	if (strcmp("explicit-export", flag) == 0) {
-		scas_runtime.options.explicit_export = value;
-	} else if (strcmp("explicit-import", flag) == 0) {
-		scas_runtime.options.explicit_import = value;
-	} else if (strcmp("auto-relocation", flag) == 0) {
-		scas_runtime.options.auto_relocation = value;
-	} else if (strcmp("remove-unused-funcs", flag) == 0) {
-		scas_runtime.options.remove_unused_functions = value;
+	char *name = NULL;
+	char *value = NULL;
+	if ((value = strchr(flag, '='))) {
+		name = malloc(value - flag + 1);
+		strncpy(name, flag, value - flag);
+		name[value - flag] = '\0';
+		value++;
 	} else {
-		scas_abort("Unknown flag %s", flag);
+		name = malloc(strlen(flag) + 1);
+		strcpy(name, flag);
+		value = "yes";
 	}
+
+	bool yes = !strcasecmp("yes", value);
+	if (!strcasecmp("no", value)) {
+		yes = false;
+	}
+
+	if (strcmp("explicit-export", name) == 0) {
+		scas_runtime.options.explicit_export = yes;
+	} else if (strcmp("no-explicit-export", name) == 0) {
+		scas_runtime.options.explicit_export = !yes;
+	} else if (strcmp("explicit-import", name) == 0) {
+		scas_runtime.options.explicit_import = yes;
+	} else if (strcmp("no-explicit-import", name) == 0) {
+		scas_runtime.options.explicit_import = !yes;
+	} else if (strcmp("auto-relocation", name) == 0) {
+		scas_runtime.options.auto_relocation = yes;
+	} else if (strcmp("no-auto-relocation", name) == 0) {
+		scas_runtime.options.auto_relocation = !yes;
+	} else if (strcmp("remove-unused-funcs", name) == 0) {
+		scas_runtime.options.remove_unused_functions = yes;
+	} else if (strcmp("no-remove-unused-funcs", name) == 0) {
+		scas_runtime.options.remove_unused_functions = !yes;
+	} else if (strcmp("format", name) == 0) {
+		struct output_format o = { .name=value };
+		struct output_format *res =
+			bsearch(&o, output_formats,
+				sizeof(output_formats) / sizeof(struct output_format),
+				sizeof(struct output_format), format_compare);
+		if (!res) {
+			scas_abort("Unknown output format %s", value);
+		}
+		scas_runtime.options.output_format = res->writer;
+	} else if (strcmp("prog-name", name) == 0) {
+		if (strlen(value) > 8) {
+			scas_abort("-fprog-name must be 8 characters or fewer.");
+		}
+		char *v = value;
+		while (*v) {
+			if (!isupper(*v) || !isascii(*v)) {
+				scas_abort("-fprog-name must be all uppercase ASCII.");
+			}
+			v++;
+		}
+		scas_runtime.options.prog_name_8xp = value;
+	} else if (strcmp("prog-protected", name) == 0) {
+		scas_runtime.options.prog_protected_8xp = yes;
+	} else if (strcmp("no-prog-protected", name) == 0) {
+		scas_runtime.options.prog_protected_8xp = !yes;
+	} else {
+		scas_abort("Unknown flag %s", name);
+	}
+
+	free(name);
 }
 
 void parse_arguments(int argc, char **argv) {
@@ -248,6 +320,7 @@ int main(int argc, char **argv) {
 			.merge_only = (scas_runtime.jobs & MERGE) == MERGE,
 			.errors = errors,
 			.warnings = warnings,
+			.write_output = scas_runtime.options.output_format
 		};
 		if (settings.merge_only) {
 			object_t *merged = merge_objects(objects);

@@ -156,7 +156,7 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 		}
 		resolve_immediate_values(symbols, area, settings->errors);
 		scas_log(L_DEBUG, "Writing final linked area to output file");
-		fwrite(area->data, sizeof(uint8_t), (int)area->data_length, output);
+		settings->write_output(output, area->data, (int)area->data_length);
 	}
 	scas_log(L_DEBUG, "Final binary written: %d bytes", ftell(output));
 	list_free(symbols);

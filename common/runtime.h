@@ -2,13 +2,17 @@
 #define GLOBALS_H
 #include <stdbool.h>
 #include "list.h"
+#include "linker.h"
 #include "enums.h"
 
 struct runtime_options {
-	bool explicit_export;			/* -fexplicit-export */
-	bool explicit_import;			/* -fexplicit-import */
-	bool auto_relocation;			/* -fauto-relocation */
-	bool remove_unused_functions;	/* -fremove-unused-funcs */
+	bool explicit_export;				/* -fexplicit-export */
+	bool explicit_import;				/* -fexplicit-import */
+	bool auto_relocation;				/* -fauto-relocation */
+	bool remove_unused_functions;		/* -fremove-unused-funcs */
+	format_writer output_format;		/* -fformat=... */
+	char *prog_name_8xp;				/* -fprog-name=... */
+	bool prog_protected_8xp;			/* -fprog-protected */
 };
 
 struct runtime {
