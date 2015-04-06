@@ -55,7 +55,7 @@ void validate_scas_runtime() {
 			ext = ".o";
 		}
 		scas_runtime.output_file = malloc(strlen(scas_runtime.input_files->items[0]) + strlen(ext) + 1);
-		memcpy(scas_runtime.output_file, scas_runtime.input_files->items[0], strlen(scas_runtime.input_files->items[0]));
+		strcpy(scas_runtime.output_file, scas_runtime.input_files->items[0]);
 		int i = strlen(scas_runtime.output_file);
 		while (scas_runtime.output_file[--i] != '.' && i != 0);
 		if (i == 0) {
