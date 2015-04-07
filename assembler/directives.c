@@ -532,7 +532,7 @@ int handle_export(struct assembler_state *state, char **argv, int argc) {
 				*(int*)stack_peek(state->line_number_stack));
 		char *exported = malloc(strlen(argv[i]) + 1);
 		strcpy(exported, argv[i]);
-		list_add(state->current_area->exports, exported);
+		list_add(state->object->exports, exported);
 	}
 	return 1;
 }

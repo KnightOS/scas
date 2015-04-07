@@ -62,7 +62,7 @@ int contains_string(list_t *l, const char *s) {
 	return 0;
 }
 
-void privatize_area(area_t *a) {
+void privatize_area(area_t *a, list_t *exports) {
 	MD5_CTX ctx;
 	unsigned char raw_checksum[16];
 	char checksum[33];
@@ -80,7 +80,7 @@ void privatize_area(area_t *a) {
 
 	for (i = 0; i < a->symbols->length; ++i) {
 		symbol_t *s = a->symbols->items[i];
-		if (contains_string(a->exports, s->name)) {
+		if (contains_string(exports, s->name)) {
 			scas_log(L_DEBUG, "Found exported symbol '%s'", s->name);
 			s->exported = 1;
 		} else {
@@ -113,6 +113,6 @@ void privatize_symbols(object_t *o) {
 	int i;
 	for (i = 0; i < o->areas->length; ++i) {
 		area_t *a = o->areas->items[i];
-		privatize_area(a);
+		privatize_area(a, o->exports);
 	}
 }

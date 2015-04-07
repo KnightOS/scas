@@ -13,6 +13,7 @@
 object_t *create_object() {
 	object_t *o = malloc(sizeof(object_t));
 	o->areas = create_list();
+	o->exports = create_list();
 	return o;
 }
 
@@ -28,7 +29,6 @@ area_t *create_area(const char *name) {
 	a->symbols = create_list();
 	a->source_map = create_list();
 	a->metadata = create_list();
-	a->exports = create_list();
 	a->final_address = 0;
 	a->data_length = 0;
 	a->data_capacity = 1024;
