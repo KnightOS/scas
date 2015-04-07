@@ -2,16 +2,19 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 #include "log.h"
 #include "stringop.h"
 #include "list.h"
 #include "enums.h"
 #include "errors.h"
 #include "assembler.h"
+#include "bin.h"
 #include "linker.h"
 #include "merge.h"
 #include "expression.h"
 #include "runtime.h"
+#include "flags.h"
 #ifdef _WIN32
 #include <Windows.h>
 #else
@@ -40,6 +43,9 @@ void init_scas_runtime() {
 	scas_runtime.options.explicit_import = true;
 	scas_runtime.options.auto_relocation = false;
 	scas_runtime.options.remove_unused_functions = true;
+	scas_runtime.options.output_format = output_bin;
+	scas_runtime.options.prog_name_8xp = "SCAS";
+	scas_runtime.options.prog_protected_8xp = true;
 }
 
 void validate_scas_runtime() {
@@ -55,7 +61,7 @@ void validate_scas_runtime() {
 			ext = ".o";
 		}
 		scas_runtime.output_file = malloc(strlen(scas_runtime.input_files->items[0]) + strlen(ext) + 1);
-		memcpy(scas_runtime.output_file, scas_runtime.input_files->items[0], strlen(scas_runtime.input_files->items[0]));
+		strcpy(scas_runtime.output_file, scas_runtime.input_files->items[0]);
 		int i = strlen(scas_runtime.output_file);
 		while (scas_runtime.output_file[--i] != '.' && i != 0);
 		if (i == 0) {
@@ -66,26 +72,6 @@ void validate_scas_runtime() {
 			scas_runtime.output_file[i + j] = ext[j];
 		}
 		scas_log(L_DEBUG, "Assigned output file name to %s", scas_runtime.output_file);
-	}
-}
-
-void parse_flag(const char *flag) {
-	bool value = true;
-	flag += 2;
-	if (strstr(flag, "no-") == flag) {
-		value = false;
-		flag += 3;
-	}
-	if (strcmp("explicit-export", flag) == 0) {
-		scas_runtime.options.explicit_export = value;
-	} else if (strcmp("explicit-import", flag) == 0) {
-		scas_runtime.options.explicit_import = value;
-	} else if (strcmp("auto-relocation", flag) == 0) {
-		scas_runtime.options.auto_relocation = value;
-	} else if (strcmp("remove-unused-funcs", flag) == 0) {
-		scas_runtime.options.remove_unused_functions = value;
-	} else {
-		scas_abort("Unknown flag %s", flag);
 	}
 }
 
@@ -248,6 +234,7 @@ int main(int argc, char **argv) {
 			.merge_only = (scas_runtime.jobs & MERGE) == MERGE,
 			.errors = errors,
 			.warnings = warnings,
+			.write_output = scas_runtime.options.output_format
 		};
 		if (settings.merge_only) {
 			object_t *merged = merge_objects(objects);

@@ -21,10 +21,10 @@ typedef struct {
 struct assembler_state {
 	object_t *object;
 	area_t *current_area;
-	stack_t *source_map_stack;
-	stack_t *file_stack;
-	stack_t *file_name_stack;
-	stack_t *line_number_stack;
+	stack_type *source_map_stack;
+	stack_type *file_stack;
+	stack_type *file_name_stack;
+	stack_type *line_number_stack;
 	list_t *errors;
 	list_t *warnings;
 	list_t *extra_lines;
@@ -32,7 +32,7 @@ struct assembler_state {
 	int column;
 	instruction_set_t *instruction_set;
 	uint8_t *instruction_buffer;
-	stack_t *if_stack;
+	stack_type *if_stack;
 	list_t *equates;
 	list_t *macros;
 	macro_t *current_macro;

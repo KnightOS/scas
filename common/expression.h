@@ -40,7 +40,7 @@ typedef struct {
 	int is_unary;
 	int precedence;
 	int right_assocative;
-	uint64_t (*function)(stack_t *, int *);
+	uint64_t (*function)(stack_type *, int *);
 } operator_t;
 
 // NOTE: when passing operators, pass them sorted by length, largest first.

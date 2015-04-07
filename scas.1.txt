@@ -83,6 +83,13 @@ Flags are enabled with the *-f* option. You may _disable_ any of these flags by
 using *-fno-[flag]* (for example: -fno-remove-unused-funcs to disable the removal
 of unused functions).
 
+*-fauto-relocation*::
+	*Disabled* by default.
+
+	Enabling this flag will insert KnightOS relocation instructions before all
+	local references during linking. This is generally not reccommended because it
+	fails to handle more complex scenarios.
+
 *-fexplicit-export*::
 	*Disabled* by default.
 
@@ -96,12 +103,25 @@ of unused functions).
 	instructs scas to raise errors during assembly if any external symbols are
 	referenced without an import directive.
 
-*-fauto-relocation*::
-	*Disabled* by default.
+*-fformat=<format>*::
+	*bin* by default.
 
-	Enabling this flag will insert KnightOS relocation instructions before all
-	local references during linking. This is generally not reccommended because it
-	fails to handle more complex scenarios.
+	Outputs machine code in the given format. Available formats:
+
+	bin - Binary machine code
+	8xp - TI-OS 8xp file
+
+*-f8xp-name=<name>*::
+	*SCAS* by default.
+
+	When using the 8xp format, this sets the name of the variable. This can be up
+	to 8 characters, all uppercase.
+
+*-f8xp-protected*::
+	*Enabled* by default.
+
+	When using the 8xp format, this sets the protected flag so that the varaible
+	may not be edited directly on the calculator.
 
 *-fremove-unused-funcs*::
 	*Enabled* by default.
