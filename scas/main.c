@@ -29,6 +29,7 @@ void init_scas_runtime() {
 	scas_runtime.output_type = EXECUTABLE;
 	scas_runtime.input_files = create_list();
 	scas_runtime.output_file = NULL;
+	scas_runtime.output_extension = "bin";
 	scas_runtime.listing_file = NULL;
 	scas_runtime.symbol_file = NULL;
 	scas_runtime.include_path = getenv("SCAS_PATH");
@@ -56,21 +57,21 @@ void validate_scas_runtime() {
 		/* Auto-assign an output file name */
 		const char *ext;
 		if ((scas_runtime.jobs & LINK) == LINK) {
-			ext = ".bin";
+			ext = scas_runtime.output_extension;
 		} else {
-			ext = ".o";
+			ext = "o";
 		}
-		scas_runtime.output_file = malloc(strlen(scas_runtime.input_files->items[0]) + strlen(ext) + 1);
+		scas_runtime.output_file = malloc(strlen(scas_runtime.input_files->items[0]) + strlen(ext) + 2);
 		strcpy(scas_runtime.output_file, scas_runtime.input_files->items[0]);
 		int i = strlen(scas_runtime.output_file);
 		while (scas_runtime.output_file[--i] != '.' && i != 0);
 		if (i == 0) {
 			i = strlen(scas_runtime.output_file);
+		} else {
+			scas_runtime.output_file[i] = '\0';
 		}
-		int j;
-		for (j = 0; j < sizeof(ext); j++) {
-			scas_runtime.output_file[i + j] = ext[j];
-		}
+		strcat(scas_runtime.output_file, ".");
+		strcat(scas_runtime.output_file, ext);
 		scas_log(L_DEBUG, "Assigned output file name to %s", scas_runtime.output_file);
 	}
 }

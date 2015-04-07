@@ -11,8 +11,9 @@ struct runtime_options {
 	bool auto_relocation;				/* -fauto-relocation */
 	bool remove_unused_functions;		/* -fremove-unused-funcs */
 	format_writer output_format;		/* -fformat=... */
-	char *prog_name_8xp;				/* -fprog-name=... */
-	bool prog_protected_8xp;			/* -fprog-protected */
+	char *prog_name_8xp;				/* -f8xp-name=... */
+	bool prog_protected_8xp;			/* -f8xp-protected */
+	bool prog_archived_8xp;				/* -f8xp-archived */
 };
 
 struct runtime {
@@ -21,6 +22,7 @@ struct runtime {
 	output_type_t output_type;
 	list_t *input_files;
 	char *output_file;
+	char *output_extension;
 	char *listing_file;
 	char *symbol_file;
 	char *include_path;

@@ -111,6 +111,12 @@ of unused functions).
 	bin - Binary machine code
 	8xp - TI-OS 8xp file
 
+*-f8xp-archived*::
+	*Disabled* by default.
+
+	When using the 8xp format, this flag indicates that the program should be
+	archived when sent to the calculator.
+
 *-f8xp-name=<name>*::
 	*SCAS* by default.
 

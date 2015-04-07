@@ -68,6 +68,7 @@ void parse_flag(const char *flag) {
 			scas_abort("Unknown output format %s", value);
 		}
 		scas_runtime.options.output_format = res->writer;
+		scas_runtime.output_extension = res->name;
 	} else if (strcmp("8xp-name", name) == 0) {
 		if (strlen(value) > 8) {
 			scas_abort("-f8xp-name must be 8 characters or fewer.");
@@ -84,6 +85,10 @@ void parse_flag(const char *flag) {
 		scas_runtime.options.prog_protected_8xp = yes;
 	} else if (strcmp("no-8xp-protected", name) == 0) {
 		scas_runtime.options.prog_protected_8xp = !yes;
+	} else if (strcmp("8xp-archived", name) == 0) {
+		scas_runtime.options.prog_archived_8xp = yes;
+	} else if (strcmp("no-8xp-archived", name) == 0) {
+		scas_runtime.options.prog_archived_8xp = !yes;
 	} else {
 		scas_abort("Unknown flag %s", name);
 	}
