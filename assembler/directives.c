@@ -33,9 +33,9 @@ enum {
 };
 
 const char *delimiters_list[] = {
-	"",     // 0
-	",",    // DELIM_COMMAS
-	" \t",  // DELIM_WHITESPACE
+	"",		// 0
+	",",	// DELIM_COMMAS
+	" \t",	// DELIM_WHITESPACE
 	", \t", // DELIM_COMMAS | DELIM_WHITESPACE
 };
 
@@ -62,6 +62,68 @@ char *join_args(char **argv, int argc) {
 }
 
 int handle_nop(struct assembler_state *state, char **argv, int argc) {
+	return 1;
+}
+int handle_define(struct assembler_state *state, char **argv, int argc) {
+	/* Basically the same thing as handle_macro, but everything is on 1 line */
+	if (argc == 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+	}
+	argv[0] = join_args(argv, argc);
+	char *location = strchr(argv[0], '(');
+	if (location == argv[0]) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+
+	macro_t *define = malloc(sizeof(macro_t));
+	define->parameters = create_list();
+	define->macro_lines = create_list();
+	if (location) {
+		int i, _;
+		define->name = malloc (location - argv[0] + 1);
+		strncpy(define->name, argv[0], location - argv[0] );
+		define->name[location - argv[0]] = 0;	 /* End of String */
+		location++;
+		char *end = strchr(location, ')');
+		if (!end) {
+			ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+			return 1;
+		}
+
+		char *params = malloc(end - location + 1);
+		strncpy(params, location, end - location);
+		params[end - location] = 0;
+		list_t *parameters = split_string(params, ",");
+
+		for (i = 0; i<parameters->length; i++)
+		{
+			char *parameter = parameters->items[i];
+			list_add(define->parameters, strip_whitespace(parameter, &_));
+		}
+		location = end + 1; /* After the Parenthesis */
+	} else {
+		define->name = malloc(strlen(argv[0]) + 1);
+		strcpy(define->name, argv[0]);
+		if (!(location = strchr(argv[0], ' '))) {
+			if (!(location = strchr(argv[0], '\t'))) {
+				location = argv[0] + strlen(argv[0]) + 1;
+			}
+		}
+	}
+	if ((strlen(argv[0]) + 1) == (location - argv[0])) { /* End of string? */
+		list_add(define->macro_lines, "1");		/* defalt define is 1 */
+	} else {
+		while ((*location == ' ' || *location == '\t')) {
+			location++;
+		}
+		char *mlines = malloc(strlen(location)+1);
+		strcpy(mlines, location);
+		list_add(define->macro_lines, mlines); /* Rest of the line */
+	}
+
+	list_add(state->macros, define);
+	scas_log(L_DEBUG,"Added define \'%s\' With %d Parameters",define->name,define->parameters->length);
 	return 1;
 }
 
@@ -797,7 +859,7 @@ int handle_macro(struct assembler_state *state, char **argv, int argc) {
 	}
 	state->current_macro = macro;
 	return 1;
-}	
+}
 
 int handle_nolist(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 0) {
@@ -860,6 +922,7 @@ struct directive directives[] = {
 	{ "bndry", handle_bndry, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "byte", handle_db, DELIM_COMMAS },
 	{ "db", handle_db, DELIM_COMMAS },
+	{ "define", handle_define, 0 },
 	{ "ds", handle_block, DELIM_COMMAS },
 	{ "dw", handle_dw, DELIM_COMMAS },
 	{ "echo", handle_echo, DELIM_COMMAS | DELIM_WHITESPACE },
