@@ -168,6 +168,7 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 		int j;
 		for (j = 0; j < macro->macro_lines->length; ++j) {
 			char *mline = macro->macro_lines->items[j];
+			scas_log(L_DEBUG, "Inserting line '%s'", mline);
 			if (j == 0) {
 				/* Replacing **line */
 				char *newline = malloc(
@@ -496,6 +497,7 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 			if (state.nolist || (state.if_stack->length && !*(int*)stack_peek(state.if_stack))) {
 				l = sizeof(nolist_line_ops) / sizeof(void*);
 			}
+			scas_log(L_DEBUG, "Assembler handling line '%s'", line);
 			for (i = 0; i < l; ++i) {
 				int res;
 				if (state.nolist || (state.if_stack->length && !*(int*)stack_peek(state.if_stack))) {
