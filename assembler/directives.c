@@ -661,7 +661,7 @@ int handle_ifdef(struct assembler_state *state, char **argv, int argc) {
 			*r = 1;
 		}
 	}
-	for (i = 0; !*r && i < state->current_area->symbols->length; ++i) {
+	for (i = 0; !*r && i < state->current_area->macros->length; ++i) {
 		macro_t *m = state->macros->items[i];
 		if (strcasecmp(m->name, argv[0]) == 0) {
 			*r = 1;
@@ -701,7 +701,7 @@ int handle_ifndef(struct assembler_state *state, char **argv, int argc) {
 			*r = 1;
 		}
 	}
-	for (i = 0; !*r && i < state->current_area->symbols->length; ++i) {
+	for (i = 0; !*r && i < state->current_area->macros->length; ++i) {
 		macro_t *m = state->macros->items[i];
 		if (strcasecmp(m->name, argv[0]) == 0) {
 			*r = 1;
