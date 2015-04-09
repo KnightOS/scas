@@ -64,116 +64,6 @@ char *join_args(char **argv, int argc) {
 int handle_nop(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
-int handle_define(struct assembler_state *state, char **argv, int argc) {
-	/* Basically the same thing as handle_macro, but everything is on 1 line */
-	if (argc == 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
-	}
-	argv[0] = join_args(argv, argc);
-	char *location = strchr(argv[0], '(');
-	if (location == argv[0]) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
-		return 1;
-	}
-
-	macro_t *define = malloc(sizeof(macro_t));
-	define->parameters = create_list();
-	define->macro_lines = create_list();
-	if (location) {
-		int i, _;
-		define->name = malloc (location - argv[0] + 1);
-		strncpy(define->name, argv[0], location - argv[0] );
-		define->name[location - argv[0]] = 0; /* End of String */
-		++location;
-		char *end = strchr(location, ')');
-		if (!end) {
-			ERROR(ERROR_INVALID_DIRECTIVE, state->column);
-			return 1;
-		}
-
-		char *params = malloc(end - location + 1);
-		strncpy(params, location, end - location);
-		params[end - location] = 0;
-		list_t *parameters = split_string(params, ",");
-
-		for (i = 0; i < parameters->length; i++) {
-			char *parameter = parameters->items[i];
-			list_add(define->parameters, strip_whitespace(parameter, &_));
-		}
-		location = end + 1; /* After the parenthesis */
-	} else {
-		define->name = malloc(strlen(argv[0]) + 1);
-		strcpy(define->name, argv[0]);
-		if (!(location = strchr(argv[0], ' '))) {
-			if (!(location = strchr(argv[0], '\t'))) {
-				location = argv[0] + strlen(argv[0]) + 1;
-			}
-		}
-	}
-	if ((strlen(argv[0]) + 1) == (location - argv[0])) { /* End of string? */
-		list_add(define->macro_lines, "1"); /* defalt define is 1 */
-	} else {
-		while (isspace(*location)) {
-			++location;
-		}
-		char *mlines = malloc(strlen(location) + 1);
-		strcpy(mlines, location);
-		list_add(define->macro_lines, mlines); /* Rest of the line */
-	}
-
-	list_add(state->macros, define);
-	scas_log(L_DEBUG, "Added define \'%s\' with %d parameters", define->name, define->parameters->length);
-	return 1;
-}
-
-int handle_area(struct assembler_state *state, char **argv, int argc) {
-	if (argc != 1) {
-		/* This space intentionally left blank */
-	}
-	area_t *area = NULL;
-	int i;
-	for (i = 0; i < state->object->areas->length; ++i) {
-		area_t *a = state->object->areas->items[i];
-		if (strcasecmp(a->name, argv[0]) == 0) {
-			area = a;
-			break;
-		}
-	}
-	if (!area) {
-		area = create_area(argv[0]);
-		list_add(state->object->areas, area);
-	}
-	state->current_area = area;
-	state->PC = area->data_length;
-	scas_log(L_INFO, "Switched to area '%s' from directive at %s:%d", area->name,
-			(char *)stack_peek(state->file_name_stack), *(int *)stack_peek(state->line_number_stack));
-	stack_pop(state->source_map_stack);
-	stack_push(state->source_map_stack, create_source_map(state->current_area,
-			(char *)stack_peek(state->file_name_stack)));
-	return 1;
-}
-
-int handle_ascii(struct assembler_state *state, char **argv, int argc) {
-	if (argc == 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
-		return 1;
-	}
-	int i;
-	for (i = 0; i < argc; ++i) {
-		int len = strlen(argv[i]);
-		if (argv[i][0] != '"' || argv[i][len - 1] != '"') {
-			ERROR(ERROR_INVALID_DIRECTIVE, state->column);
-			return 1;
-		}
-		argv[i][len - 1] = '\0';
-		len -= 2;
-		len = unescape_string(argv[i] + 1);
-		MAP_SOURCE(len);
-		append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len);
-		state->PC += len;
-	}
-	return 1;
-}
 
 int handle_asciiz(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
@@ -353,6 +243,117 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 	}
 	add_source_map((source_map_t *)stack_peek(state->source_map_stack),
 		*(int*)stack_peek(state->line_number_stack), state->line, dlen, olen);
+	return 1;
+}
+
+int handle_define(struct assembler_state *state, char **argv, int argc) {
+	/* Basically the same thing as handle_macro, but everything is on 1 line */
+	if (argc == 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+	}
+	argv[0] = join_args(argv, argc);
+	char *location = strchr(argv[0], '(');
+	if (location == argv[0]) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+
+	macro_t *define = malloc(sizeof(macro_t));
+	define->parameters = create_list();
+	define->macro_lines = create_list();
+	if (location) {
+		int i, _;
+		define->name = malloc (location - argv[0] + 1);
+		strncpy(define->name, argv[0], location - argv[0] );
+		define->name[location - argv[0]] = 0; /* End of String */
+		++location;
+		char *end = strchr(location, ')');
+		if (!end) {
+			ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+			return 1;
+		}
+
+		char *params = malloc(end - location + 1);
+		strncpy(params, location, end - location);
+		params[end - location] = 0;
+		list_t *parameters = split_string(params, ",");
+
+		for (i = 0; i < parameters->length; i++) {
+			char *parameter = parameters->items[i];
+			list_add(define->parameters, strip_whitespace(parameter, &_));
+		}
+		location = end + 1; /* After the parenthesis */
+	} else {
+		define->name = malloc(strlen(argv[0]) + 1);
+		strcpy(define->name, argv[0]);
+		if (!(location = strchr(argv[0], ' '))) {
+			if (!(location = strchr(argv[0], '\t'))) {
+				location = argv[0] + strlen(argv[0]) + 1;
+			}
+		}
+	}
+	if ((strlen(argv[0]) + 1) == (location - argv[0])) { /* End of string? */
+		list_add(define->macro_lines, "1"); /* defalt define is 1 */
+	} else {
+		while (isspace(*location)) {
+			++location;
+		}
+		char *mlines = malloc(strlen(location) + 1);
+		strcpy(mlines, location);
+		list_add(define->macro_lines, mlines); /* Rest of the line */
+	}
+
+	list_add(state->macros, define);
+	scas_log(L_DEBUG, "Added define \'%s\' with %d parameters", define->name, define->parameters->length);
+	return 1;
+}
+
+int handle_area(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 1) {
+		/* This space intentionally left blank */
+	}
+	area_t *area = NULL;
+	int i;
+	for (i = 0; i < state->object->areas->length; ++i) {
+		area_t *a = state->object->areas->items[i];
+		if (strcasecmp(a->name, argv[0]) == 0) {
+			area = a;
+			break;
+		}
+	}
+	if (!area) {
+		area = create_area(argv[0]);
+		list_add(state->object->areas, area);
+	}
+	state->current_area = area;
+	state->PC = area->data_length;
+	scas_log(L_INFO, "Switched to area '%s' from directive at %s:%d", area->name,
+			(char *)stack_peek(state->file_name_stack), *(int *)stack_peek(state->line_number_stack));
+	stack_pop(state->source_map_stack);
+	stack_push(state->source_map_stack, create_source_map(state->current_area,
+			(char *)stack_peek(state->file_name_stack)));
+	return 1;
+}
+
+int handle_ascii(struct assembler_state *state, char **argv, int argc) {
+	if (argc == 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+	int i;
+	for (i = 0; i < argc; ++i) {
+		int len = strlen(argv[i]);
+		if (argv[i][0] != '"' || argv[i][len - 1] != '"') {
+			ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+			return 1;
+		}
+		argv[i][len - 1] = '\0';
+		len -= 2;
+		len = unescape_string(argv[i] + 1);
+		MAP_SOURCE(len);
+		append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len);
+		state->PC += len;
+	}
 	return 1;
 }
 
