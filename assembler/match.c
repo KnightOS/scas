@@ -44,6 +44,9 @@ char *get_operand_string(instruction_t *inst, int *i, const char *code, int j) {
 		}
 	} else {
 		end = code_strchr(code + j, delimiter);
+		if (end == NULL && delimiter == ')') {
+			end = code_strchr(code + j, ']');
+		}
 	}
 	if (end == NULL) {
 		return NULL;
@@ -148,6 +151,14 @@ instruction_match_t *try_match(instruction_set_t *set, instruction_t *inst, cons
 			free(value);
 			i--;
 		} else {
+			if (inst->match[i] == '(' && str[j] == '[') {
+				scas_log(L_DEBUG, "Permitting [ in place of (");
+				continue;
+			}
+			if (inst->match[i] == ')' && str[j] == ']') {
+				scas_log(L_DEBUG, "Permitting ] in place of )");
+				continue;
+			}
 			if (toupper(inst->match[i]) != toupper(str[j])) {
 				match = 0;
 				break;

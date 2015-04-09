@@ -481,6 +481,7 @@ INS CALL_%A<16>                         11001101 %A
 INS DJNZ_^A<8>                          00010000 ^A
 
 INS JP_(-HL-)                           11101001
+INS JP_HL                               11101001
 INS JP_(-@A<g8>-)                       @A 11101001
 
 INS JP_@A<g2>-,-%B<16>                  11@A010 %B
