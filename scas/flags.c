@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "runtime.h"
+#include "expression.h"
 #include "log.h"
 #include "linker.h"
 #include "bin.h"
@@ -89,6 +90,18 @@ void parse_flag(const char *flag) {
 		scas_runtime.options.prog_archived_8xp = yes;
 	} else if (strcmp("no-8xp-archived", name) == 0) {
 		scas_runtime.options.prog_archived_8xp = !yes;
+	} else if (strcmp("origin", name) == 0) {
+		tokenized_expression_t *e = parse_expression(value);
+		if (!e) {
+			scas_abort("Unable to parse -forigin=%s", value);
+		}
+		list_t *s = create_list();
+		int _;
+		uint64_t res = evaluate_expression(e, s, &_);
+		if (_) {
+			scas_abort("Unable to evaluate -forigin=%s", value);
+		}
+		scas_runtime.options.origin = res;
 	} else {
 		scas_abort("Unknown flag %s", name);
 	}

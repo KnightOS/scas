@@ -47,6 +47,7 @@ void init_scas_runtime() {
 	scas_runtime.options.output_format = output_bin;
 	scas_runtime.options.prog_name_8xp = "SCAS";
 	scas_runtime.options.prog_protected_8xp = true;
+	scas_runtime.options.origin = 0;
 }
 
 void validate_scas_runtime() {

@@ -14,6 +14,7 @@ struct runtime_options {
 	char *prog_name_8xp;				/* -f8xp-name=... */
 	bool prog_protected_8xp;			/* -f8xp-protected */
 	bool prog_archived_8xp;				/* -f8xp-archived */
+	uint64_t origin;					/* -forigin-... */
 };
 
 struct runtime {

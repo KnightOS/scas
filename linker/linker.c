@@ -132,6 +132,7 @@ void gather_symbols(list_t *symbols, area_t *area, linker_settings_t *settings) 
 			add_error_from_map(settings->errors, ERROR_DUPLICATE_SYMBOL,
 					area->source_map, sym->defined_address);
 		} else {
+			sym->value += scas_runtime.options.origin;
 			list_add(symbols, sym);
 		}
 	}
