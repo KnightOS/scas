@@ -83,8 +83,8 @@ int handle_define(struct assembler_state *state, char **argv, int argc) {
 		int i, _;
 		define->name = malloc (location - argv[0] + 1);
 		strncpy(define->name, argv[0], location - argv[0] );
-		define->name[location - argv[0]] = 0;	 /* End of String */
-		location++;
+		define->name[location - argv[0]] = 0; /* End of String */
+		++location;
 		char *end = strchr(location, ')');
 		if (!end) {
 			ERROR(ERROR_INVALID_DIRECTIVE, state->column);
@@ -96,12 +96,11 @@ int handle_define(struct assembler_state *state, char **argv, int argc) {
 		params[end - location] = 0;
 		list_t *parameters = split_string(params, ",");
 
-		for (i = 0; i<parameters->length; i++)
-		{
+		for (i = 0; i < parameters->length; i++) {
 			char *parameter = parameters->items[i];
 			list_add(define->parameters, strip_whitespace(parameter, &_));
 		}
-		location = end + 1; /* After the Parenthesis */
+		location = end + 1; /* After the parenthesis */
 	} else {
 		define->name = malloc(strlen(argv[0]) + 1);
 		strcpy(define->name, argv[0]);
@@ -112,18 +111,18 @@ int handle_define(struct assembler_state *state, char **argv, int argc) {
 		}
 	}
 	if ((strlen(argv[0]) + 1) == (location - argv[0])) { /* End of string? */
-		list_add(define->macro_lines, "1");		/* defalt define is 1 */
+		list_add(define->macro_lines, "1"); /* defalt define is 1 */
 	} else {
-		while ((*location == ' ' || *location == '\t')) {
-			location++;
+		while (isspace(*location)) {
+			++location;
 		}
-		char *mlines = malloc(strlen(location)+1);
+		char *mlines = malloc(strlen(location) + 1);
 		strcpy(mlines, location);
 		list_add(define->macro_lines, mlines); /* Rest of the line */
 	}
 
 	list_add(state->macros, define);
-	scas_log(L_DEBUG,"Added define \'%s\' With %d Parameters",define->name,define->parameters->length);
+	scas_log(L_DEBUG, "Added define \'%s\' with %d parameters", define->name, define->parameters->length);
 	return 1;
 }
 
