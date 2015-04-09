@@ -425,6 +425,13 @@ char *split_line(struct assembler_state *state, char *line) {
 	return part;
 }
 
+int try_split_line(struct assembler_state *state, char **line) {
+	if (code_strchr(*line, '\\')) {
+		*line = split_line(state, *line);
+	}
+	return 0;
+}
+
 object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *settings) {
 	struct assembler_state state = {
 		.object = create_object(),
@@ -463,10 +470,11 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 
 	int(*const line_ops[])(struct assembler_state *, char **) = {
 		try_empty_line,
+		try_handle_directive,
+		try_split_line,
 		try_parse_inside_macro,
 		try_expand_macro,
 		try_add_label,
-		try_handle_directive,
 		try_match_instruction,
 	};
 	int(*const nolist_line_ops[])(struct assembler_state *, char **) = {
@@ -489,9 +497,6 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 			strcpy(state.line, line);
 			line = strip_comments(line);
 			line = strip_whitespace(line, &state.column);
-			if (code_strchr(line, '\\')) {
-				line = split_line(&state, line);
-			}
 			int i;
 			int l = sizeof(line_ops) / sizeof(void*);
 			if (state.nolist || (state.if_stack->length && !*(int*)stack_peek(state.if_stack))) {
