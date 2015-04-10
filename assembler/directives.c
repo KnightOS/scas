@@ -942,10 +942,10 @@ struct directive directives[] = {
 	{ "if", handle_if, 0 },
 	{ "ifdef", handle_ifdef, 0 },
 	{ "ifndef", handle_ifndef, 0 },
+	{ "import", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE }, /* TODO */
 	{ "incbin", handle_incbin, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "include", handle_include, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "lclequ", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE },
-	{ "import", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE }, /* TODO */
 	{ "list", handle_list, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "local", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "macro", handle_macro, 0 },
@@ -976,6 +976,7 @@ struct directive if_directives[] = { /* The only directives parsed during a fals
 int directive_compare(const void *_a, const void *_b) {
 	const struct directive *a = _a;
 	const struct directive *b = _b;
+	scas_log(L_DEBUG, "bsearch '%s' : '%s'", a->match, b->match);
 	return strcasecmp(a->match, b->match);
 }
 

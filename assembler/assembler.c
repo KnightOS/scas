@@ -426,6 +426,17 @@ char *split_line(struct assembler_state *state, char *line) {
 }
 
 int try_split_line(struct assembler_state *state, char **line) {
+	/* If the line starts with any of these things, don't split it */
+	const char *blacklist[] = {
+		"#define",
+		".define"
+	};
+	int i;
+	for (i = 0; i < sizeof(blacklist) / sizeof(char *); ++i) {
+		if (code_strstr(*line, blacklist[i]) == *line) {
+			return 0;
+		}
+	}
 	if (code_strchr(*line, '\\')) {
 		*line = split_line(state, *line);
 	}
@@ -471,10 +482,10 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 	int(*const line_ops[])(struct assembler_state *, char **) = {
 		try_empty_line,
 		try_parse_inside_macro,
-		try_handle_directive,
 		try_split_line,
 		try_expand_macro,
 		try_add_label,
+		try_handle_directive,
 		try_match_instruction,
 	};
 	int(*const nolist_line_ops[])(struct assembler_state *, char **) = {
