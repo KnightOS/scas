@@ -132,15 +132,23 @@ void gather_symbols(list_t *symbols, area_t *area, linker_settings_t *settings) 
 			add_error_from_map(settings->errors, ERROR_DUPLICATE_SYMBOL,
 					area->source_map, sym->defined_address);
 		} else {
-			sym->value += scas_runtime.options.origin;
 			list_add(symbols, sym);
 		}
+	}
+}
+
+void move_origin(list_t *symbols) {
+	int i;
+	for (i = 0; i < symbols->length; ++i) {
+		symbol_t *sym = symbols->items[i];
+		sym->value += scas_runtime.options.origin;
 	}
 }
 
 void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	list_t *symbols = create_list(); // TODO: Use a hash table
 	object_t *merged = merge_objects(objects);
+	area_t *final = create_area("FINAL");
 
 	int i;
 	for (i = 0; i < merged->areas->length; ++i) {
@@ -156,10 +164,14 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 		if (settings->automatic_relocation) {
 			auto_relocate_area(area);
 		}
+		if (scas_runtime.options.origin) {
+			move_origin(symbols);
+		}
 		resolve_immediate_values(symbols, area, settings->errors);
 		scas_log(L_DEBUG, "Writing final linked area to output file");
-		settings->write_output(output, area->data, (int)area->data_length);
+		append_to_area(final, area->data, area->data_length);
 	}
+	settings->write_output(output, final->data, (int)final->data_length);
 	scas_log(L_DEBUG, "Final binary written: %d bytes", ftell(output));
 	list_free(symbols);
 }
