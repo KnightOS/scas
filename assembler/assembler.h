@@ -40,6 +40,7 @@ struct assembler_state {
 	uint64_t PC;
 	char *last_global_label;
 	assembler_settings_t *settings;
+	macro_t *most_recent_macro;
 };
 
 object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *settings);
