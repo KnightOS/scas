@@ -284,16 +284,17 @@ int handle_define(struct assembler_state *state, char **argv, int argc) {
 		}
 		location = end + 1; /* After the parenthesis */
 	} else {
+		location = argv[0];
+		while (*location && !isspace(*location)) ++location;
+		char _ = *location;
+		*location = '\0';
 		define->name = malloc(strlen(argv[0]) + 1);
 		strcpy(define->name, argv[0]);
-		if (!(location = strchr(argv[0], ' '))) {
-			if (!(location = strchr(argv[0], '\t'))) {
-				location = argv[0] + strlen(argv[0]) + 1;
-			}
-		}
+		*location = _;
+		++location;
 	}
 	if ((strlen(argv[0]) + 1) == (location - argv[0])) { /* End of string? */
-		list_add(define->macro_lines, "1"); /* defalt define is 1 */
+		list_add(define->macro_lines, "1"); /* default value is 1 */
 	} else {
 		while (isspace(*location)) {
 			++location;
@@ -976,7 +977,6 @@ struct directive if_directives[] = { /* The only directives parsed during a fals
 int directive_compare(const void *_a, const void *_b) {
 	const struct directive *a = _a;
 	const struct directive *b = _b;
-	scas_log(L_DEBUG, "bsearch '%s' : '%s'", a->match, b->match);
 	return strcasecmp(a->match, b->match);
 }
 
@@ -1092,8 +1092,10 @@ void correct_equates(char **line) {
 
 int try_handle_directive(struct assembler_state *state, char **line) {
 	/* Handle alternate forms of .equ */
-	if (code_strstr(*line, ".equ") || code_strchr(*line, '=')) {
-		correct_equates(line);
+	if (!(**line == '.' || **line == '#')) {
+		if (code_strstr(*line, ".equ") || code_strchr(*line, '=')) {
+			correct_equates(line);
+		}
 	}
 	if (**line == '.' || **line == '#') {
 		struct directive *dir = directives;

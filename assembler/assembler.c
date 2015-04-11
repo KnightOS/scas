@@ -131,6 +131,9 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 	int i;
 	for (i = 0; i < state->macros->length; i++) {
 		macro_t *macro = state->macros->items[i];
+		if (macro == state->most_recent_macro) {
+			continue;
+		}
 		int name_length = strlen(macro->name);
 		char *match = strstr(*line, macro->name);
 		if (match == NULL) {
@@ -207,6 +210,8 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 		}
 		list_free(newlines);
 		free_flat_list(userparams);
+
+		state->most_recent_macro = macro;
 		return -1;
 	}
 	return 0;
@@ -469,6 +474,8 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 		.PC = 0,
 		.last_global_label = "@start",
 		.settings = settings,
+
+		.most_recent_macro = NULL,
 	};
 	int *ln = malloc(sizeof(int)); *ln = 0;
 	char *name = malloc(strlen(file_name) + 1);
@@ -500,6 +507,7 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 			if (state.extra_lines->length == 0) {
 				++*(int*)stack_peek(state.line_number_stack);
 				line = read_line(cur);
+				state.most_recent_macro = NULL;
 			} else {
 				line = state.extra_lines->items[0];
 				list_del(state.extra_lines, 0);
