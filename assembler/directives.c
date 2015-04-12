@@ -309,6 +309,26 @@ int handle_define(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_undef(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 1) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 1;
+	}
+
+	int i;
+	for (i = 0; i < state->macros->length; i++) {
+		macro_t *m = state->macros->items[i];
+		scas_log(L_DEBUG, "Found %s", m->name);
+		if (strcasecmp(m->name, argv[0]) == 0) {
+			scas_log(L_DEBUG, "Undefined Symbol \'%s\'", m->name);
+			list_del(state->macros, i);
+			return 1;
+		}
+	}
+	ERROR(ERROR_UNKNOWN_SYMBOL, state->column);
+	return 1;
+}
+
 int handle_area(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
 		/* This space intentionally left blank */
@@ -961,6 +981,7 @@ struct directive directives[] = {
 	{ "section", handle_area, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "strs", handle_ascii, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "strz", handle_asciiz, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "undef", handle_undef, DELIM_WHITESPACE },
 };
 
 struct directive if_directives[] = { /* The only directives parsed during a falsey if stack */
