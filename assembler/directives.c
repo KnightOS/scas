@@ -982,6 +982,7 @@ struct directive directives[] = {
 	{ "strs", handle_ascii, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "strz", handle_asciiz, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "undef", handle_undef, DELIM_WHITESPACE },
+	{ "undefine", handle_undef, DELIM_WHITESPACE },
 };
 
 struct directive if_directives[] = { /* The only directives parsed during a falsey if stack */
