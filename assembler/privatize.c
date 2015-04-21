@@ -62,7 +62,7 @@ int contains_string(list_t *l, const char *s) {
 	return 0;
 }
 
-void privatize_area(area_t *a, list_t *exports) {
+void privatize_area(object_t *o, area_t *a, list_t *exports) {
 	MD5_CTX ctx;
 	unsigned char raw_checksum[16];
 	char checksum[33];
@@ -93,7 +93,11 @@ void privatize_area(area_t *a, list_t *exports) {
 			strcat(new_name, "@");
 			strcat(new_name, checksum);
 			scas_log(L_DEBUG, "Renaming private symbol '%s' to '%s'", s->name, new_name);
-			rename_symbol(a, s->name, new_name);
+			int j;
+			for (j = 0; j < o->areas->length; ++j) {
+				area_t *_a = o->areas->items[j];
+				rename_symbol(_a, s->name, new_name);
+			}
 			free(s->name);
 			s->name = new_name;
 		}
@@ -113,6 +117,6 @@ void privatize_symbols(object_t *o) {
 	int i;
 	for (i = 0; i < o->areas->length; ++i) {
 		area_t *a = o->areas->items[i];
-		privatize_area(a, o->exports);
+		privatize_area(o, a, o->exports);
 	}
 }
