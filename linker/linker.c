@@ -181,13 +181,10 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	runtime = get_area_by_name(merged, "__scas_relocatable");
 
 	scas_log(L_INFO, "Assigning final address for all areas");
-	int i;
-	for (i = 0; i < merged->areas->length; ++i) {
-		area_t *area = merged->areas->items[i];
-		if (scas_runtime.options.remove_unused_functions) {
-			remove_unused_functions(area, merged->areas);
-		}
+	if (scas_runtime.options.remove_unused_functions) {
+		remove_unused_functions(merged);
 	}
+	int i;
 	uint64_t address = 0;
 	for (i = 0; i < merged->areas->length; ++i) {
 		area_t *area = merged->areas->items[i];

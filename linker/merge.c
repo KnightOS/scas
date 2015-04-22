@@ -71,10 +71,10 @@ void merge_areas(object_t *merged, object_t *source) {
 		metadata_t *new_functions = get_area_metadata(source_area, "scas.functions");
 		metadata_t *old_functions = get_area_metadata(merged_area, "scas.functions");
 		if (new_functions) {
-			list_t *decoded = decode_function_metadata(new_functions->value, new_functions->value_length);
+			list_t *decoded = decode_function_metadata(source_area, new_functions->value, new_functions->value_length);
 			list_t *merged;
 			if (old_functions) {
-				merged = decode_function_metadata(old_functions->value, old_functions->value_length);
+				merged = decode_function_metadata(source_area, old_functions->value, old_functions->value_length);
 			} else {
 				merged = create_list();
 			}

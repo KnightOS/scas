@@ -583,7 +583,7 @@ int handle_function(struct assembler_state *state, char **argv, int argc) {
 		meta->value_length = sizeof(uint32_t);
 		*(uint32_t *)meta->value = 0;
 	}
-	list_t *functions = decode_function_metadata(meta->value, meta->value_length);
+	list_t *functions = decode_function_metadata(state->current_area, meta->value, meta->value_length);
 	function_metadata_t *new_function = malloc(sizeof(function_metadata_t));
 
 	new_function->name = malloc(strlen(argv[0]) + 1);
