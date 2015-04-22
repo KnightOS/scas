@@ -1,12 +1,12 @@
 /////
 vim:set ts=4 sw=4 tw=82 noet:
 /////
-scasdump (1)
+scdump (1)
 ==========
 
 Name
 ----
-scasdump - Dump scas object files
+scdump - Dump scas object files
 
 Synopsis
 --------

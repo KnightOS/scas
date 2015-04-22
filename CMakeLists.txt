@@ -35,7 +35,7 @@ FILE(GLOB assembler ${PROJECT_SOURCE_DIR}/assembler/*.c)
 FILE(GLOB linker ${PROJECT_SOURCE_DIR}/linker/*.c)
 FILE(GLOB tables ${PROJECT_SOURCE_DIR}/tables/*)
 FILE(GLOB scas ${PROJECT_SOURCE_DIR}/scas/*.c)
-FILE(GLOB scasdump ${PROJECT_SOURCE_DIR}/scasdump/*.c)
+FILE(GLOB scdump ${PROJECT_SOURCE_DIR}/scdump/*.c)
 
 add_executable(scas
     ${common}
@@ -44,15 +44,15 @@ add_executable(scas
     ${scas}
 )
 
-add_executable(scasdump
+add_executable(scdump
     ${common}
-    ${scasdump}
+    ${scdump}
 )
 
 ADD_CUSTOM_TARGET(
     man ALL
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/bin/scas.1
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/bin/scasdump.1
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/bin/scdump.1
 )
 
 ADD_CUSTOM_COMMAND(
@@ -64,13 +64,13 @@ ADD_CUSTOM_COMMAND(
 )
 set_directory_properties(${CMAKE_CURRENT_BINARY_DIR} ADDITIONAL_MAKE_CLEAN_FILES scas.1)
 ADD_CUSTOM_COMMAND(
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/scasdump.1.txt
-    COMMAND a2x --no-xmllint --doctype manpage --format manpage ${CMAKE_CURRENT_SOURCE_DIR}/scasdump.1.txt
-    COMMAND test "${CMAKE_CURRENT_SOURCE_DIR}" != "${CMAKE_CURRENT_BINARY_DIR}/bin" && mv -f ${CMAKE_CURRENT_SOURCE_DIR}/scasdump.1 ${CMAKE_CURRENT_BINARY_DIR}/bin || true
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/bin/scasdump.1
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/scdump.1.txt
+    COMMAND a2x --no-xmllint --doctype manpage --format manpage ${CMAKE_CURRENT_SOURCE_DIR}/scdump.1.txt
+    COMMAND test "${CMAKE_CURRENT_SOURCE_DIR}" != "${CMAKE_CURRENT_BINARY_DIR}/bin" && mv -f ${CMAKE_CURRENT_SOURCE_DIR}/scdump.1 ${CMAKE_CURRENT_BINARY_DIR}/bin || true
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/bin/scdump.1
     VERBATIM
 )
-set_directory_properties(${CMAKE_CURRENT_BINARY_DIR} ADDITIONAL_MAKE_CLEAN_FILES scasdump.1)
+set_directory_properties(${CMAKE_CURRENT_BINARY_DIR} ADDITIONAL_MAKE_CLEAN_FILES scdump.1)
 
 INSTALL(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/scas.1
@@ -78,7 +78,7 @@ INSTALL(
 )
 
 INSTALL(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/scasdump.1
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/scdump.1
     DESTINATION man/man1
 )
 
@@ -93,6 +93,6 @@ INSTALL(
 )
 
 INSTALL(
-    TARGETS scasdump
+    TARGETS scdump
     RUNTIME DESTINATION bin
 )
