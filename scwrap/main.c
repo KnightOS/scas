@@ -60,8 +60,8 @@ int main(int argc, char **argv) {
 	start.defined_address = 0;
 	start.exported = 1;
 	start.name = malloc(1 + strlen(_start) + strlen(runtime.prefix) + 1);
-	strcpy(start.name, runtime.prefix);
-	strcat(start.name, "_");
+	strcpy(start.name, "_");
+	strcat(start.name, runtime.prefix);
 	strcat(start.name, _start);
 	list_add(a->symbols, &start);
 
@@ -70,8 +70,8 @@ int main(int argc, char **argv) {
 	end.defined_address = 0;
 	end.exported = 1;
 	end.name = malloc(1 + strlen(_end) + strlen(runtime.prefix) + 1);
-	strcpy(end.name, runtime.prefix);
-	strcat(end.name, "_");
+	strcpy(end.name, "_");
+	strcat(end.name, runtime.prefix);
 	strcat(end.name, _end);
 	list_add(a->symbols, &end);
 
