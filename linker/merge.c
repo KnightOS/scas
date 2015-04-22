@@ -96,6 +96,5 @@ object_t *merge_objects(list_t *objects) {
 		scas_log(L_DEBUG, "Merging object %d", i);
 		merge_areas(merged, o);
 	}
-	scas_log(L_INFO, "Writing merged object to output");
 	return merged;
 }

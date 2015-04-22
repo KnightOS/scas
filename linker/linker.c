@@ -3,6 +3,7 @@
 #include "errors.h"
 #include "list.h"
 #include "expression.h"
+#include "string.h"
 #include "instructions.h"
 #include "functions.h"
 #include "merge.h"
@@ -92,33 +93,41 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 	deindent_log();
 }
 
-void auto_relocate_area(area_t *area) {
-	// Note: This is z80-specific, how should we handle that
+/* z80 only (and possibly ez80) */
+void auto_relocate_area(area_t *area, area_t *runtime) {
+	scas_log(L_DEBUG, "Performing automatic relocation for %s", area->name);
 	uint8_t rst0x8 = 0xCF;
 	int i;
 	for (i = 0; i < area->late_immediates->length; ++i) {
 		late_immediate_t *imm = area->late_immediates->items[i];
-		if (imm->base_address != imm->address && imm->type != IMM_TYPE_RELATIVE) {
-			/* Relocate this */
-			scas_log(L_DEBUG, "Adding relocation instruction for immediate at 0x%08X (inserting at 0x%08X)", imm->address, imm->instruction_address);
-			insert_in_area(area, &rst0x8, sizeof(uint8_t), imm->instruction_address);
-			++imm->address;
-			/* Move everything that comes after */
-			int k;
-			for (k = 0; k < area->symbols->length; ++k) {
-				symbol_t *sym = area->symbols->items[k];
-				if (sym->type == SYMBOL_LABEL && sym->value > imm->instruction_address) {
-					++sym->value;
+		if (imm->type != IMM_TYPE_RELATIVE) {
+			if (imm->base_address != imm->address) {
+				/* Relocate this */
+				scas_log(L_DEBUG, "Adding relocation instruction for immediate at 0x%08X (inserting at 0x%08X)", imm->address, imm->instruction_address);
+				insert_in_area(area, &rst0x8, sizeof(uint8_t), imm->instruction_address);
+				++imm->address;
+				/* Move everything that comes after */
+				int k;
+				for (k = 0; k < area->symbols->length; ++k) {
+					symbol_t *sym = area->symbols->items[k];
+					if (sym->type == SYMBOL_LABEL && sym->value > imm->instruction_address) {
+						++sym->value;
+					}
 				}
-			}
-			int j;
-			for (j = 0; j < area->late_immediates->length; ++j) {
-				late_immediate_t *_imm = area->late_immediates->items[j];
-				if (_imm->base_address > imm->base_address) {
-					++_imm->base_address;
-					++_imm->instruction_address;
-					++_imm->address;
+				int j;
+				for (j = 0; j < area->late_immediates->length; ++j) {
+					late_immediate_t *_imm = area->late_immediates->items[j];
+					if (_imm->base_address > imm->base_address) {
+						++_imm->base_address;
+						++_imm->instruction_address;
+						++_imm->address;
+					}
 				}
+			} else {
+				/* Relocate this */
+				scas_log(L_DEBUG, "Adding runtime relocation for immediate at 0x%08X (inserting at 0x%08X)", imm->address, imm->instruction_address);
+				uint16_t value = (uint16_t)imm->instruction_address;
+				append_to_area(runtime, (uint8_t*)&value, sizeof(uint16_t));
 			}
 		}
 	}
@@ -147,22 +156,55 @@ void move_origin(list_t *symbols) {
 
 void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	list_t *symbols = create_list(); // TODO: Use a hash table
+
+	/* Create a new area for relocatable references */
+	area_t *runtime;
+	if (settings->automatic_relocation) {
+		const char *sym_name = "__scas_relocatable_data";
+		runtime = create_area("__scas_relocatable");
+		symbol_t *sym = malloc(sizeof(symbol_t));
+		sym->type = SYMBOL_LABEL;
+		sym->name = malloc(strlen(sym_name) + 1);
+		strcpy(sym->name, sym_name);
+		sym->value = 0;
+		sym->defined_address = 0;
+		sym->exported = 0;
+		list_add(runtime->symbols, sym);
+		object_t *o = create_object();
+		list_add(o->areas, runtime);
+		list_add(objects, o);
+	}
+
 	object_t *merged = merge_objects(objects);
 	area_t *final = create_area("FINAL");
 
+	runtime = get_area_by_name(merged, "__scas_relocatable");
+
+	scas_log(L_INFO, "Assigning final address for all areas");
+	uint64_t address = 0;
 	int i;
+	for (i = 0; i < merged->areas->length; ++i) {
+		area_t *area = merged->areas->items[i];
+		relocate_area(area, address);
+		address += area->data_length;
+	}
 	for (i = 0; i < merged->areas->length; ++i) {
 		area_t *area = merged->areas->items[i];
 		gather_symbols(symbols, area, settings);
 	}
 	for (i = 0; i < merged->areas->length; ++i) {
 		area_t *area = merged->areas->items[i];
-		scas_log(L_DEBUG, "Linking area %s", area->name);
+		scas_log(L_INFO, "Linking area %s", area->name);
 		if (scas_runtime.options.remove_unused_functions) {
 			remove_unused_functions(area, merged->areas);
 		}
 		if (settings->automatic_relocation) {
-			auto_relocate_area(area);
+			if (area == runtime) {
+				uint16_t null_ptr = 0;
+				append_to_area(area, (uint8_t *)&null_ptr, sizeof(uint16_t));
+			} else {
+				auto_relocate_area(area, runtime);
+			}
 		}
 		if (scas_runtime.options.origin) {
 			move_origin(symbols);

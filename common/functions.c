@@ -95,7 +95,7 @@ int compare_functions(const void *a, const void *b) {
 }
 
 void remove_unused_functions(area_t *area, list_t *areas) {
-	scas_log(L_INFO, "Optimizing out unused functions for area %s", area->name);
+	scas_log(L_DEBUG, "Optimizing out unused functions for area %s", area->name);
 	list_t *functions = create_list();
 	metadata_t *meta = get_area_metadata(area, "scas.functions");
 	if (meta) {

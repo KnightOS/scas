@@ -87,8 +87,8 @@ of unused functions).
 	*Disabled* by default.
 
 	Enabling this flag will insert KnightOS relocation instructions before all
-	local references during linking. This is generally not reccommended because it
-	fails to handle more complex scenarios.
+	local references during linking, among other changes. This is generally not
+	reccommended because it fails to handle more complex scenarios.
 
 *-fexplicit-export*::
 	*Disabled* by default.
