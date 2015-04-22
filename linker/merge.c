@@ -24,7 +24,7 @@ area_t *get_area_by_name(object_t *object, char *name) {
 	return NULL;
 }
 
-void relocate_area(area_t *area, uint64_t address) {
+void relocate_area(area_t *area, uint64_t address, bool immediates) {
 	int i;
 	scas_log(L_DEBUG, "Assigning final address %08X to area %s", address, area->name);
 	area->final_address = address;
@@ -36,13 +36,13 @@ void relocate_area(area_t *area, uint64_t address) {
 		sym->defined_address += address;
 		sym->value += address;
 	}
-	for (i = 0; i < area->late_immediates->length; ++i) {
+	for (i = 0; immediates && i < area->late_immediates->length; ++i) {
 		late_immediate_t *imm = area->late_immediates->items[i];
 		imm->address += address;
 		imm->instruction_address += address;
 		imm->base_address += address;
 	}
-	for (i = 0; i < area->source_map->length; ++i) {
+	for (i = 0; immediates && i < area->source_map->length; ++i) {
 		source_map_t *map = area->source_map->items[i];
 		int j;
 		for (j = 0; j < map->entries->length; ++j) {
@@ -62,7 +62,7 @@ void merge_areas(object_t *merged, object_t *source) {
 			list_add(merged->areas, merged_area);
 		}
 		uint64_t new_address = merged_area->data_length;
-		relocate_area(source_area, new_address);
+		relocate_area(source_area, new_address, true);
 
 		append_to_area(merged_area, source_area->data, source_area->data_length);
 		list_cat(merged_area->symbols, source_area->symbols);

@@ -10,6 +10,7 @@
 #include "runtime.h"
 #include "log.h"
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #ifdef _WIN32
 #include <Windows.h>
@@ -64,7 +65,7 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 			if (imm->type == IMM_TYPE_RELATIVE) {
 				result = result - imm->base_address;
 			}
-			scas_log(L_DEBUG, "Immediate value result: 0x%08X (width %d, base address 0x%08X, %02X)", result, imm->width, imm->instruction_address);
+			scas_log(L_DEBUG, "Immediate value result: 0x%08X (width %d, base address 0x%08X)", result, imm->width, imm->base_address);
 			uint64_t mask = 1;
 			int shift = imm->width;
 			while (--shift) {
@@ -125,8 +126,7 @@ void auto_relocate_area(area_t *area, area_t *runtime) {
 				}
 			} else {
 				/* Relocate this */
-				scas_log(L_DEBUG, "Adding runtime relocation for immediate at 0x%08X (inserting at 0x%08X)", imm->address, imm->instruction_address);
-				uint16_t value = (uint16_t)imm->instruction_address;
+				uint16_t value = (uint16_t)(imm->address + area->final_address);
 				append_to_area(runtime, (uint8_t*)&value, sizeof(uint16_t));
 			}
 		}
@@ -181,11 +181,25 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	runtime = get_area_by_name(merged, "__scas_relocatable");
 
 	scas_log(L_INFO, "Assigning final address for all areas");
-	uint64_t address = 0;
 	int i;
 	for (i = 0; i < merged->areas->length; ++i) {
 		area_t *area = merged->areas->items[i];
-		relocate_area(area, address);
+		if (scas_runtime.options.remove_unused_functions) {
+			remove_unused_functions(area, merged->areas);
+		}
+	}
+	uint64_t address = 0;
+	for (i = 0; i < merged->areas->length; ++i) {
+		area_t *area = merged->areas->items[i];
+		relocate_area(area, address, false);
+		if (settings->automatic_relocation) {
+			if (area == runtime) {
+				uint16_t null_ptr = 0;
+				append_to_area(area, (uint8_t *)&null_ptr, sizeof(uint16_t));
+			} else {
+				auto_relocate_area(area, runtime);
+			}
+		}
 		address += area->data_length;
 	}
 	for (i = 0; i < merged->areas->length; ++i) {
@@ -195,17 +209,6 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	for (i = 0; i < merged->areas->length; ++i) {
 		area_t *area = merged->areas->items[i];
 		scas_log(L_INFO, "Linking area %s", area->name);
-		if (scas_runtime.options.remove_unused_functions) {
-			remove_unused_functions(area, merged->areas);
-		}
-		if (settings->automatic_relocation) {
-			if (area == runtime) {
-				uint16_t null_ptr = 0;
-				append_to_area(area, (uint8_t *)&null_ptr, sizeof(uint16_t));
-			} else {
-				auto_relocate_area(area, runtime);
-			}
-		}
 		if (scas_runtime.options.origin) {
 			move_origin(symbols);
 		}
