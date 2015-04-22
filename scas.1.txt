@@ -85,53 +85,53 @@ of unused functions).
 
 *-fauto-relocation*::
 	*Disabled* by default.
-
+	+
 	Enabling this flag will insert KnightOS relocation instructions before all
 	local references during linking, among other changes. This is generally not
 	reccommended because it fails to handle more complex scenarios.
 
 *-fexplicit-export*::
 	*Disabled* by default.
-
+	+
 	Instead of exporting all symbols implicitly, require that all symbols for
 	export are explicitly declared as such through the export directive.
 
 *-fexplicit-import*::
 	*Disabled* by default.
-
+	+
 	Instead of postponing all unresolved symbol errors to the linker, this flag
 	instructs scas to raise errors during assembly if any external symbols are
 	referenced without an import directive.
 
 *-fformat=<format>*::
 	*bin* by default.
-
+	+
 	Outputs machine code in the given format. Available formats:
-
-	bin - Binary machine code
-	8xp - TI-OS 8xp file
+	+
+	* bin - Binary machine code
+	* 8xp - TI-OS 8xp file
 
 *-f8xp-archived*::
 	*Disabled* by default.
-
+	+
 	When using the 8xp format, this flag indicates that the program should be
 	archived when sent to the calculator.
 
 *-f8xp-name=<name>*::
 	*SCAS* by default.
-
+	+
 	When using the 8xp format, this sets the name of the variable. This can be up
 	to 8 characters, all uppercase.
 
 *-f8xp-protected*::
 	*Enabled* by default.
-
+	+
 	When using the 8xp format, this sets the protected flag so that the varaible
 	may not be edited directly on the calculator.
 
 *-fremove-unused-funcs*::
 	*Enabled* by default.
-
+	+
 	Enabling this flag instructs scas to remove all unused functions during
 	linking to reduce the size of the final executable. Functions can be declared
 	with the function directive. All code that does not belong to a function is
@@ -139,7 +139,7 @@ of unused functions).
 
 *-forigin=<address>*::
 	*0* by default.
-
+	+
 	Sets the origin address to <value>. All symbols and references will be
 	adjusted as if the executable is loaded at address. Note that this does not
 	take special action in combination with the origin directive. When both are

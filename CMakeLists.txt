@@ -36,6 +36,7 @@ FILE(GLOB linker ${PROJECT_SOURCE_DIR}/linker/*.c)
 FILE(GLOB tables ${PROJECT_SOURCE_DIR}/tables/*)
 FILE(GLOB scas ${PROJECT_SOURCE_DIR}/scas/*.c)
 FILE(GLOB scdump ${PROJECT_SOURCE_DIR}/scdump/*.c)
+FILE(GLOB scwrap ${PROJECT_SOURCE_DIR}/scwrap/*.c)
 
 add_executable(scas
     ${common}
@@ -49,10 +50,16 @@ add_executable(scdump
     ${scdump}
 )
 
+add_executable(scwrap
+    ${common}
+    ${scwrap}
+)
+
 ADD_CUSTOM_TARGET(
     man ALL
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/bin/scas.1
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/bin/scdump.1
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/bin/scwrap.1
 )
 
 ADD_CUSTOM_COMMAND(
@@ -71,6 +78,14 @@ ADD_CUSTOM_COMMAND(
     VERBATIM
 )
 set_directory_properties(${CMAKE_CURRENT_BINARY_DIR} ADDITIONAL_MAKE_CLEAN_FILES scdump.1)
+ADD_CUSTOM_COMMAND(
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/scwrap.1.txt
+    COMMAND a2x --no-xmllint --doctype manpage --format manpage ${CMAKE_CURRENT_SOURCE_DIR}/scwrap.1.txt
+    COMMAND test "${CMAKE_CURRENT_SOURCE_DIR}" != "${CMAKE_CURRENT_BINARY_DIR}/bin" && mv -f ${CMAKE_CURRENT_SOURCE_DIR}/scwrap.1 ${CMAKE_CURRENT_BINARY_DIR}/bin || true
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/bin/scwrap.1
+    VERBATIM
+)
+set_directory_properties(${CMAKE_CURRENT_BINARY_DIR} ADDITIONAL_MAKE_CLEAN_FILES scwrap.1)
 
 INSTALL(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/scas.1
@@ -79,6 +94,11 @@ INSTALL(
 
 INSTALL(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/scdump.1
+    DESTINATION man/man1
+)
+
+INSTALL(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/scwrap.1
     DESTINATION man/man1
 )
 
@@ -94,5 +114,10 @@ INSTALL(
 
 INSTALL(
     TARGETS scdump
+    RUNTIME DESTINATION bin
+)
+
+INSTALL(
+    TARGETS scwrap
     RUNTIME DESTINATION bin
 )

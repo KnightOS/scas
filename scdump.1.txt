@@ -10,7 +10,7 @@ scdump - Dump scas object files
 
 Synopsis
 --------
-'scas' [options] _FILE(s)_
+'scdump' [options] _FILE(s)_
 
 Description
 -----------
