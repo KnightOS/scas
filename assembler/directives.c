@@ -126,7 +126,14 @@ int handle_block(struct assembler_state *state, char **argv, int argc) {
 	if (expression == NULL) {
 		error = EXPRESSION_BAD_SYNTAX;
 	} else {
+		symbol_t sym_pc = {
+			.type = SYMBOL_LABEL,
+			.value = state->PC,
+			.name = "$"
+		};
+		list_add(state->equates, &sym_pc);
 		result = evaluate_expression(expression, state->equates, &error);
+		list_del(state->equates, state->equates->length - 1); // Remove $
 	}
 	if (error == EXPRESSION_BAD_SYMBOL) {
 		ERROR(ERROR_UNKNOWN_SYMBOL, state->column);
