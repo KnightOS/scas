@@ -232,6 +232,26 @@ void parse_instruction_line(const char *line, instruction_set_t *set) {
 	free_flat_list(parts);
 }
 
+void handle_line(char *line, instruction_set_t *result) {
+	int trimmed_start;
+	line = strip_whitespace(line, &trimmed_start);
+	if (line[0] == '\0' || line[0] == '#') {
+		free(line);
+		return;
+	}
+	if (strstr(line, "ARCH ") == line) {
+		result->arch = malloc(strlen(line) - 4);
+		strcpy(result->arch, line + 5);
+	}
+	if (strstr(line, "OPERAND ") == line) {
+		parse_operand_line(line, result);
+	}
+	if (strstr(line, "INS ") == line) {
+		parse_instruction_line(line, result);
+	}
+	free(line);
+}
+
 instruction_set_t *load_instruction_set(FILE *file) {
 	instruction_set_t *result = malloc(sizeof(instruction_set_t));
 	result->instructions = create_list();
@@ -239,23 +259,20 @@ instruction_set_t *load_instruction_set(FILE *file) {
 	result->arch = NULL;
 	while (!feof(file)) {
 		char *line = read_line(file);
-		int trimmed_start;
-		line = strip_whitespace(line, &trimmed_start);
-		if (line[0] == '\0' || line[0] == '#') {
-			free(line);
-			continue;
-		}
-		if (strstr(line, "ARCH ") == line) {
-			result->arch = malloc(strlen(line) - 4);
-			strcpy(result->arch, line + 5);
-		}
-		if (strstr(line, "OPERAND ") == line) {
-			parse_operand_line(line, result);
-		}
-		if (strstr(line, "INS ") == line) {
-			parse_instruction_line(line, result);
-		}
-		free(line);
+		handle_line(line, result);
+	}
+	return result;
+}
+
+instruction_set_t *load_instruction_set_s(const char *set) {
+	instruction_set_t *result = malloc(sizeof(instruction_set_t));
+	result->instructions = create_list();
+	result->operand_groups = create_list();
+	result->arch = NULL;
+	int offset = 0;
+	while (set[offset]) {
+		char *line = read_line_s(set, &offset);
+		handle_line(line, result);
 	}
 	return result;
 }

@@ -6,6 +6,7 @@
 #include "privatize.h"
 #include "list.h"
 #include "log.h"
+#include "runtime.h"
 #include "objects.h"
 #include "readline.h"
 #include "stringop.h"
@@ -299,7 +300,7 @@ int try_add_label(struct assembler_state *state, char **line) {
 		state->last_global_label = sym->name;
 	}
 	sym->type = SYMBOL_LABEL;
-	sym->value = state->PC;
+	sym->value = state->PC + scas_runtime.options.origin;
 	sym->defined_address = state->current_area->data_length;
 	sym->exported = 1; /* TODO: Support explicit export */
 	list_add(state->current_area->symbols, sym);
@@ -360,7 +361,8 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 				ERROR(ERROR_INVALID_SYNTAX, state->column);
 			} else {
 				if (imm->type == IMM_TYPE_RELATIVE) {
-					result = result - (state->PC + (match->instruction->width / 8));
+					result = result - ((state->PC + scas_runtime.options.origin)
+						+ (match->instruction->width / 8));
 				} else if (imm->type == IMM_TYPE_RESTART) {
 					if ((result & ~0x07) != result || result > 0x38) {
 						/* We get an ERROR_VALUE_TRUNCATED if we just let it proceed */

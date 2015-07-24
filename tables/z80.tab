@@ -13,8 +13,8 @@
 #  '&': Special - RST value
 # 
 # VALUE is a value in binary, which may include references to immediate values and operands
-# in use above. For example, in the MNOMIC "hello,-world_%A<16>_@B<a>", the value could be
-# "01011 %A 10110 @B"
+# in use above. For example, in the MNOMIC 'hello,-world_%A<16>_@B<a>', the value could be
+# '01011 %A 10110 @B'
 #
 #### OPERAND GROUP
 # OPERAND [GROUP NAME] [OPERAND NAME] [VALUE]

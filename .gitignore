@@ -10,3 +10,4 @@ bin/
 test/
 build/
 .lvimrc
+tables/z80.c

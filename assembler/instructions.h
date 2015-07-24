@@ -51,6 +51,7 @@ typedef struct {
 } instruction_operand_t;
 
 instruction_set_t *load_instruction_set(FILE *file);
+instruction_set_t *load_instruction_set_s(const char *set);
 void instruction_set_free(instruction_set_t *set);
 instruction_operand_t *find_instruction_operand(instruction_t *inst, char key);
 immediate_t *find_instruction_immediate(instruction_t *inst, char key);

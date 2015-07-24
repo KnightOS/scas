@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include "generated.h"
 #include "log.h"
 #include "stringop.h"
 #include "list.h"
@@ -126,7 +127,7 @@ void parse_arguments(int argc, char **argv) {
 }
 
 instruction_set_t *find_inst() {
-	const char *sets_dir = INSTRUCTION_SET_PATH;
+	const char *sets_dir = "/usr/share/scas/tables/";
 	const char *ext = ".tab";
 	FILE *f = fopen(scas_runtime.arch, "r");
 	if (!f) {
@@ -137,7 +138,13 @@ instruction_set_t *find_inst() {
 		f = fopen(path, "r");
 		free(path);
 		if (!f) {
-			scas_abort("Unknown architecture: %s", scas_runtime.arch);
+			if (!strcmp(scas_runtime.arch, "z80")) {
+				// Load from internal copy
+				instruction_set_t *set = load_instruction_set_s(z80_tab);
+				return set;
+			} else {
+				scas_abort("Unknown architecture: %s", scas_runtime.arch);
+			}
 		}
 	}
 	instruction_set_t *set = load_instruction_set(f);
