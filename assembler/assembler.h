@@ -43,6 +43,7 @@ struct assembler_state {
 	char *last_global_label;
 	assembler_settings_t *settings;
 	macro_t *most_recent_macro;
+    bool auto_source_maps;
 };
 
 object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *settings);

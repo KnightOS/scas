@@ -23,7 +23,7 @@
 		*(int*)stack_peek(state->line_number_stack), \
 		state->line, COLUMN, stack_peek(state->file_name_stack));
 
-#define MAP_SOURCE(LENGTH) if (!state->expanding_macro) { \
+#define MAP_SOURCE(LENGTH) if (!state->expanding_macro && state->auto_source_maps) { \
 			add_source_map((source_map_t *)stack_peek(state->source_map_stack), \
 			*(int*)stack_peek(state->line_number_stack), state->line, \
 			state->current_area->data_length, LENGTH); \
@@ -846,7 +846,9 @@ int handle_list(struct assembler_state *state, char **argv, int argc) {
 }
 
 int handle_map(struct assembler_state *state, char **argv, int argc) {
-	// TODO
+	// .map filename, lineno, code
+	add_source_map((source_map_t *)stack_peek(state->source_map_stack),
+		atoi(argv[1]), argv[2], state->PC, 1); // TODO: figure out actual length
 	return 0;
 }
 
@@ -952,6 +954,12 @@ int handle_org(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_optsdcc(struct assembler_state *state, char **argv, int argc) {
+	// For now this is a hack to turn off automatic source maps
+	state->auto_source_maps = false;
+	return 0;
+}
+
 /* Keep these alphabetized */
 struct directive directives[] = {
 	{ "area", handle_area, DELIM_COMMAS | DELIM_WHITESPACE },
@@ -989,12 +997,12 @@ struct directive directives[] = {
 	{ "lclequ", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "list", handle_list, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "local", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE },
-	{ "map", handle_map, DELIM_COMMAS },
 	{ "macro", handle_macro, 0 },
+	{ "map", handle_map, DELIM_COMMAS },
 	{ "module", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "nolist", handle_nolist, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "odd", handle_odd, DELIM_COMMAS | DELIM_WHITESPACE },
-	{ "optsdcc", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "optsdcc", handle_optsdcc, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "org", handle_org, 0 },
 	{ "ref", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE }, /* TODO */
 	{ "rmb", handle_block, DELIM_COMMAS | DELIM_WHITESPACE },

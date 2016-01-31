@@ -212,9 +212,11 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 		list_free(newlines);
 		free_flat_list(userparams);
 
-		add_source_map((source_map_t *)stack_peek(state->source_map_stack),
-			*(int *)stack_peek(state->line_number_stack), state->line,
-			state->current_area->data_length, 0);
+		if (state->auto_source_maps) {
+			add_source_map((source_map_t *)stack_peek(state->source_map_stack),
+				*(int *)stack_peek(state->line_number_stack), state->line,
+				state->current_area->data_length, 0);
+		}
 		state->expanding_macro = true;
 
 		state->most_recent_macro = macro;
@@ -404,7 +406,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 			instruction >>= 8;
 		}
 		/* Add completed instruction */
-		if (!state->expanding_macro) {
+		if (!state->expanding_macro && state->auto_source_maps) {
 			add_source_map((source_map_t *)stack_peek(state->source_map_stack),
 				*(int *)stack_peek(state->line_number_stack), state->line,
 				state->current_area->data_length, bytes_width);
@@ -486,6 +488,8 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 		.settings = settings,
 
 		.most_recent_macro = NULL,
+
+		.auto_source_maps = true
 	};
 	int *ln = malloc(sizeof(int)); *ln = 0;
 	char *name = malloc(strlen(file_name) + 1);
