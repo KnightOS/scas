@@ -23,9 +23,11 @@
 		*(int*)stack_peek(state->line_number_stack), \
 		state->line, COLUMN, stack_peek(state->file_name_stack));
 
-#define MAP_SOURCE(LENGTH) add_source_map((source_map_t *)stack_peek(state->source_map_stack), \
-		*(int*)stack_peek(state->line_number_stack), state->line, \
-		state->current_area->data_length, LENGTH);
+#define MAP_SOURCE(LENGTH) if (!state->expanding_macro) { \
+			add_source_map((source_map_t *)stack_peek(state->source_map_stack), \
+			*(int*)stack_peek(state->line_number_stack), state->line, \
+			state->current_area->data_length, LENGTH); \
+		}
 
 enum {
 	DELIM_COMMAS = 1,
@@ -248,8 +250,10 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 			++state->PC;
 		}
 	}
-	add_source_map((source_map_t *)stack_peek(state->source_map_stack),
-		*(int*)stack_peek(state->line_number_stack), state->line, dlen, olen);
+	if (!state->expanding_macro) {
+		add_source_map((source_map_t *)stack_peek(state->source_map_stack),
+			*(int*)stack_peek(state->line_number_stack), state->line, dlen, olen);
+	}
 	return 1;
 }
 
@@ -430,9 +434,11 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 		state->PC += 2;
 		olen += 2;
 	}
-	add_source_map((source_map_t *)stack_peek(state->source_map_stack),
-		*(int*)stack_peek(state->line_number_stack), state->line,
-		state->current_area->data_length, olen);
+	if (!state->expanding_macro) {
+		add_source_map((source_map_t *)stack_peek(state->source_map_stack),
+			*(int*)stack_peek(state->line_number_stack), state->line,
+			state->current_area->data_length, olen);
+	}
 	return 1;
 }
 
@@ -771,9 +777,11 @@ int handle_incbin(struct assembler_state *state, char **argv, int argc) {
 		state->PC += l;
 		olen += l;
 	}
-	add_source_map((source_map_t *)stack_peek(state->source_map_stack),
-		*(int*)stack_peek(state->line_number_stack), state->line,
-		state->current_area->data_length, olen);
+	if (!state->expanding_macro) {
+		add_source_map((source_map_t *)stack_peek(state->source_map_stack),
+			*(int*)stack_peek(state->line_number_stack), state->line,
+			state->current_area->data_length, olen);
+	}
 	free(buf);
 	fclose(file);
 	return 1;
