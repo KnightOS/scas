@@ -845,6 +845,11 @@ int handle_list(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_map(struct assembler_state *state, char **argv, int argc) {
+	// TODO
+	return 0;
+}
+
 int handle_macro(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
@@ -984,6 +989,7 @@ struct directive directives[] = {
 	{ "lclequ", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "list", handle_list, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "local", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "map", handle_map, DELIM_COMMAS },
 	{ "macro", handle_macro, 0 },
 	{ "module", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "nolist", handle_nolist, DELIM_COMMAS | DELIM_WHITESPACE },
