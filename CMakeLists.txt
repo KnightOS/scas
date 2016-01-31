@@ -11,7 +11,7 @@ endif()
 
 add_custom_command(
     OUTPUT ${PROJECT_SOURCE_DIR}/tables/z80.c
-    DEPENDS ${PROJECT_SOURCE_DIR}/tables/z80.tab ${PROJECT_SOURCE_DIR}/generate-tables.sh
+    DEPENDS ${PROJECT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_SOURCE_DIR}/generate-tables.sh
     COMMAND ./generate-tables.sh)
 
 include_directories(

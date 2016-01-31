@@ -212,6 +212,11 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 		list_free(newlines);
 		free_flat_list(userparams);
 
+		add_source_map((source_map_t *)stack_peek(state->source_map_stack),
+			*(int *)stack_peek(state->line_number_stack), state->line,
+			state->current_area->data_length, 0);
+		state->expanding_macro = true;
+
 		state->most_recent_macro = macro;
 		return -1;
 	}
@@ -399,9 +404,11 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 			instruction >>= 8;
 		}
 		/* Add completed instruction */
-		add_source_map((source_map_t *)stack_peek(state->source_map_stack),
-			*(int *)stack_peek(state->line_number_stack), state->line,
-			state->current_area->data_length, bytes_width);
+		if (!state->expanding_macro) {
+			add_source_map((source_map_t *)stack_peek(state->source_map_stack),
+				*(int *)stack_peek(state->line_number_stack), state->line,
+				state->current_area->data_length, bytes_width);
+		}
 		append_to_area(state->current_area, state->instruction_buffer, bytes_width);
 		state->PC += bytes_width;
 		deindent_log();
@@ -463,6 +470,7 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 		.warnings = settings->warnings,
 
 		.extra_lines = create_list(),
+		.expanding_macro = false,
 		.line = "",
 		.column = 0,
 
@@ -510,6 +518,15 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 				++*(int*)stack_peek(state.line_number_stack);
 				line = read_line(cur);
 				state.most_recent_macro = NULL;
+				if (state.expanding_macro) {
+					state.expanding_macro = false;
+					source_map_t *map = stack_peek(state.source_map_stack);
+					source_map_entry_t *entry = map->entries->items[map->entries->length - 1];
+					entry->length = state.PC - entry->address;
+					if (entry->length == 0) {
+						list_del(map->entries, map->entries->length - 1);
+					}
+				}
 			} else {
 				line = state.extra_lines->items[0];
 				list_del(state.extra_lines, 0);

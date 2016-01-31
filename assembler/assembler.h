@@ -1,6 +1,7 @@
 #ifndef ASSEMBLER_H
 #define ASSEMBLER_H
 #include <stdio.h>
+#include <stdbool.h>
 #include "list.h"
 #include "objects.h"
 #include "instructions.h"
@@ -28,6 +29,7 @@ struct assembler_state {
 	list_t *errors;
 	list_t *warnings;
 	list_t *extra_lines;
+    bool expanding_macro;
 	char *line;
 	int column;
 	instruction_set_t *instruction_set;
