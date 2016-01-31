@@ -849,7 +849,7 @@ int handle_map(struct assembler_state *state, char **argv, int argc) {
 	// .map filename, lineno, code
 	add_source_map((source_map_t *)stack_peek(state->source_map_stack),
 		atoi(argv[1]), argv[2], state->PC, 1); // TODO: figure out actual length
-	return 0;
+	return 1;
 }
 
 int handle_macro(struct assembler_state *state, char **argv, int argc) {
@@ -957,7 +957,7 @@ int handle_org(struct assembler_state *state, char **argv, int argc) {
 int handle_optsdcc(struct assembler_state *state, char **argv, int argc) {
 	// For now this is a hack to turn off automatic source maps
 	state->auto_source_maps = false;
-	return 0;
+	return 1;
 }
 
 /* Keep these alphabetized */
