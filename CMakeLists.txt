@@ -38,7 +38,8 @@ add_library(libscas SHARED
     ${common}
     ${assembler}
     ${linker}
-    ${PROJECT_BINARY_DIR}/tables/z80.c)
+    ${PROJECT_BINARY_DIR}/tables/z80.c
+    ${PROJECT_SOURCE_DIR}/runtime.c)
 
 SET_TARGET_PROPERTIES(libscas
   PROPERTIES OUTPUT_NAME scas)
