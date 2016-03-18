@@ -10,9 +10,9 @@ if(EMSCRIPTEN)
 endif()
 
 add_custom_command(
-    OUTPUT ${PROJECT_SOURCE_DIR}/tables/z80.c
-    DEPENDS ${PROJECT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_SOURCE_DIR}/generate-tables.sh
-    COMMAND ./generate-tables.sh)
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_SOURCE_DIR}/generate-tables.sh
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/generate-tables.sh ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c)
 
 include_directories(
     assembler/
@@ -33,8 +33,17 @@ add_executable(scas
     ${assembler}
     ${linker}
     ${scas}
-    ${PROJECT_SOURCE_DIR}/tables/z80.c
+    ${PROJECT_BINARY_DIR}/tables/z80.c
 )
+
+add_library(libscas SHARED
+    ${common}
+    ${assembler}
+    ${linker}
+    ${PROJECT_BINARY_DIR}/tables/z80.c)
+
+SET_TARGET_PROPERTIES(libscas
+  PROPERTIES OUTPUT_NAME scas)
 
 add_executable(scdump
     ${common}
@@ -106,4 +115,11 @@ INSTALL(
 INSTALL(
     TARGETS scwrap
     RUNTIME DESTINATION bin
+)
+
+INSTALL(
+    TARGETS libscas
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION lib
+    LIBRARY DESTINATION lib
 )

@@ -1,8 +1,11 @@
 #!/bin/bash
 
-source_file=$(cat tables/z80.tab | sed -r s/$/\\\\n\\\\/g)
+echo "$*"
 
-cat <<EOF > tables/z80.c
+source_file=$(cat "$1" | sed -r s/$/\\\\n\\\\/g)
+mkdir -p $(dirname "$2")
+
+cat <<EOF > "$2"
 #include "generated.h"
 
 const char *z80_tab = "\
