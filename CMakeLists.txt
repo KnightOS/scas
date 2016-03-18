@@ -15,10 +15,8 @@ add_custom_command(
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/generate-tables.sh ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c)
 
 include_directories(
-    assembler/
-    linker/
+    include/
     scas/
-    common/
 )
 
 FILE(GLOB common ${PROJECT_SOURCE_DIR}/common/*.c)
@@ -122,4 +120,9 @@ INSTALL(
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION lib
     LIBRARY DESTINATION lib
+)
+
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    DESTINATION include/scas
 )
