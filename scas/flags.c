@@ -1,3 +1,4 @@
+#define _XOPEN_SOURCE
 #include "flags.h"
 #include <stdio.h>
 #include <string.h>

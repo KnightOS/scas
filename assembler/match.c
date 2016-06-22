@@ -100,7 +100,8 @@ instruction_match_t *try_match(instruction_set_t *set, instruction_t *inst, cons
 			char type = inst->match[i];
 			char key = inst->match[++i];
 			if (type != '&') {
-				while (inst->match[++i] != '>'); ++i;
+				while (inst->match[++i] != '>') { }
+				++i;
 			} else {
 				++i;
 			}

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include "log.h"
 #include "list.h"
 #include "readline.h"
@@ -186,7 +187,8 @@ void parse_instruction_line(const char *line, instruction_set_t *set) {
 	int trimmed_start;
 	_value = strip_whitespace(_value, &trimmed_start);
 	char *value = _value;
-	while (*value++ != ' '); while (*value++ != ' ');
+	while (*value++ != ' ') { }
+	while (*value++ != ' ') { }
 	inst->width = 0;
 	int shift = 0;
 	for (i = 0; i < strlen(value); ++i) {

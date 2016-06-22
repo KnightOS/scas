@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <strings.h>
 #include "log.h"
 #include "functions.h"
 #include "expression.h"
