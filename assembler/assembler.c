@@ -21,9 +21,9 @@
 #include <strings.h>
 #endif
 
-#define ERROR(ERROR_CODE, COLUMN) add_error(state->errors, ERROR_CODE, \
+#define ERROR(ERROR_CODE, COLUMN, ...) add_error(state->errors, ERROR_CODE, \
 		*(int*)stack_peek(state->line_number_stack), \
-		state->line, COLUMN, stack_peek(state->file_name_stack));
+		state->line, COLUMN, stack_peek(state->file_name_stack), ##__VA_ARGS__);
 
 struct assembler_state state;
 
@@ -328,7 +328,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 	char *line = *_line;
 	instruction_match_t *match = match_instruction(state->instruction_set, line);
 	if (match == NULL) {
-		ERROR(ERROR_INVALID_INSTRUCTION, state->column);
+		ERROR(ERROR_INVALID_INSTRUCTION, state->column, line);
 		return 0;
 	} else {
 		scas_log(L_DEBUG, "Matched string '%s' to instruction '%s'", line, match->instruction->match);
@@ -345,13 +345,14 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 			immediate_t *imm = find_instruction_immediate(match->instruction, ref->key);
 
 			int error;
+			char *symbol;
 			uint64_t result;
 			tokenized_expression_t *expression = parse_expression(ref->value_provided);
 			if (expression == NULL) {
 				error = EXPRESSION_BAD_SYNTAX;
 			} else {
 				transform_local_labels(expression, state->last_global_label);
-				result = evaluate_expression(expression, state->equates, &error);
+				result = evaluate_expression(expression, state->equates, &error, &symbol);
 			}
 			if (error == EXPRESSION_BAD_SYMBOL) {
 				/* TODO: Throw error if using explicit import */

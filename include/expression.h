@@ -48,7 +48,8 @@ typedef struct {
 tokenized_expression_t *parse_expression(const char *str);
 void initialize_expressions();
 void print_tokenized_expression(FILE *f, tokenized_expression_t *expression);
-uint64_t evaluate_expression(tokenized_expression_t *expression, list_t *symbols, int *error);
+uint64_t evaluate_expression(tokenized_expression_t *expression, list_t
+        *symbols, int *error, char **symbol);
 void fwrite_tokens(FILE *f, tokenized_expression_t *expression);
 tokenized_expression_t *fread_tokenized_expression(FILE *f);
 

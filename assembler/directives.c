@@ -19,9 +19,9 @@
 #include <strings.h>
 #endif
 
-#define ERROR(ERROR_CODE, COLUMN) add_error(state->errors, ERROR_CODE, \
+#define ERROR(ERROR_CODE, COLUMN, ...) add_error(state->errors, ERROR_CODE, \
 		*(int*)stack_peek(state->line_number_stack), \
-		state->line, COLUMN, stack_peek(state->file_name_stack));
+		state->line, COLUMN, stack_peek(state->file_name_stack) , ##__VA_ARGS__);
 
 #define MAP_SOURCE(LENGTH) if (!state->expanding_macro && state->auto_source_maps) { \
 			add_source_map((source_map_t *)stack_peek(state->source_map_stack), \
@@ -69,14 +69,14 @@ int handle_nop(struct assembler_state *state, char **argv, int argc) {
 
 int handle_asciiz(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "asciiz expects 1+ arguments");
 		return 1;
 	}
 	int i;
 	for (i = 0; i < argc; ++i) {
 		int len = strlen(argv[i]);
 		if (argv[i][0] != '"' || argv[i][len - 1] != '"') {
-			ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+			ERROR(ERROR_INVALID_DIRECTIVE, state->column, "unterminated string");
 			return 1;
 		}
 		argv[i][len - 1] = '\0';
@@ -91,14 +91,14 @@ int handle_asciiz(struct assembler_state *state, char **argv, int argc) {
 
 int handle_asciip(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "asciip expects 1+ arguments");
 		return 1;
 	}
 	int i;
 	for (i = 0; i < argc; ++i) {
 		int len = strlen(argv[i]);
 		if (argv[i][0] != '"' || argv[i][len - 1] != '"') {
-			ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+			ERROR(ERROR_INVALID_DIRECTIVE, state->column, "unterminated string");
 			return 1;
 		}
 		argv[i][len - 1] = '\0';
@@ -119,11 +119,12 @@ int handle_asciip(struct assembler_state *state, char **argv, int argc) {
 
 int handle_block(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "block expects 1 argument");
 		return 1;
 	}
 	int error;
 	uint64_t result;
+	char *symbol;
 	tokenized_expression_t *expression = parse_expression(argv[0]);
 	if (expression == NULL) {
 		error = EXPRESSION_BAD_SYNTAX;
@@ -134,11 +135,11 @@ int handle_block(struct assembler_state *state, char **argv, int argc) {
 			.name = "$"
 		};
 		list_add(state->equates, &sym_pc);
-		result = evaluate_expression(expression, state->equates, &error);
+		result = evaluate_expression(expression, state->equates, &error, &symbol);
 		list_del(state->equates, state->equates->length - 1); // Remove $
 	}
 	if (error == EXPRESSION_BAD_SYMBOL) {
-		ERROR(ERROR_UNKNOWN_SYMBOL, state->column);
+		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
 	} else if (error == EXPRESSION_BAD_SYNTAX) {
 		ERROR(ERROR_INVALID_SYNTAX, state->column);
 	} else {
@@ -160,19 +161,20 @@ int handle_block(struct assembler_state *state, char **argv, int argc) {
 
 int handle_bndry(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "bndry expects 1 argument");
 		return 1;
 	}
 	int error;
 	uint64_t result;
+	char *symbol;
 	tokenized_expression_t *expression = parse_expression(argv[0]);
 	if (expression == NULL) {
 		error = EXPRESSION_BAD_SYNTAX;
 	} else {
-		result = evaluate_expression(expression, state->equates, &error);
+		result = evaluate_expression(expression, state->equates, &error, &symbol);
 	}
 	if (error == EXPRESSION_BAD_SYMBOL) {
-		ERROR(ERROR_UNKNOWN_SYMBOL, state->column);
+		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
 	} else if (error == EXPRESSION_BAD_SYNTAX) {
 		ERROR(ERROR_INVALID_SYNTAX, state->column);
 	} else {
@@ -197,7 +199,7 @@ int handle_bndry(struct assembler_state *state, char **argv, int argc) {
 
 int handle_db(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "db expects 1+ arguments");
 		return 1;
 	}
 	uint64_t olen = 0;
@@ -216,12 +218,13 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 		} else {
 			int error;
 			uint64_t result;
+			char *symbol;
 			tokenized_expression_t *expression = parse_expression(argv[i]);
 
 			if (expression == NULL) {
 				error = EXPRESSION_BAD_SYNTAX;
 			} else {
-				result = evaluate_expression(expression, state->equates, &error);
+				result = evaluate_expression(expression, state->equates, &error, &symbol);
 			}
 
 			if (error == EXPRESSION_BAD_SYMBOL) {
@@ -260,12 +263,12 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 int handle_define(struct assembler_state *state, char **argv, int argc) {
 	/* Basically the same thing as handle_macro, but everything is on 1 line */
 	if (argc == 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "define expects 1+ arguments");
 	}
 	argv[0] = join_args(argv, argc);
 	char *location = strchr(argv[0], '(');
 	if (location == argv[0]) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "unnamed macro");
 		return 1;
 	}
 
@@ -280,7 +283,7 @@ int handle_define(struct assembler_state *state, char **argv, int argc) {
 		++location;
 		char *end = strchr(location, ')');
 		if (!end) {
-			ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+			ERROR(ERROR_INVALID_DIRECTIVE, state->column, "unterminated parameters");
 			return 1;
 		}
 
@@ -322,7 +325,7 @@ int handle_define(struct assembler_state *state, char **argv, int argc) {
 
 int handle_undef(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "undef expects 1 argument");
 		return 1;
 	}
 
@@ -336,7 +339,7 @@ int handle_undef(struct assembler_state *state, char **argv, int argc) {
 			return 1;
 		}
 	}
-	ERROR(ERROR_UNKNOWN_SYMBOL, state->column);
+	ERROR(ERROR_UNKNOWN_SYMBOL, state->column, argv[0]);
 	return 1;
 }
 
@@ -369,14 +372,14 @@ int handle_area(struct assembler_state *state, char **argv, int argc) {
 
 int handle_ascii(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "ascii expects 1+ arguments");
 		return 1;
 	}
 	int i;
 	for (i = 0; i < argc; ++i) {
 		int len = strlen(argv[i]);
 		if (argv[i][0] != '"' || argv[i][len - 1] != '"') {
-			ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+			ERROR(ERROR_INVALID_DIRECTIVE, state->column, "unterminated string");
 			return 1;
 		}
 		argv[i][len - 1] = '\0';
@@ -391,7 +394,7 @@ int handle_ascii(struct assembler_state *state, char **argv, int argc) {
 
 int handle_dw(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "dw expects 1+ arguments");
 		return 1;
 	}
 	uint64_t olen = 0;
@@ -399,12 +402,13 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 	for (i = 0; i < argc; ++i) {
 		int error;
 		uint64_t result;
+		char *symbol;
 		tokenized_expression_t *expression = parse_expression(argv[i]);
 
 		if (expression == NULL) {
 			error = EXPRESSION_BAD_SYNTAX;
 		} else {
-			result = evaluate_expression(expression, state->equates, &error);
+			result = evaluate_expression(expression, state->equates, &error, &symbol);
 		}
 
 		if (error == EXPRESSION_BAD_SYMBOL) {
@@ -444,12 +448,12 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 
 int handle_echo(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "echo expects 1+ arguments");
 		return 1;
 	}
 	int len = strlen(argv[0]);
 	if (argv[0][0] != '"' || argv[0][len - 1] != '"') {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "unterminated string");
 		return 1;
 	}
 	argv[0][len - 1] = '\0';
@@ -462,7 +466,7 @@ int handle_echo(struct assembler_state *state, char **argv, int argc) {
 
 int handle_elseif(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "elseif expects 1 argument");
 		return 1;
 	}
 	if (state->if_stack->length == 0) {
@@ -474,18 +478,19 @@ int handle_elseif(struct assembler_state *state, char **argv, int argc) {
 	}
 	tokenized_expression_t *expression = parse_expression(argv[0]);
 	int error;
+	char *symbol;
 	uint64_t result;
 	if (expression == NULL) {
 		ERROR(ERROR_INVALID_SYNTAX, state->column);
 		return 1;
 	} else {
-		result = evaluate_expression(expression, state->equates, &error);
+		result = evaluate_expression(expression, state->equates, &error, &symbol);
 	}
 	if (error == EXPRESSION_BAD_SYNTAX) {
 		ERROR(ERROR_INVALID_SYNTAX, state->column);
 		return 1;
 	} else if (error == EXPRESSION_BAD_SYMBOL) {
-		ERROR(ERROR_UNKNOWN_SYMBOL, state->column);
+		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
 		return 1;
 	} else {
 		*(int *)stack_peek(state->if_stack) = result;
@@ -496,7 +501,7 @@ int handle_elseif(struct assembler_state *state, char **argv, int argc) {
 
 int handle_else(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "else expects 0 arguments");
 		return 1;
 	}
 	if (state->if_stack->length == 0) {
@@ -511,7 +516,7 @@ int handle_else(struct assembler_state *state, char **argv, int argc) {
 
 int handle_end(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "end expects 0 arguments");
 		return 1;
 	}
 	if (state->if_stack->length == 0) {
@@ -524,7 +529,7 @@ int handle_end(struct assembler_state *state, char **argv, int argc) {
 
 int handle_endif(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "endif expects 0 arguments");
 		return 1;
 	}
 	if (state->if_stack->length == 0) {
@@ -538,22 +543,23 @@ int handle_endif(struct assembler_state *state, char **argv, int argc) {
 
 int handle_equ(struct assembler_state *state, char **argv, int argc) {
 	if (argc < 2) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "equ expects 2+ arguments");
 		return 1;
 	}
 	char *args = join_args(argv + 1, argc - 1);
 	tokenized_expression_t *expression = parse_expression(args);
 	free(args);
 	int error;
+	char *symbol;
 	uint64_t result;
 	if (expression == NULL) {
 		ERROR(ERROR_INVALID_SYNTAX, state->column);
 		return 1;
 	} else {
-		result = evaluate_expression(expression, state->equates, &error);
+		result = evaluate_expression(expression, state->equates, &error, &symbol);
 	}
 	if (error == EXPRESSION_BAD_SYMBOL) {
-		ERROR(ERROR_UNKNOWN_SYMBOL, state->column);
+		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
 	} else if (error == EXPRESSION_BAD_SYNTAX) {
 		ERROR(ERROR_INVALID_SYNTAX, state->column);
 	} else {
@@ -571,7 +577,7 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 
 int handle_even(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "even expects 0 arguments");
 		return 1;
 	}
 	if (state->PC % 2 != 0) {
@@ -586,7 +592,7 @@ int handle_even(struct assembler_state *state, char **argv, int argc) {
 
 int handle_function(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 3) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "function expects 3 arguments");
 		return 1;
 	}
 	metadata_t *meta = get_area_metadata(state->current_area, "scas.functions");
@@ -642,23 +648,24 @@ int handle_if(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	if (argc != 1) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "if expects 1 argument");
 		return 1;
 	}
 	tokenized_expression_t *expression = parse_expression(argv[0]);
 	int error;
+	char *symbol;
 	uint64_t result;
 	if (expression == NULL) {
 		ERROR(ERROR_INVALID_SYNTAX, state->column);
 		return 1;
 	} else {
-		result = evaluate_expression(expression, state->equates, &error);
+		result = evaluate_expression(expression, state->equates, &error, &symbol);
 	}
 	if (error == EXPRESSION_BAD_SYNTAX) {
 		ERROR(ERROR_INVALID_SYNTAX, state->column);
 		return 1;
 	} else if (error == EXPRESSION_BAD_SYMBOL) {
-		ERROR(ERROR_UNKNOWN_SYMBOL, state->column);
+		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
 		return 1;
 	} else {
 		int *r = malloc(sizeof(int));
@@ -678,7 +685,7 @@ int handle_ifdef(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	if (argc != 1) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "ifdef expects 1 argument");
 		return 1;
 	}
 	int *r = malloc(sizeof(int));
@@ -718,7 +725,7 @@ int handle_ifndef(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	if (argc != 1) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "ifndef expects 1 argument");
 		return 1;
 	}
 	int *r = malloc(sizeof(int));
@@ -749,13 +756,14 @@ int handle_ifndef(struct assembler_state *state, char **argv, int argc) {
 
 int handle_incbin(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "incbin expects 1 argument");
 		return 1;
 	}
 	/* TODO: Pass runtime settings down to assembler from main */
 	int len = strlen(argv[0]);
-	if ((argv[0][0] != '"' || argv[0][len - 1] != '"') && (argv[0][0] != '<' || argv[0][len - 1] != '>')) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+	if ((argv[0][0] != '"' || argv[0][len - 1] != '"') &&
+			(argv[0][0] != '<' || argv[0][len - 1] != '>')) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "unterminated \"\" or <>");
 		return 1;
 	}
 	argv[0][len - 1] = '\0';
@@ -765,10 +773,12 @@ int handle_incbin(struct assembler_state *state, char **argv, int argc) {
 	strcpy(name, argv[0] + 1);
 	FILE *file = fopen(name, "r");
 	if (!file) {
-		ERROR(ERROR_BAD_FILE, state->column);
+		ERROR(ERROR_BAD_FILE, state->column, name);
+		free(name);
 		return 1;
 	}
-	scas_log(L_INFO, "Including binary file '%s' from '%s'", name, (char *)stack_peek(state->file_name_stack));
+	scas_log(L_INFO, "Including binary file '%s' from '%s'", name,
+			(char *)stack_peek(state->file_name_stack));
 	uint8_t *buf = malloc(1024);
 	uint64_t olen = 0;
 	int l;
@@ -789,12 +799,13 @@ int handle_incbin(struct assembler_state *state, char **argv, int argc) {
 
 int handle_include(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "include expects 1 argument");
 		return 1;
 	}
 	int len = strlen(argv[0]);
-	if ((argv[0][0] != '"' || argv[0][len - 1] != '"') && (argv[0][0] != '<' || argv[0][len - 1] != '>')) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+	if ((argv[0][0] != '"' || argv[0][len - 1] != '"') &&
+			(argv[0][0] != '<' || argv[0][len - 1] != '>')) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "unterminated \"\" or <>");
 		return 1;
 	}
 	argv[0][len - 1] = '\0';
@@ -823,7 +834,7 @@ int handle_include(struct assembler_state *state, char **argv, int argc) {
 		}
 	}
 	if (!file) {
-		ERROR(ERROR_BAD_FILE, state->column);
+		ERROR(ERROR_BAD_FILE, state->column, name);
 		return 1;
 	}
 	scas_log(L_INFO, "Including file '%s' from '%s'", name, (char *)stack_peek(state->file_name_stack));
@@ -837,7 +848,7 @@ int handle_include(struct assembler_state *state, char **argv, int argc) {
 
 int handle_list(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "list expects 0 arguments");
 		return 1;
 	}
 	state->nolist = 0;
@@ -854,13 +865,13 @@ int handle_map(struct assembler_state *state, char **argv, int argc) {
 
 int handle_macro(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "macro expects 1 argument");
 		return 1;
 	}
 	char *location = strchr(argv[0], '(');
 
 	if (location == argv[0]) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "macro without a name");
 		return 1;
 	}
 
@@ -881,7 +892,7 @@ int handle_macro(struct assembler_state *state, char **argv, int argc) {
 			}
 
 			if (!end || end == location) {
-				ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+				ERROR(ERROR_INVALID_DIRECTIVE, state->column, "unterminated parameter list");
 				return 1;
 				// TODO: Free everything
 			}
@@ -906,7 +917,7 @@ int handle_macro(struct assembler_state *state, char **argv, int argc) {
 
 int handle_nolist(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "nolist expects 0 arguments");
 		return 1;
 	}
 	state->nolist = 1;
@@ -916,7 +927,7 @@ int handle_nolist(struct assembler_state *state, char **argv, int argc) {
 
 int handle_odd(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "odd expects 0 arguments");
 		return 1;
 	}
 	if (state->PC % 2 != 1) {
@@ -931,20 +942,21 @@ int handle_odd(struct assembler_state *state, char **argv, int argc) {
 
 int handle_org(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "org expects 1 argument");
 		return 1;
 	}
 	int error;
 	uint64_t result;
+	char *symbol;
 	tokenized_expression_t *expression = parse_expression(argv[0]);
 	if (!expression) {
 		ERROR(ERROR_INVALID_SYNTAX, state->column);
 		return 1;
 	} else {
-		result = evaluate_expression(expression, state->equates, &error);
+		result = evaluate_expression(expression, state->equates, &error, &symbol);
 	}
 	if (error == EXPRESSION_BAD_SYMBOL) {
-		ERROR(ERROR_UNKNOWN_SYMBOL, state->column);
+		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
 	} else if (error == EXPRESSION_BAD_SYNTAX) {
 		ERROR(ERROR_INVALID_SYNTAX, state->column);
 	} else {
@@ -1161,7 +1173,7 @@ int try_handle_directive(struct assembler_state *state, char **line) {
 				// Ignore "invalid" directives inside of falsy if segments
 				return 1;
 			}
-			ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+			ERROR(ERROR_INVALID_DIRECTIVE, state->column, line);
 			return 1;
 		}
 		scas_log(L_DEBUG, "Matched directive '%s' at %s:%d", d->match,

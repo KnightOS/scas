@@ -105,7 +105,8 @@ tokenized_expression_t *fread_tokenized_expression(FILE *f) {
 	return expression;
 }
 
-uint64_t evaluate_expression(tokenized_expression_t *expression, list_t *symbols, int *error) {
+uint64_t evaluate_expression(tokenized_expression_t *expression, list_t
+		*symbols, int *error, char **symbol) {
 	stack_type *stack = create_stack();
 	list_t *to_free = create_list();
 	expression_token_t *token;
@@ -133,6 +134,7 @@ uint64_t evaluate_expression(tokenized_expression_t *expression, list_t *symbols
 					}
 				}
 				if (!found) {
+					*symbol = token->symbol;
 					*error = EXPRESSION_BAD_SYMBOL;
 				}
 				list_add(to_free, resolved);

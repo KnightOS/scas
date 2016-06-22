@@ -265,7 +265,7 @@ int main(int argc, char **argv) {
 			error_t *error = errors->items[i];
 			fprintf(stderr, "%s:%d:%d: error #%d: %s\n", error->file_name,
 					(int)error->line_number, (int)error->column, error->code,
-					get_error_string(error));
+					error->message);
 			fprintf(stderr, "%s\n", error->line);
 			if (error->column != 0) {
 				int j;

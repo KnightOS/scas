@@ -98,7 +98,8 @@ void parse_flag(const char *flag) {
 		}
 		list_t *s = create_list();
 		int _;
-		uint64_t res = evaluate_expression(e, s, &_);
+		char *__;
+		uint64_t res = evaluate_expression(e, s, &_, &__);
 		if (_) {
 			scas_abort("Unable to evaluate -forigin=%s", value);
 		}

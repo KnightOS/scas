@@ -51,15 +51,17 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 		};
 		list_add(symbols, &sym_pc);
 		int error;
-		uint64_t result = evaluate_expression(imm->expression, symbols, &error);
+		char *symbol;
+		uint64_t result = evaluate_expression(imm->expression, symbols, &error, &symbol);
 		list_del(symbols, symbols->length - 1); // Remove $
 		if (error == EXPRESSION_BAD_SYMBOL) {
 			scas_log(L_ERROR, "Unable to find symbol for expression");
-			add_error_from_map(errors, ERROR_UNKNOWN_SYMBOL, area->source_map, imm->instruction_address);
-			print_tokenized_expression(stderr, imm->expression);
+			add_error_from_map(errors, ERROR_UNKNOWN_SYMBOL, area->source_map,
+					imm->instruction_address, symbol);
 			continue;
 		} else if (error == EXPRESSION_BAD_SYNTAX) {
-			add_error_from_map(errors, ERROR_INVALID_SYNTAX, area->source_map, imm->instruction_address);
+			add_error_from_map(errors, ERROR_INVALID_SYNTAX, area->source_map,
+					imm->instruction_address);
 			continue;
 		} else {
 			if (imm->type == IMM_TYPE_RELATIVE) {
@@ -75,12 +77,14 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 			if (imm->type == IMM_TYPE_RELATIVE) { // Signed
 				if ((result & (mask >> 1)) != result) {
 					if (!(result & (1 << imm->width)) || (result & ~mask) != ~mask) {
-						add_error_from_map(errors, ERROR_VALUE_TRUNCATED, area->source_map, imm->instruction_address);
+						add_error_from_map(errors, ERROR_VALUE_TRUNCATED,
+								area->source_map, imm->instruction_address);
 					}
 				}
 			} else {
 				if ((result & mask) != result && ~result >> imm->width) {
-					add_error_from_map(errors, ERROR_VALUE_TRUNCATED, area->source_map, imm->instruction_address);
+					add_error_from_map(errors, ERROR_VALUE_TRUNCATED,
+							area->source_map, imm->instruction_address);
 				}
 			}
 			result = result & mask;
@@ -139,7 +143,7 @@ void gather_symbols(list_t *symbols, area_t *area, linker_settings_t *settings) 
 		symbol_t *sym = area->symbols->items[i];
 		if (find_symbol(symbols, sym->name)) {
 			add_error_from_map(settings->errors, ERROR_DUPLICATE_SYMBOL,
-					area->source_map, sym->defined_address);
+					area->source_map, sym->defined_address, sym->name);
 		} else {
 			list_add(symbols, sym);
 		}
