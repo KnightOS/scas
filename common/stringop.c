@@ -106,14 +106,18 @@ char *code_strstr(const char *haystack, const char *needle) {
 }
 
 char *code_strchr(const char *str, char delimiter) {
-	int in_string = 0, in_character = 0;
+	int in_string = 0, in_character = 0, in_paren = 0;
 	int i = 0;
 	while (str[i] != '\0') {
 		if (str[i] == '"' && !in_character) {
 			in_string = !in_string;
 		} else if (str[i] == '\'' && !in_string) {
 			in_character = !in_character;
-		} else if (!in_character && !in_string) {
+		} else if (str[i] == '(' && !in_paren) {
+			in_paren = 1;
+		} else if (str[i] == ')' && in_paren) {
+			in_paren = 0;
+		} else if (!in_character && !in_string && !in_paren) {
 			if (str[i] == delimiter) {
 				return (char *)str + i;
 			}
