@@ -2,7 +2,13 @@
 
 echo "$*"
 
-source_file=$(cat "$1" | sed -r s/$/\\\\n\\\\/g)
+if [ "$(uname -s)" == "Darwin" ]; then
+    sed_opt="-E"
+else
+    sed_opt="-r"
+fi
+
+source_file=$(cat "$1" | sed $sed_opt s/$/\\\\n\\\\/g)
 mkdir -p $(dirname "$2")
 
 cat <<EOF > "$2"
