@@ -113,10 +113,10 @@ char *code_strchr(const char *str, char delimiter) {
 			in_string = !in_string;
 		} else if (str[i] == '\'' && !in_string) {
 			in_character = !in_character;
-		} else if (str[i] == '(' && !in_paren) {
-			in_paren = 1;
+		} else if (str[i] == '(') {
+			in_paren++;
 		} else if (str[i] == ')' && in_paren) {
-			in_paren = 0;
+			in_paren--;
 		} else if (!in_character && !in_string && !in_paren) {
 			if (str[i] == delimiter) {
 				return (char *)str + i;
