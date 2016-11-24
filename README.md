@@ -1,6 +1,22 @@
 # scas
 
-Assembler and linker for z80. Work in progress.
+Assembler and linker for z80.
+
+## Status
+
+Nearly done. We'd like to get relative labels working so it can compile the
+KnightOS kernel, and then there are a few more bugs that need to be sorted out.
+Should be usable now.
+
+## Compiling from Source
+
+    mkdir build
+    cd build
+    cmake -DCMAKE_BUILD_TYPE=Release ..
+    make
+    sudo make install
+
+Now read `man scas` to learn how to use it.
 
 ## Help, Bugs, Feedback
 
