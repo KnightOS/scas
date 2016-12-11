@@ -1,10 +1,8 @@
 # scas
 
-<<<<<<< HEAD
 =======
 Assembler and linker for z80. Work in progress.
 =======
->>>>>>> Update readme to include windows information
 Assembler and linker for z80.
 
 ## Status
