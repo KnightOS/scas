@@ -29,8 +29,8 @@ int log10_u64(uint64_t i) {
 	int log = 1;
 	while (i >= 10) {
 		i /= 10;
+		log++;
 	}
-
 	return log;
 }
 
