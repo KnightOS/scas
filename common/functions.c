@@ -7,10 +7,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#ifndef _WIN32
+#ifdef _WIN32
+#include <Windows.h>
+#else
 #include <strings.h>
 #endif
-
 
 unsigned int hash(void *data) {
 	unsigned int hash = 5381;

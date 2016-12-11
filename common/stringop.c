@@ -4,16 +4,12 @@
 #include "string.h"
 #include "list.h"
 #ifdef _WIN32
-#include <string.h>
-#include <windows.h>
+#include <Windows.h>
 #else
 #include <strings.h>
 #endif
 
-
-/* I'm fairly sure every windows toolchain
- * has this feature by now */
-#ifndef strcasecmp
+#ifdef _WIN32
 int strcasecmp(const char* s1, const char* s2)
 {
 	int c1, c2;

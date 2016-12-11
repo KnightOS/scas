@@ -5,10 +5,11 @@
 #include "functions.h"
 #include "list.h"
 #include "log.h"
-#include "stringop.h"
 #include <stdint.h>
 #include <stdlib.h>
-#ifndef _WIN32
+#ifdef _WIN32
+#include <Windows.h>
+#else
 #include <strings.h>
 #endif
 

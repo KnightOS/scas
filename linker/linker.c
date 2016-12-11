@@ -12,10 +12,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#ifndef _WIN32
+#ifdef _WIN32
+#include <Windows.h>
+#else
 #include <strings.h>
 #endif
-
 
 /*
  * Notes on how this could be improved:
