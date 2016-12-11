@@ -13,9 +13,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#ifdef _WIN32
-#include <Windows.h>
-#else
+#ifndef _WIN32
 #include <strings.h>
 #endif
 
