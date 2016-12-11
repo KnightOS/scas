@@ -194,11 +194,6 @@ is with commas.
 	Defines a new macro named _key_ (with optional parameters specified in
 	parenthesis) and with substitution _value_.
 
-*echo* <format>, <values>::
-	Echos a line to stdout during assembly. The format is a printf format string
-	and each value is an expression that evaluates to something passed to the
-	format string.
-
 *equ, equate* <key> <value>::
 	Creates a symbol named _key_ with value of _value_. The expression _value_ is
 	evaluated at the time this directive is parsed, rather than when the symbol is
@@ -240,6 +235,11 @@ is with commas.
 *org* <expression>::
 	Evaluates _expression_ and sets PC to the resulting value. All labels beyond
 	this point will be relative to _expression_.
+
+*printf* <format>, <values>::
+	Writes text to stdout during assembly. <format> is a printf format string
+	and each value is an expression that is evaluated and used in the format
+	string.
 
 *!*::
 	! directives are ignored.

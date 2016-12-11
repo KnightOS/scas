@@ -7,6 +7,7 @@
 #include "runtime.h"
 #include "list.h"
 #include "log.h"
+#include "format.h"
 #include <limits.h>
 #include <string.h>
 #include <ctype.h>
@@ -444,7 +445,51 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_echo(struct assembler_state *state, char **argv, int argc) {
+struct assembler_state *printf_state;
+char **printf_argv;
+int printf_argc;
+
+static uintmax_t printf_arg(size_t size) {
+	// TODO: support strings?
+
+	int error;
+	uint64_t result;
+	char *symbol;
+
+	struct assembler_state *state = printf_state;
+
+	if (!printf_argc) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		return 0;
+	}
+
+	char *arg = *printf_argv;
+	++printf_argv;
+	--printf_argc;
+
+	tokenized_expression_t *expression = parse_expression(arg);
+
+	if (expression == NULL) {
+		error = EXPRESSION_BAD_SYNTAX;
+	} else {
+		result = evaluate_expression(expression, state->equates, &error, &symbol);
+	}
+	if (error == EXPRESSION_BAD_SYMBOL) {
+		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		return 0;
+	} else if (error == EXPRESSION_BAD_SYNTAX) {
+		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		return 0;
+	}
+
+	return result;
+}
+
+static void printf_putc(char c) {
+	putchar(c);
+}
+
+int handle_printf(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "echo expects 1+ arguments");
 		return 1;
@@ -456,9 +501,10 @@ int handle_echo(struct assembler_state *state, char **argv, int argc) {
 	}
 	argv[0][len - 1] = '\0';
 	len -= 2;
-	/* TODO: Handle format string properly */
-	puts(argv[0] + 1);
-	puts("\n");
+	printf_argv = argv + 1;
+	printf_argc = argc - 1;
+	printf_state = state;
+	format(printf_putc, printf_arg, argv[0] + 1);
 	return 1;
 }
 
@@ -984,7 +1030,7 @@ struct directive directives[] = {
 	{ "define", handle_define, 0 },
 	{ "ds", handle_block, DELIM_COMMAS },
 	{ "dw", handle_dw, DELIM_COMMAS },
-	{ "echo", handle_echo, DELIM_COMMAS | DELIM_WHITESPACE },
+	//{ "echo", handle_echo, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "elif", handle_elseif, 0 },
 	{ "else", handle_else, 0 },
 	{ "elseif", handle_elseif, 0 },
@@ -1014,6 +1060,7 @@ struct directive directives[] = {
 	{ "odd", handle_odd, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "optsdcc", handle_optsdcc, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "org", handle_org, 0 },
+	{ "printf", handle_printf, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "ref", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE }, /* TODO */
 	{ "rmb", handle_block, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "rs", handle_block, DELIM_COMMAS | DELIM_WHITESPACE },
