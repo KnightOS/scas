@@ -15,9 +15,7 @@
 #include "errors.h"
 #include "expression.h"
 #include "directives.h"
-#ifdef _WIN32
-#include <Windows.h>
-#else
+#ifndef _WIN32
 #include <strings.h>
 #endif
 
