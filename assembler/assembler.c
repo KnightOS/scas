@@ -23,6 +23,17 @@
 		*(int*)stack_peek(state->line_number_stack), \
 		state->line, COLUMN, stack_peek(state->file_name_stack), ##__VA_ARGS__);
 
+struct assembler_state state;
+
+int log10_u64(uint64_t i) {
+	int log = 1;
+	while (i >= 10) {
+		i /= 10;
+	}
+
+	return log;
+}
+
 void transform_local_labels(tokenized_expression_t *expression, const char *last_global_label) {
 	int i;
 	for (i = 0; i < expression->tokens->length; ++i) {
@@ -57,6 +68,40 @@ void transform_local_labels(tokenized_expression_t *expression, const char *last
 				free(token->symbol);
 				token->symbol = temp;
 			}
+		}
+	}
+}
+
+void transform_relative_labels(tokenized_expression_t *expression, int last_relative_label) {
+	int i;
+	for(i = 0; i < expression->tokens->length; i++) {
+		fflush(stderr);
+		expression_token_t *token = expression->tokens->items[i];
+		if (token->type != SYMBOL || strcmp(token->symbol, "_")) {
+			continue;
+		}
+
+		int j = i;
+		int offset = get_relative_label_offset(expression, &j);
+		int relative_label = offset + last_relative_label;
+
+		const char *fmtstring = "relative@%d";
+		int len = log10_u64(relative_label);
+		token->symbol = malloc((strlen(fmtstring) - 2)
+						+ len
+						+ 1);
+		sprintf(token->symbol, fmtstring, relative_label);
+		token->symbol[(strlen(fmtstring) - 2)
+						+ len
+						+ 1] = '\0';
+		scas_log(L_DEBUG, "Transformed relative label with offset %d to %s", offset, token->symbol);
+		for (int k = 0; k < j - i; k++) {
+			expression_token_t *toremove = expression->tokens->items[i + 1];
+			/* these should actually all be OPERATORs
+			if (toremove->type == SYMBOL)
+				free(toremove->symbol); */
+			free(toremove);
+			list_del(expression->tokens, i + 1);
 		}
 	}
 }
@@ -259,6 +304,14 @@ int try_add_label(struct assembler_state *state, char **line) {
 		return 0;
 	}
 	/* Check for illegal label names */
+	if (i == 0) {
+		scas_log(L_ERROR, "Illegal (Unnamed label)");
+		return 0;
+	}
+	if (strncmp(".", *line, i) == 0) {
+		scas_log(L_ERROR, "Illegal (Unnamed local label)");
+		return 0;
+	}
 	if (strncmp("$", *line, i) == 0) {
 		// Don't allow "$" alone, it's a special case
 		scas_log(L_ERROR, "Illegal ($)");
@@ -268,8 +321,14 @@ int try_add_label(struct assembler_state *state, char **line) {
 		// Don't allow symbols to start with a number unless they're ASxxxx local labels
 		return 0;
 	}
+
 	/* Add label */
 	symbol_t *sym = malloc(sizeof(symbol_t));
+	sym->exported = 1; /* TODO: Support explicit export */
+	sym->type = SYMBOL_LABEL;
+	sym->value = state->PC + scas_runtime.options.origin;
+	sym->defined_address = state->current_area->data_length;
+
 	if (isdigit(**line) && (*line)[i - 1] == '$') {
 		/* ASxxxx local label, give it a better name */
 		char *temp = malloc(i + 1);
@@ -287,6 +346,19 @@ int try_add_label(struct assembler_state *state, char **line) {
 				+ strlen(state->last_global_label)] = '\0';
 		scas_log(L_DEBUG, "Adding ASxxxx local label %s", sym->name);
 		free(temp);
+	} else if (strncmp("_", *line, i) == 0) {
+		const char *fmtstring = "relative@%d";
+		int len = log10_u64(state->last_relative_label);
+		sym->name = malloc((strlen(fmtstring) - 2)
+						+ len
+						+ 1);
+		sprintf(sym->name, fmtstring, state->last_relative_label++);
+		sym->name[(strlen(fmtstring) - 2)
+						+ len
+						+ 1] = '\0';
+
+		scas_log(L_DEBUG, "Adding relative label %s", sym->name);
+		sym->exported = 0; /* Dont export anonymous labels */
 	} else if (**line == '.') {
 		char *temp = malloc(i + 1);
 		strncpy(temp, *line, i);
@@ -309,10 +381,6 @@ int try_add_label(struct assembler_state *state, char **line) {
 		sym->name[i] = '\0';
 		state->last_global_label = sym->name;
 	}
-	sym->type = SYMBOL_LABEL;
-	sym->value = state->PC + scas_runtime.options.origin;
-	sym->defined_address = state->current_area->data_length;
-	sym->exported = 1; /* TODO: Support explicit export */
 	list_add(state->current_area->symbols, sym);
 	list_add(state->object->imports, sym->name);
 	scas_log(L_DEBUG, "Added label '%s' (pre-linking value 0x%08X) from %s:%d", sym->name, sym->value,
@@ -357,6 +425,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 				error = EXPRESSION_BAD_SYNTAX;
 			} else {
 				transform_local_labels(expression, state->last_global_label);
+				transform_relative_labels(expression, state->last_relative_label);
 				result = evaluate_expression(expression, state->equates, &error, &symbol);
 			}
 			if (error == EXPRESSION_BAD_SYMBOL) {
@@ -509,7 +578,9 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 
 		.most_recent_macro = NULL,
 
-		.auto_source_maps = true
+		.auto_source_maps = true,
+
+		.last_relative_label = 0
 	};
 	list_cat(state.macros, settings->macros);
 	int *ln = malloc(sizeof(int)); *ln = 0;
