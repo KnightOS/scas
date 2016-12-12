@@ -170,6 +170,9 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 	if (strstr(*line, "macro") == *line + 1) { // Cannot expand macros while defining them
 		return 0;
 	}
+	if (strstr(*line, "ifdef") == *line + 1) { // Should not expand when testing for existence
+		return 0;
+	}
 	int i;
 	for (i = 0; i < state->macros->length; i++) {
 		macro_t *macro = state->macros->items[i];
@@ -559,6 +562,7 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 
 		.last_relative_label = 0
 	};
+	list_cat(state.macros, settings->macros);
 	int *ln = malloc(sizeof(int)); *ln = 0;
 	char *name = malloc(strlen(file_name) + 1);
 	strcpy(name, file_name);

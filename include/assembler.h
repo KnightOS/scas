@@ -11,6 +11,7 @@ typedef struct {
 	list_t *include_path;
 	list_t *errors;
 	list_t *warnings;
+	list_t *macros;
 } assembler_settings_t;
 
 typedef struct {

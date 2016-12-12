@@ -733,6 +733,7 @@ int handle_ifdef(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	int *r = malloc(sizeof(int));
+	*r = 0;
 	int i;
 	for (i = 0; !*r && i < state->equates->length; ++i) {
 		symbol_t *sym = state->equates->items[i];

@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -25,6 +26,7 @@ struct runtime scas_runtime;
 void init_scas_runtime() {
 	scas_runtime.arch = "z80";
 	scas_runtime.jobs = LINK | ASSEMBLE;
+	scas_runtime.macros = create_list();
 	scas_runtime.output_type = EXECUTABLE;
 	scas_runtime.input_files = create_list();
 	scas_runtime.output_file = NULL;
@@ -110,6 +112,26 @@ void parse_arguments(int argc, char **argv) {
 						scas_abort("Invalid option %s", argv[i]);
 					}
 				}
+			} else if (argv[i][1] == 'D') {
+				char *name = NULL, *value = NULL;
+				if (argv[i][2]) {
+					name = argv[i] + 2;
+				} else {
+					name = argv[++i];
+				}
+				value = strchr(name, '=');
+				if (value) {
+					*value = '\0';
+					++value;
+				} else {
+					value = "1";
+				}
+				macro_t *macro = malloc(sizeof(macro_t));
+				macro->parameters = create_list();
+				macro->macro_lines = create_list();
+				list_add(macro->macro_lines, strdup(value));
+				macro->name = strdup(name);
+				list_add(scas_runtime.macros, macro);
 			} else {
 				scas_abort("Invalid option %s", argv[i]);
 			}
@@ -213,6 +235,7 @@ int main(int argc, char **argv) {
 				.set = instruction_set,
 				.errors = errors,
 				.warnings = warnings,
+				.macros = scas_runtime.macros,
 			};
 			o = assemble(f, scas_runtime.input_files->items[i], &settings);
 			fclose(f);

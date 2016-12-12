@@ -1,6 +1,7 @@
 #include "stringop.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 #include "string.h"
 #include "list.h"
 #ifdef _WIN32

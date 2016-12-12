@@ -15,7 +15,7 @@ char *code_strstr(const char *haystack, const char *needle);
 int unescape_string(char *string);
 
 #ifndef strcasecmp
-int strcasecmp(const char* s1, const char* s2)
+int strcasecmp(const char* s1, const char* s2);
 #endif
 
 #endif
