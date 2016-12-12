@@ -27,6 +27,7 @@ void init_scas_runtime() {
 	scas_runtime.jobs = LINK | ASSEMBLE;
 	scas_runtime.output_type = EXECUTABLE;
 	scas_runtime.input_files = create_list();
+	scas_runtime.macros = create_list();
 	scas_runtime.output_file = NULL;
 	scas_runtime.output_extension = "bin";
 	scas_runtime.listing_file = NULL;
@@ -76,6 +77,62 @@ void validate_scas_runtime() {
 	}
 }
 
+/* basically copied from handle_define*/
+macro_t *parse_define(char *arg) {
+	char *location = strchr(arg, '(');
+	if (location == arg) {
+		scas_abort("Unnamed macro '%s'", arg);
+	}
+
+	macro_t *define = malloc(sizeof(macro_t));
+	define->parameters = create_list();
+	define->macro_lines = create_list();
+	if (location) {
+		int i, _;
+		define->name = malloc (location - arg + 1);
+		strncpy(define->name, arg, location - arg);
+		define->name[location - arg] = 0; /* End of String */
+		++location;
+		char *end = strchr(location, ')');
+		if (!end) {
+			scas_abort("Unterminated macro parameters '%s'", arg);
+		}
+
+		char *params = malloc(end - location + 1);
+		strncpy(params, location, end - location);
+		params[end - location] = 0;
+		list_t *parameters = split_string(params, ",");
+
+		for (i = 0; i < parameters->length; i++) {
+			char *parameter = parameters->items[i];
+			list_add(define->parameters, strip_whitespace(parameter, &_));
+		}
+		location = end + 1; /* After the parenthesis */
+	} else {
+		location = arg;
+		while (*location && !isspace(*location) && *location != '=') ++location;
+		char _ = *location;
+		*location = '\0';
+		define->name = malloc(strlen(arg) + 1);
+		strcpy(define->name, arg);
+		*location = _;
+	}
+
+	while(*location && isspace(*location)) ++location;
+	if (*location == '=') {
+		++location;
+		while(*location && isspace(*location)) ++location;
+		char *mlines = malloc(strlen(location) + 1);
+		strcpy(mlines, location);
+		list_add(define->macro_lines, mlines); /* Rest of the line */
+	} else {
+		/* define has no value */
+		list_add(define->macro_lines, "1");
+	}
+
+	return define;
+}
+
 void parse_arguments(int argc, char **argv) {
 	int i;
 	for (i = 1; i < argc; ++i) {
@@ -101,6 +158,19 @@ void parse_arguments(int argc, char **argv) {
 				scas_runtime.include_path = realloc(scas_runtime.include_path, l + strlen(path) + 2);
 				strcat(scas_runtime.include_path, ":");
 				strcat(scas_runtime.include_path, path);
+			} else if (argv[i][1] == 'D' || strcmp("--define", argv[i]) == 0) {
+				char *define;
+				if (argv[i][1] == 'D' && argv[i][2] != 0) {
+					// -Dmacro
+					define = argv[i] + 2;
+				} else {
+					// [-D | --define] macro
+					define = argv[++i];
+				}
+				if (define) {
+					macro_t *macro = parse_define(define);
+					list_add(scas_runtime.macros, macro);
+				}
 			} else if (argv[i][1] == 'v') {
 				int j;
 				for (j = 1; argv[i][j] != '\0'; ++j) {
@@ -213,6 +283,7 @@ int main(int argc, char **argv) {
 				.set = instruction_set,
 				.errors = errors,
 				.warnings = warnings,
+				.macros = scas_runtime.macros
 			};
 			o = assemble(f, scas_runtime.input_files->items[i], &settings);
 			fclose(f);

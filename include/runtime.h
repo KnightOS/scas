@@ -22,6 +22,7 @@ struct runtime {
 	jobs_t jobs;
 	output_type_t output_type;
 	list_t *input_files;
+	list_t *macros;
 	char *output_file;
 	char *output_extension;
 	char *listing_file;

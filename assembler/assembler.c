@@ -546,7 +546,7 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 		.instruction_buffer = malloc(64 / 8),
 		.if_stack = create_stack(),
 		.equates = create_list(),
-		.macros = create_list(),
+		.macros = settings->macros,
 		.current_macro = 0,
 		.nolist = 0,
 		.PC = 0,
