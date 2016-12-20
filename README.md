@@ -10,8 +10,6 @@ Should be usable now.
 
 ## Compiling from Source
 
-Compiling under UNIX and Cygwin environments:
-
     mkdir build
     cd build
     cmake -DCMAKE_BUILD_TYPE=Release ..
