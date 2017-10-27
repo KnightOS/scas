@@ -378,6 +378,7 @@ int try_add_label(struct assembler_state *state, char **line) {
 		state->last_global_label = sym->name;
 	}
 	list_add(state->current_area->symbols, sym);
+	list_add(state->object->imports, sym);
 	scas_log(L_DEBUG, "Added label '%s' (pre-linking value 0x%08X) from %s:%d", sym->name, sym->value,
 			(char *)stack_peek(state->file_name_stack), *(int *)stack_peek(state->line_number_stack));
 	/* Modify this line so that processing may continue */
