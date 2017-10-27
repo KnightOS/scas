@@ -318,7 +318,10 @@ int try_add_label(struct assembler_state *state, char **line) {
 		return 0;
 	}
 
-	/* Add label */
+	/* Add label - if no area has been selected, fall back to the default */
+	if (state->current_area == NULL){
+		fall_back(state);
+	}
 	symbol_t *sym = malloc(sizeof(symbol_t));
 	sym->exported = 1; /* TODO: Support explicit export */
 	sym->type = SYMBOL_LABEL;
@@ -424,6 +427,9 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 			}
 			if (error == EXPRESSION_BAD_SYMBOL) {
 				/* TODO: Throw error if using explicit import */
+				if (state->current_area==NULL) {
+					fall_back(state);
+				}
 				scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", ref->value_provided);
 				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
 				late_imm->instruction_address = state->current_area->data_length;
@@ -473,6 +479,10 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 		for (i = 0; i < bytes_width; ++i) {
 			state->instruction_buffer[bytes_width - i - 1] = instruction & 0xFF;
 			instruction >>= 8;
+		}
+		//If valid instruction and no area has been specified, fall back to default
+		if (state->current_area == NULL) {
+			fall_back(state);
 		}
 		/* Add completed instruction */
 		if (!state->expanding_macro && state->auto_source_maps) {
@@ -528,10 +538,16 @@ int try_split_line(struct assembler_state *state, char **line) {
 	return 0;
 }
 
+void fall_back(struct assembler_state* state){
+	state->current_area=create_area("_CODE");
+	stack_push(state->source_map_stack, create_source_map(state->current_area, stack_peek(state->file_name_stack)));
+	list_add(state->object->areas, state->current_area);
+}
+
 object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *settings) {
 	struct assembler_state state = {
 		.object = create_object(),
-		.current_area = create_area("_CODE"),
+		.current_area = NULL,
 		.source_map_stack = create_stack(),
 
 		.file_stack = create_stack(),
@@ -569,9 +585,7 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 	stack_push(state.file_name_stack, name);
 	stack_push(state.line_number_stack, ln);
 	stack_push(state.file_stack, file);
-	stack_push(state.source_map_stack, create_source_map(state.current_area, file_name));
-	list_add(state.object->areas, state.current_area);
-
+	
 	int(*const line_ops[])(struct assembler_state *, char **) = {
 		try_empty_line,
 		try_parse_inside_macro,

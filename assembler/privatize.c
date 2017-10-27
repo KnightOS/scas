@@ -11,6 +11,9 @@
 #include "runtime.h"
 
 void rename_symbol(area_t *a, const char *original, const char *new) {
+	if (a == NULL){
+		return;
+	}
 	int i;
 	for (i = 0; i < a->late_immediates->length; ++i) {
 		late_immediate_t *imm = a->late_immediates->items[i];
@@ -64,6 +67,9 @@ int contains_string(list_t *l, const char *s) {
 }
 
 void privatize_area(object_t *o, area_t *a, list_t *exports) {
+	if (a == NULL){
+		return;
+	}
 	MD5_CTX ctx;
 	unsigned char raw_checksum[16];
 	char checksum[33];

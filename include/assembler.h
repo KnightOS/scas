@@ -49,5 +49,6 @@ struct assembler_state {
 };
 
 object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *settings);
+void fall_back(struct assembler_state *state);
 
 #endif

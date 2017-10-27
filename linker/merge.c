@@ -55,6 +55,9 @@ void merge_areas(object_t *merged, object_t *source) {
 	int i;
 	for (i = 0; i < source->areas->length; ++i) {
 		area_t *source_area = source->areas->items[i];
+		if (source_area == NULL){
+			continue;
+		}
 		area_t *merged_area = get_area_by_name(merged, source_area->name);
 		if (merged_area == NULL) {
 			merged_area = create_area(source_area->name);

@@ -350,6 +350,9 @@ int handle_area(struct assembler_state *state, char **argv, int argc) {
 	int i;
 	for (i = 0; i < state->object->areas->length; ++i) {
 		area_t *a = state->object->areas->items[i];
+		if (a == NULL) {
+			continue;
+		}
 		if (strcasecmp(a->name, argv[0]) == 0) {
 			area = a;
 			break;
@@ -887,6 +890,9 @@ int handle_include(struct assembler_state *state, char **argv, int argc) {
 	stack_push(state->file_name_stack, name);
 	int *ln = malloc(sizeof(int)); *ln = 0;
 	stack_push(state->line_number_stack, ln);
+	if (state->current_area == NULL) {
+		fall_back(state);
+	}
 	stack_push(state->source_map_stack, create_source_map(state->current_area, name));
 	return 1;
 }
