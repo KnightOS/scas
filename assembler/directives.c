@@ -225,9 +225,24 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 			} else {
 				result = evaluate_expression(expression, state->equates, &error, &symbol);
 			}
-
+			
 			if (error == EXPRESSION_BAD_SYMBOL) {
-				/* TODO: Throw error if using explicit import */
+				
+				if (scas_runtime.options.explicit_import) {
+					bool imported=false;
+					list_t *imports=state->object->imports;
+					for (int i=0; i<imports->length; i++) {
+						if (strcmp(imports->items[i],symbol) == 0) {
+							imported = true;
+							break;
+						}
+					}
+					if (!imported) {
+						ERROR(ERROR_EXPLICIT_IMPORT,state->column,symbol)
+					}
+					break;
+				}
+				
 				scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", argv[i]);
 				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
 				late_imm->address = state->current_area->data_length;
@@ -411,7 +426,21 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 		}
 
 		if (error == EXPRESSION_BAD_SYMBOL) {
-			/* TODO: Throw error if using explicit import */
+			if (scas_runtime.options.explicit_import) {
+				bool imported=false;
+				list_t *imports=state->object->imports;
+				for (int i=0; i<imports->length; i++) {
+					if (strcmp(imports->items[i],symbol) == 0) {
+						imported = true;
+						break;
+					}
+				}
+				if (!imported) {
+					ERROR(ERROR_EXPLICIT_IMPORT,state->column,symbol)
+				}
+				break;
+			}
+
 			scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", argv[i]);
 			late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
 			late_imm->address = state->current_area->data_length;
