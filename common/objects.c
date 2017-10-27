@@ -14,11 +14,15 @@ object_t *create_object() {
 	object_t *o = malloc(sizeof(object_t));
 	o->areas = create_list();
 	o->exports = create_list();
+	o->imports = create_list();
+	o->unresolved = create_list();
 	return o;
 }
 
 void object_free(object_t *o) {
 	list_free(o->areas);
+	list_free(o->unresolved);
+	list_free(o->imports);
 }
 
 area_t *create_area(const char *name) {
