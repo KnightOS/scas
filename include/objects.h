@@ -26,6 +26,14 @@ typedef struct {
 } symbol_t;
 
 typedef struct {
+	char *name;
+	size_t line_number;
+	char *line;
+	int column;
+	char *file_name;
+} unresolved_symbol_t;
+
+typedef struct {
     tokenized_expression_t *expression;
     uint64_t width;
     uint64_t address;
@@ -63,6 +71,8 @@ typedef struct {
     list_t *areas;
     /* Only used for assembly */
     list_t *exports;
+    list_t *imports;
+    list_t *unresolved;
 } object_t;
 
 object_t *create_object();

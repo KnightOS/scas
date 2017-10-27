@@ -32,6 +32,8 @@ const char *get_error_string(error_t *error) {
 
 const char *get_warning_string(warning_t *warning) {
 	switch (warning->code) {
+		case WARNING_NO_EFFECT:
+			return "'%s' has no effect %s";
 		default:
 			return NULL;
 	}
@@ -64,6 +66,36 @@ void add_error(list_t *errors, int code, size_t line_number, const char *line,
 
 	list_add(errors, error);
 	scas_log(L_ERROR, "Added error '%s' at %s:%d:%d", buf, file_name,
+			line_number, column);
+}
+
+void add_warning(list_t *warnings, int code, size_t line_number,
+		const char *line, int column, const char *file_name, ...) {
+	warning_t *warning = malloc(sizeof(warning_t));
+	warning->code = code;
+	warning->line_number = line_number;
+	warning->file_name = malloc(strlen(file_name) + 1);
+	strcpy(warning->file_name, file_name);
+	warning->line = malloc(strlen(line) + 1);
+	strcpy(warning->line, line);
+	warning->column = column;
+
+	const char *fmt = get_warning_string(warning);
+
+	va_list args;
+	va_start(args, file_name);
+	int len = vsnprintf(NULL, 0, fmt, args);
+	va_end(args);
+
+	char *buf = malloc(len + 1);
+	va_start(args, file_name);
+	vsnprintf(buf, len + 1, fmt, args);
+	va_end(args);
+
+	warning->message = buf;
+
+	list_add(warnings, warning);
+	scas_log(L_ERROR, "Added warning '%s' at %s:%d:%d", buf, file_name,
 			line_number, column);
 }
 

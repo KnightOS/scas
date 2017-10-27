@@ -310,6 +310,7 @@ int try_add_label(struct assembler_state *state, char **line) {
 	sym->defined_address = state->current_area->data_length;
 	sym->exported = 1; /* TODO: Support explicit export */
 	list_add(state->current_area->symbols, sym);
+	list_add(state->object->imports, sym->name);
 	scas_log(L_DEBUG, "Added label '%s' (pre-linking value 0x%08X) from %s:%d", sym->name, sym->value,
 			(char *)stack_peek(state->file_name_stack), *(int *)stack_peek(state->line_number_stack));
 	/* Modify this line so that processing may continue */
@@ -354,7 +355,19 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 				result = evaluate_expression(expression, state->equates, &error, &symbol);
 			}
 			if (error == EXPRESSION_BAD_SYMBOL) {
-				/* TODO: Throw error if using explicit import */
+				if (scas_runtime.options.explicit_import) {
+					unresolved_symbol_t *unresolved_sym = malloc(sizeof(unresolved_symbol_t));
+					unresolved_sym->name = malloc(strlen(symbol)+1);
+					strcpy(unresolved_sym->name,symbol);
+					unresolved_sym->column = state->column;
+					unresolved_sym->line_number = *(int*)stack_peek(state->line_number_stack);
+					unresolved_sym->line = malloc(strlen(state->line) + 1);
+					strcpy(unresolved_sym->line,state->line);
+					const char *file_name = stack_peek(state->file_name_stack);
+					unresolved_sym->file_name = malloc(sizeof(file_name)+1);
+					strcpy(unresolved_sym->file_name,file_name);
+					list_add(state->object->unresolved,unresolved_sym);
+				}
 				scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", ref->value_provided);
 				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
 				late_imm->instruction_address = state->current_area->data_length;
@@ -569,8 +582,25 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 				fclose(cur);
 				stack_pop(state.file_stack);
 				stack_pop(state.source_map_stack);
-				scas_log(L_INFO, "Returning to file '%s'", (char *)stack_peek(state.file_name_stack));
+				scas_log(L_INFO, "Returning to file '%s'",
+					(char *)stack_peek(state.file_name_stack));
 			} else {
+				for (int i = 0; i < state.object->unresolved->length; i++) {
+					unresolved_symbol_t *sym = (unresolved_symbol_t*)
+						state.object->unresolved->items[i];
+					bool imported = false;
+					for (int j = 0; j < state.object->imports->length; j++) {
+						if (strcmp(sym->name, state.object->imports->items[j]) == 0) {
+							imported = true;
+							break;
+						}
+					}
+					if (!imported) {
+						add_error(state.errors, ERROR_UNKNOWN_SYMBOL,
+							sym->line_number, sym->line, sym->column,
+							sym->file_name, sym->name);
+					}
+				}
 				break;
 			}
 		}
