@@ -25,6 +25,8 @@ const char *get_error_string(error_t *error) {
 			return "No matching if directive";
 		case ERROR_DUPLICATE_SYMBOL:
 			return "Duplicate symbol '%s'";
+		case ERROR_EXPLICIT_IMPORT:
+			return "Symbol '%s' not imported";
 		default:
 			return NULL;
 	}

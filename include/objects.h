@@ -63,6 +63,7 @@ typedef struct {
     list_t *areas;
     /* Only used for assembly */
     list_t *exports;
+    list_t *imports;
 } object_t;
 
 object_t *create_object();

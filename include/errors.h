@@ -13,6 +13,7 @@ enum {
     ERROR_BAD_FILE,
     ERROR_TRAILING_END,
     ERROR_DUPLICATE_SYMBOL,
+    ERROR_EXPLICIT_IMPORT,
 };
 
 typedef struct {

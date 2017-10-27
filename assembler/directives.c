@@ -683,6 +683,20 @@ int handle_export(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_import(struct assembler_state *state, char **argv, int argc) {
+	if (!scas_runtime.options.explicit_import) {
+		scas_log(L_INFO, "Implicitly enabling -fexplicit-import due to use of import directive");
+		scas_runtime.options.explicit_import = 1;
+	}
+	for (int i = 0; i < argc; ++i) {
+		scas_log(L_INFO, "Importing '%s'",argv[i]);
+		char *imported = malloc(strlen(argv[i]) + 1);
+		strcpy(imported, argv[i]);
+		list_add(state->object->imports,imported);
+	}
+	return 1;
+}
+
 int handle_if(struct assembler_state *state, char **argv, int argc) {
 	if (state->if_stack->length != 0 && !*(int *)stack_peek(state->if_stack)) {
 		/* Push up another falsy if if we're already in a falsy if */
@@ -1048,7 +1062,7 @@ struct directive directives[] = {
 	{ "if", handle_if, 0 },
 	{ "ifdef", handle_ifdef, 0 },
 	{ "ifndef", handle_ifndef, 0 },
-	{ "import", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE }, /* TODO */
+	{ "import", handle_import, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "incbin", handle_incbin, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "include", handle_include, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "lclequ", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE },

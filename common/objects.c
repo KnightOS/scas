@@ -14,6 +14,7 @@ object_t *create_object() {
 	object_t *o = malloc(sizeof(object_t));
 	o->areas = create_list();
 	o->exports = create_list();
+	o->imports = create_list();
 	return o;
 }
 
