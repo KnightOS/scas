@@ -226,7 +226,7 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 			} else {
 				result = evaluate_expression(expression, state->equates, &error, &symbol);
 			}
-			
+
 			if (error == EXPRESSION_BAD_SYMBOL) {
 				
 				if (scas_runtime.options.explicit_import) {

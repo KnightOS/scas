@@ -429,10 +429,10 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 					unresolved_sym->name = malloc(strlen(symbol)+1);
 					strcpy(unresolved_sym->name,symbol);
 					unresolved_sym->column = state->column;
-					unresolved_sym->line_number=*(int*)stack_peek(state->line_number_stack);
+					unresolved_sym->line_number = *(int*)stack_peek(state->line_number_stack);
 					unresolved_sym->line = malloc(strlen(state->line) + 1);
 					strcpy(unresolved_sym->line,state->line);
-					const char *file_name=stack_peek(state->file_name_stack);
+					const char *file_name = stack_peek(state->file_name_stack);
 					unresolved_sym->file_name = malloc(sizeof(file_name)+1);
 					strcpy(unresolved_sym->file_name,file_name);
 					list_add(state->object->unresolved,unresolved_sym);
@@ -655,12 +655,12 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 				stack_pop(state.source_map_stack);
 				scas_log(L_INFO, "Returning to file '%s'", (char *)stack_peek(state.file_name_stack));
 			} else {
-				for (int i=0; i<state.object->unresolved->length; i++) {
-					unresolved_symbol_t *sym=(unresolved_symbol_t*)state.object->unresolved->items[i];
-					bool imported=false;
-					for (int j=0; j<state.object->imports->length; j++) {
+				for (int i = 0; i<state.object->unresolved->length; i++) {
+					unresolved_symbol_t *sym = (unresolved_symbol_t*)state.object->unresolved->items[i];
+					bool imported = false;
+					for (int j = 0; j<state.object->imports->length; j++) {
 						if (strcmp(sym->name,state.object->imports->items[j]) == 0) {
-							imported=true;
+							imported = true;
 							break;
 						}
 					}
