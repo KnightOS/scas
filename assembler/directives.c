@@ -1,4 +1,5 @@
 #include "directives.h"
+#include "assembler.h"
 #include "errors.h"
 #include "functions.h"
 #include "expression.h"
@@ -229,18 +230,24 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 			if (error == EXPRESSION_BAD_SYMBOL) {
 				
 				if (scas_runtime.options.explicit_import) {
-					bool imported=false;
-					list_t *imports=state->object->imports;
-					for (int i=0; i<imports->length; i++) {
-						if (strcmp(imports->items[i],symbol) == 0) {
-							imported = true;
-							break;
-						}
-					}
-					if (!imported) {
-						ERROR(ERROR_EXPLICIT_IMPORT,state->column,symbol)
-					}
-					break;
+					tokenized_expression_t *changed_expression = malloc(sizeof(tokenized_expression_t));
+					memcpy(changed_expression, expression, sizeof(tokenized_expression_t));
+					int ignored_error;
+					char *fixed_symbol;
+					transform_local_labels(changed_expression, state->last_global_label);
+					transform_relative_labels(changed_expression, state->last_relative_label);
+					evaluate_expression(expression, state->equates, &ignored_error, &fixed_symbol);
+					unresolved_symbol_t *unresolved_sym = malloc(sizeof(unresolved_symbol_t));
+					unresolved_sym->name = malloc(strlen(fixed_symbol)+1);
+					strcpy(unresolved_sym->name,fixed_symbol);
+					unresolved_sym->column = state->column;
+					unresolved_sym->line_number=*(int*)stack_peek(state->line_number_stack);
+					unresolved_sym->line = malloc(strlen(state->line) + 1);
+					strcpy(unresolved_sym->line,state->line);
+					const char *file_name=stack_peek(state->file_name_stack);
+					unresolved_sym->file_name = malloc(sizeof(file_name)+1);
+					strcpy(unresolved_sym->file_name,file_name);
+					list_add(state->object->unresolved,unresolved_sym);
 				}
 				
 				scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", argv[i]);
@@ -427,18 +434,24 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 
 		if (error == EXPRESSION_BAD_SYMBOL) {
 			if (scas_runtime.options.explicit_import) {
-				bool imported=false;
-				list_t *imports=state->object->imports;
-				for (int i=0; i<imports->length; i++) {
-					if (strcmp(imports->items[i],symbol) == 0) {
-						imported = true;
-						break;
-					}
-				}
-				if (!imported) {
-					ERROR(ERROR_EXPLICIT_IMPORT,state->column,symbol)
-				}
-				break;
+				tokenized_expression_t *changed_expression = malloc(sizeof(tokenized_expression_t));
+				memcpy(changed_expression, expression, sizeof(tokenized_expression_t));
+				int ignored_error;
+				char *fixed_symbol;
+				transform_local_labels(changed_expression, state->last_global_label);
+				transform_relative_labels(changed_expression, state->last_relative_label);
+				evaluate_expression(expression, state->equates, &ignored_error, &fixed_symbol);
+				unresolved_symbol_t *unresolved_sym = malloc(sizeof(unresolved_symbol_t));
+				unresolved_sym->name = malloc(strlen(fixed_symbol)+1);
+				strcpy(unresolved_sym->name,fixed_symbol);
+				unresolved_sym->column = state->column;
+				unresolved_sym->line_number=*(int*)stack_peek(state->line_number_stack);
+				unresolved_sym->line = malloc(strlen(state->line) + 1);
+				strcpy(unresolved_sym->line,state->line);
+				const char *file_name=stack_peek(state->file_name_stack);
+				unresolved_sym->file_name = malloc(sizeof(file_name)+1);
+				strcpy(unresolved_sym->file_name,file_name);
+				list_add(state->object->unresolved,unresolved_sym);
 			}
 
 			scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", argv[i]);
