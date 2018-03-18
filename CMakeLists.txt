@@ -58,52 +58,60 @@ add_executable(scwrap
     ${scwrap}
 )
 
-ADD_CUSTOM_TARGET(
-    man ALL
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/bin/scas.1
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/bin/scdump.1
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/bin/scwrap.1
-)
+if (NOT DEFINED SCAS_DOCUMENTATION)
+	set(SCAS_DOCUMENTATION FALSE CACHE BOOL "Whether to build the documentation")
+endif()
 
-ADD_CUSTOM_COMMAND(
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/scas.1.txt
-    COMMAND a2x --no-xmllint --doctype manpage --format manpage ${CMAKE_CURRENT_SOURCE_DIR}/scas.1.txt
-    COMMAND test "${CMAKE_CURRENT_SOURCE_DIR}" != "${CMAKE_CURRENT_BINARY_DIR}/bin" && mv -f ${CMAKE_CURRENT_SOURCE_DIR}/scas.1 ${CMAKE_CURRENT_BINARY_DIR}/bin || true
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/bin/scas.1
-    VERBATIM
-)
-set_directory_properties(${CMAKE_CURRENT_BINARY_DIR} ADDITIONAL_MAKE_CLEAN_FILES scas.1)
-ADD_CUSTOM_COMMAND(
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/scdump.1.txt
-    COMMAND a2x --no-xmllint --doctype manpage --format manpage ${CMAKE_CURRENT_SOURCE_DIR}/scdump.1.txt
-    COMMAND test "${CMAKE_CURRENT_SOURCE_DIR}" != "${CMAKE_CURRENT_BINARY_DIR}/bin" && mv -f ${CMAKE_CURRENT_SOURCE_DIR}/scdump.1 ${CMAKE_CURRENT_BINARY_DIR}/bin || true
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/bin/scdump.1
-    VERBATIM
-)
-set_directory_properties(${CMAKE_CURRENT_BINARY_DIR} ADDITIONAL_MAKE_CLEAN_FILES scdump.1)
-ADD_CUSTOM_COMMAND(
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/scwrap.1.txt
-    COMMAND a2x --no-xmllint --doctype manpage --format manpage ${CMAKE_CURRENT_SOURCE_DIR}/scwrap.1.txt
-    COMMAND test "${CMAKE_CURRENT_SOURCE_DIR}" != "${CMAKE_CURRENT_BINARY_DIR}/bin" && mv -f ${CMAKE_CURRENT_SOURCE_DIR}/scwrap.1 ${CMAKE_CURRENT_BINARY_DIR}/bin || true
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/bin/scwrap.1
-    VERBATIM
-)
-set_directory_properties(${CMAKE_CURRENT_BINARY_DIR} ADDITIONAL_MAKE_CLEAN_FILES scwrap.1)
+if(SCAS_DOCUMENTATION)
 
-INSTALL(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/scas.1
-    DESTINATION man/man1
-)
+	ADD_CUSTOM_TARGET(
+		man ALL
+		DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/bin/scas.1
+		DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/bin/scdump.1
+		DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/bin/scwrap.1
+	)
 
-INSTALL(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/scdump.1
-    DESTINATION man/man1
-)
+	ADD_CUSTOM_COMMAND(
+		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/scas.1.txt
+		COMMAND a2x --no-xmllint --doctype manpage --format manpage ${CMAKE_CURRENT_SOURCE_DIR}/scas.1.txt
+		COMMAND test "${CMAKE_CURRENT_SOURCE_DIR}" != "${CMAKE_CURRENT_BINARY_DIR}/bin" && mv -f ${CMAKE_CURRENT_SOURCE_DIR}/scas.1 ${CMAKE_CURRENT_BINARY_DIR}/bin || true
+		OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/bin/scas.1
+		VERBATIM
+	)
+	set_directory_properties(${CMAKE_CURRENT_BINARY_DIR} ADDITIONAL_MAKE_CLEAN_FILES scas.1)
+	ADD_CUSTOM_COMMAND(
+		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/scdump.1.txt
+		COMMAND a2x --no-xmllint --doctype manpage --format manpage ${CMAKE_CURRENT_SOURCE_DIR}/scdump.1.txt
+		COMMAND test "${CMAKE_CURRENT_SOURCE_DIR}" != "${CMAKE_CURRENT_BINARY_DIR}/bin" && mv -f ${CMAKE_CURRENT_SOURCE_DIR}/scdump.1 ${CMAKE_CURRENT_BINARY_DIR}/bin || true
+		OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/bin/scdump.1
+		VERBATIM
+	)
+	set_directory_properties(${CMAKE_CURRENT_BINARY_DIR} ADDITIONAL_MAKE_CLEAN_FILES scdump.1)
+	ADD_CUSTOM_COMMAND(
+		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/scwrap.1.txt
+		COMMAND a2x --no-xmllint --doctype manpage --format manpage ${CMAKE_CURRENT_SOURCE_DIR}/scwrap.1.txt
+		COMMAND test "${CMAKE_CURRENT_SOURCE_DIR}" != "${CMAKE_CURRENT_BINARY_DIR}/bin" && mv -f ${CMAKE_CURRENT_SOURCE_DIR}/scwrap.1 ${CMAKE_CURRENT_BINARY_DIR}/bin || true
+		OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/bin/scwrap.1
+		VERBATIM
+	)
+	set_directory_properties(${CMAKE_CURRENT_BINARY_DIR} ADDITIONAL_MAKE_CLEAN_FILES scwrap.1)
 
-INSTALL(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/scwrap.1
-    DESTINATION man/man1
-)
+	INSTALL(
+		FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/scas.1
+		DESTINATION man/man1
+	)
+
+	INSTALL(
+		FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/scdump.1
+		DESTINATION man/man1
+	)
+
+	INSTALL(
+		FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/scwrap.1
+		DESTINATION man/man1
+	)
+
+endif()
 
 INSTALL(
     TARGETS scas
