@@ -122,7 +122,7 @@ int handle_block(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	int error;
-	uint64_t result;
+	uint16_t result;
 	char *symbol;
 	tokenized_expression_t *expression = parse_expression(argv[0]);
 	if (expression == NULL) {
