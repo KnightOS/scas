@@ -903,6 +903,7 @@ int handle_list(struct assembler_state *state, char **argv, int argc) {
 
 int handle_map(struct assembler_state *state, char **argv, int argc) {
 	// .map filename, lineno, code
+	strcpy(((source_map_t *)stack_peek(state->source_map_stack))->file_name, argv[0]);
 	add_source_map((source_map_t *)stack_peek(state->source_map_stack),
 		atoi(argv[1]), argv[2], state->PC, 1); // TODO: figure out actual length
 	return 1;
