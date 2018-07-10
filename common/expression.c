@@ -123,7 +123,6 @@ uint64_t evaluate_expression(tokenized_expression_t *expression, list_t
 				resolved = malloc(sizeof(expression_token_t));
 				resolved->type = NUMBER;
 				resolved->number = 0;
-
 				int found = 0;
 				int j;
 				for (j = 0; j < symbols->length; ++j) {
@@ -138,7 +137,6 @@ uint64_t evaluate_expression(tokenized_expression_t *expression, list_t
 					*symbol = token->symbol;
 					*error = EXPRESSION_BAD_SYMBOL;
 				}
-
 				list_add(to_free, resolved);
 				stack_push(stack, resolved);
 				break;
@@ -389,38 +387,4 @@ tokenized_expression_t *parse_expression(const char *str) {
 	stack_free(stack);
 	free(operator_cache);
 	return list;
-}
-
-void free_expression_token(expression_token_t *token) {
-	free(token->symbol);
-	free(token);
-}
-
-/* add a sequence of +s and -s to get an offset for a relative label. */
-int get_relative_label_offset(tokenized_expression_t *expression, int *start) {
-	int offset = 0;
-
-	for(++*start; *start < expression->tokens->length; ++*start) {
-		expression_token_t *token = expression->tokens->items[*start];
-
-		if (token->type != OPERATOR) {
-			--*start; /* roll back */
-			break;
-		}
-		operator_t op = operators[token->operator];
-		if (op.expression_type == OP_UNARY_PLUS) {
-			offset++;
-		} else if(op.expression_type == OP_UNARY_MINUS) {
-			offset--;
-		} else {
-			--*start; /* roll back */
-			break;
-		}
-	}
-
-	if (offset > 0) {
-		offset--;
-	}
-
-	return offset;
 }

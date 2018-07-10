@@ -45,7 +45,6 @@ struct assembler_state {
 	assembler_settings_t *settings;
 	macro_t *most_recent_macro;
     bool auto_source_maps;
-    uint64_t last_relative_label;
 };
 
 object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *settings);
