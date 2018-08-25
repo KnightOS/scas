@@ -1220,7 +1220,7 @@ int try_handle_directive(struct assembler_state *state, char **line) {
 				// Ignore "invalid" directives inside of falsy if segments
 				return 1;
 			}
-			ERROR(ERROR_INVALID_DIRECTIVE, state->column, line);
+			ERROR(ERROR_INVALID_DIRECTIVE, state->column, *line);
 			return 1;
 		}
 		scas_log(L_DEBUG, "Matched directive '%s' at %s:%d", d->match,
