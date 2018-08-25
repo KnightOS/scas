@@ -84,6 +84,10 @@ void parse_arguments(int argc, char **argv) {
 		if (argv[i][0] == '-' && argv[i][1] != '\0') {
 			if (strcmp("-o", argv[i]) == 0 || strcmp("--output", argv[i]) == 0) {
 				scas_runtime.output_file = argv[++i];
+			} else if (strcmp("-S", argv[i]) == 0 || strcmp("--symbols", argv[i]) == 0) {
+				scas_runtime.symbol_file = argv[++i];
+			} else if (strcmp("-L", argv[i]) == 0 || strcmp("--listing", argv[i]) == 0) {
+				scas_runtime.listing_file = argv[++i];
 			} else if (strcmp("-i", argv[i]) == 0 || strcmp("--input", argv[i]) == 0) {
 				list_add(scas_runtime.input_files, argv[++i]);
 			} else if (strcmp("-c", argv[i]) == 0 || strcmp("--merge", argv[i]) == 0) {
@@ -112,9 +116,9 @@ void parse_arguments(int argc, char **argv) {
 						scas_abort("Invalid option %s", argv[i]);
 					}
 				}
-			} else if (argv[i][1] == 'D') {
+			} else if (argv[i][1] == 'D' || strcmp("--define", argv[i]) == 0) {
 				char *name = NULL, *value = NULL;
-				if (argv[i][2]) {
+				if (argv[i][1] == 'D' && argv[i][2]) {
 					name = argv[i] + 2;
 				} else {
 					name = argv[++i];
