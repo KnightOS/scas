@@ -15,8 +15,9 @@ endif()
 
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_SOURCE_DIR}/generate-tables.sh
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/generate-tables.sh ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c)
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab1 ${CMAKE_CURRENT_SOURCE_DIR}/generate-tables.sh
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab2 ${CMAKE_CURRENT_SOURCE_DIR}/generate-tables.sh
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/generate-tables.sh ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab1 ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab2 ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c)
 
 include_directories(
     include/
