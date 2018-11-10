@@ -77,7 +77,7 @@ void append_to_area(area_t *area, uint8_t *data, size_t length) {
 }
 
 void insert_in_area(area_t *area, uint8_t *data, size_t length, size_t index) {
-	while (area->data_capacity < length + index) {
+	while (area->data_capacity < length + area->data_length) {
 		/* Expand capacity */
 		area->data = realloc(area->data, area->data_capacity + 1024);
 		area->data_capacity += 1024;
