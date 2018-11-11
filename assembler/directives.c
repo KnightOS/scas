@@ -619,6 +619,76 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_fill(struct assembler_state *state, char **argv, int argc) {
+	if (argc < 1 || argc > 2) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "fill expects one or two arguments");
+		return 1;
+	}
+	int error;
+	uint16_t size;
+	uint8_t value;
+	char *symbol;
+	tokenized_expression_t *expression = parse_expression(argv[0]);
+	if (expression == NULL) {
+		error = EXPRESSION_BAD_SYNTAX;
+	} else {
+		symbol_t sym_pc = {
+			.type = SYMBOL_LABEL,
+			.value = state->PC,
+			.name = "$"
+		};
+		list_add(state->equates, &sym_pc);
+		size = evaluate_expression(expression, state->equates, &error, &symbol);
+		list_del(state->equates, state->equates->length - 1); // Remove $
+	}
+	if (error == EXPRESSION_BAD_SYMBOL) {
+		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
+	} else if (error == EXPRESSION_BAD_SYNTAX) {
+		ERROR(ERROR_INVALID_SYNTAX, state->column);
+	} else {
+		if (size == 0) {
+			ERROR(ERROR_INVALID_DIRECTIVE, state->column, "Fill requires a non-zero size");
+			return 1;
+		}
+		if (argc == 2) {
+			tokenized_expression_t *expression = parse_expression(argv[1]);
+			if (expression == NULL) {
+				error = EXPRESSION_BAD_SYNTAX;
+			} else {
+				symbol_t sym_pc = {
+					.type = SYMBOL_LABEL,
+					.value = state->PC,
+					.name = "$"
+				};
+				list_add(state->equates, &sym_pc);
+				uint64_t result = evaluate_expression(expression, state->equates, &error, &symbol);
+				list_del(state->equates, state->equates->length - 1); // Remove $5
+				if ((result & 0xFF) != result) {
+					ERROR(ERROR_VALUE_TRUNCATED, state->column);
+					return 1;
+				}
+				value = result & 0xFF;
+			}
+		}
+		else {
+			value = 0;
+		}
+		uint8_t *buffer;
+		if (value != 0) {
+			buffer = malloc(sizeof(uint8_t) * size);
+			for (uint16_t i = 0; i < size; i++) {
+				buffer[i] = value;
+			}
+		}
+		else {
+			buffer = calloc(size, sizeof(uint8_t));
+		}
+		append_to_area(state->current_area, buffer, sizeof(uint8_t) * size);
+		state->PC += size;
+	}
+	return 1;
+}
+
 int handle_even(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "even expects 0 arguments");
@@ -1042,6 +1112,7 @@ struct directive directives[] = {
 	{ "equate", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "even", handle_even, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "export", handle_export, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "fill", handle_fill, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "function", handle_function, DELIM_COMMAS },
 	{ "gblequ", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE }, /* TODO: Allow users to export equates? */
 	{ "global", handle_export, DELIM_COMMAS | DELIM_WHITESPACE },
