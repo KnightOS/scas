@@ -1,0 +1,15 @@
+image: archlinux
+packages:
+  - make
+  - cmake
+sources:
+  - https://github.com/knightos/scas
+environment:
+  project: scas
+tasks:
+  - build: |
+      cd ${project}
+      mkdir build
+      cd build
+      cmake -DCMAKE_BUILD_TYPE=Release ..
+      make
