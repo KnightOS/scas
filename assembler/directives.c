@@ -78,12 +78,11 @@ int handle_asciiz(struct assembler_state *state, char **argv, int argc) {
 			ERROR(ERROR_INVALID_DIRECTIVE, state->column, "unterminated string");
 			return 1;
 		}
-		argv[i][len - 1] = '\0';
-		len -= 2;
 		len = unescape_string(argv[i] + 1);
 		MAP_SOURCE(len + 1);
-		append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len + 1 /* Includes the null terminator */);
-		state->PC += len + 1;
+		argv[i][len] = 0;
+		append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len /* Includes the null terminator */);
+		state->PC += len;
 	}
 	return 1;
 }
@@ -381,9 +380,7 @@ int handle_ascii(struct assembler_state *state, char **argv, int argc) {
 			ERROR(ERROR_INVALID_DIRECTIVE, state->column, "unterminated string");
 			return 1;
 		}
-		argv[i][len - 1] = '\0';
-		len -= 2;
-		len = unescape_string(argv[i] + 1);
+		len = unescape_string(argv[i] + 1) - 1;
 		MAP_SOURCE(len);
 		append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len);
 		state->PC += len;
