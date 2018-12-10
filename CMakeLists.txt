@@ -16,7 +16,8 @@ endif()
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_SOURCE_DIR}/generate-tables.sh
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/generate-tables.sh ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c)
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/generate-tables.sh ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c
+)
 
 include_directories(
     include/
@@ -38,12 +39,28 @@ add_executable(scas
     ${PROJECT_BINARY_DIR}/tables/z80.c
 )
 
+add_executable(test
+    ${common}
+	${CMAKE_SOURCE_DIR}/test.c
+)
+add_dependencies(test scas)
+
 add_library(libscas SHARED
     ${common}
     ${assembler}
     ${linker}
     ${PROJECT_BINARY_DIR}/tables/z80.c
     ${PROJECT_SOURCE_DIR}/runtime.c)
+
+add_custom_target(tests)
+add_dependencies(tests test)
+
+add_custom_command(
+	TARGET tests
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/run_tests.sh
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/run_tests.sh
+)
 
 SET_TARGET_PROPERTIES(libscas
   PROPERTIES OUTPUT_NAME scas)
