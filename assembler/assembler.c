@@ -360,7 +360,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 				scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", ref->value_provided);
 				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
 				late_imm->instruction_address = state->current_area->data_length;
-				late_imm->base_address = state->current_area->data_length + (match->instruction->width / 8);
+				late_imm->base_address = state->PC + (match->instruction->width / 8);
 				late_imm->address = state->current_area->data_length + (imm->shift / 8);
 				late_imm->width = imm->width;
 				late_imm->type = imm->type;
