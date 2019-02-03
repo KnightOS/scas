@@ -987,6 +987,11 @@ int handle_macro(struct assembler_state *state, char **argv, int argc) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "macro without a name");
 		return 1;
 	}
+	
+	if (strchr(location + 1, '(') != NULL) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "macro contains excess parentheses");
+		return 1;
+	}
 
 	macro_t *macro = malloc(sizeof(macro_t));
 	macro->parameters = create_list();
