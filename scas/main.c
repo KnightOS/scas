@@ -78,6 +78,17 @@ void validate_scas_runtime() {
 	}
 }
 
+/* validate_scas_optarg: ensure that an option that takes an argument was indeed provided an
+ *                       argument.
+ *  args:
+ *    optind: index of the option in _argv_.
+ */
+void validate_scas_optarg(int optind, int argc, char *argv[]) {
+	if (optind == argc - 1 || argv[optind+1][0] == '-') {
+		scas_abort("Option requires argument: %s", argv[optind]);
+	}
+}
+
 void parse_arguments(int argc, char **argv) {
 	int i;
 	for (i = 1; i < argc; ++i) {
@@ -85,10 +96,13 @@ void parse_arguments(int argc, char **argv) {
 			if (strcmp("-o", argv[i]) == 0 || strcmp("--output", argv[i]) == 0) {
 				scas_runtime.output_file = argv[++i];
 			} else if (strcmp("-S", argv[i]) == 0 || strcmp("--symbols", argv[i]) == 0) {
+				validate_scas_optarg(i, argc, argv);
 				scas_runtime.symbol_file = argv[++i];
 			} else if (strcmp("-L", argv[i]) == 0 || strcmp("--listing", argv[i]) == 0) {
+				validate_scas_optarg(i, argc, argv);
 				scas_runtime.listing_file = argv[++i];
 			} else if (strcmp("-i", argv[i]) == 0 || strcmp("--input", argv[i]) == 0) {
+				validate_scas_optarg(i, argc, argv);
 				list_add(scas_runtime.input_files, argv[++i]);
 			} else if (strcmp("-c", argv[i]) == 0 || strcmp("--merge", argv[i]) == 0) {
 				scas_runtime.jobs &= ~LINK;
@@ -101,6 +115,7 @@ void parse_arguments(int argc, char **argv) {
 					path = argv[i] + 2;
 				} else {
 					// [-I | --include] path/goes/here
+					validate_scas_optarg(i, argc, argv);
 					path = argv[++i];
 				}
 				int l = strlen(scas_runtime.include_path);
@@ -121,6 +136,7 @@ void parse_arguments(int argc, char **argv) {
 				if (argv[i][1] == 'D' && argv[i][2]) {
 					name = argv[i] + 2;
 				} else {
+					validate_scas_optarg(i, argc, argv);
 					name = argv[++i];
 				}
 				value = strchr(name, '=');
@@ -149,6 +165,7 @@ void parse_arguments(int argc, char **argv) {
 		}
 	}
 }
+
 
 instruction_set_t *find_inst() {
 	const char *sets_dir = "/usr/share/scas/tables/";
