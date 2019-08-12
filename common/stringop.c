@@ -172,6 +172,11 @@ int unescape_string(char *string) {
 				string[i - 1] = '\r';
 				memmove(string + i, string + i + 1, len - i);
 				break;
+			case '\\':
+			case '"':
+			case '\'':
+				memmove(string + i - 1, string + i, len - i + 1);
+				break;
 			}
 		}
 	}
