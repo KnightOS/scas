@@ -106,6 +106,9 @@ void parse_arguments(int argc, char **argv) {
 				list_add(scas_runtime.input_files, argv[++i]);
 			} else if (strcmp("-c", argv[i]) == 0 || strcmp("--merge", argv[i]) == 0) {
 				scas_runtime.jobs &= ~LINK;
+			} else if (strcmp("-a", argv[i]) == 0 || strcmp("--architecture", argv[i]) == 0) {
+				validate_scas_optarg(i, argc, argv);
+				scas_runtime.arch = argv[++i];
 			} else if (argv[i][1] == 'f') {
 				parse_flag(argv[i]);
 			} else if (argv[i][1] == 'I' || strcmp("--include", argv[i]) == 0) {
