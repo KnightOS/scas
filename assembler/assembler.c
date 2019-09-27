@@ -23,8 +23,6 @@
 		*(int*)stack_peek(state->line_number_stack), \
 		state->line, COLUMN, stack_peek(state->file_name_stack), ##__VA_ARGS__);
 
-struct assembler_state state;
-
 void transform_local_labels(tokenized_expression_t *expression, const char *last_global_label) {
 	int i;
 	for (i = 0; i < expression->tokens->length; ++i) {
