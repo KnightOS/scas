@@ -178,6 +178,7 @@ int unescape_string(char *string) {
 				memmove(string + i - 1, string + i, len - i + 1);
 				break;
 			}
+			i--;
 		}
 	}
 	return len;
