@@ -283,6 +283,83 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int handle_dl(struct assembler_state *state, char **argv, int argc) {
+	if (argc == 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "dl expects 1+ arguments");
+		return 1;
+	}
+	uint64_t olen = 0;
+	int i;
+	for (i = 0; i < argc; ++i) {
+		int error;
+		uint64_t result;
+		char *symbol;
+		tokenized_expression_t *expression = parse_expression(argv[i]);
+
+		if (expression == NULL) {
+			error = EXPRESSION_BAD_SYNTAX;
+		} else {
+			result = evaluate_expression(expression, state->equates, &error, &symbol);
+		}
+
+		if (error == EXPRESSION_BAD_SYMBOL) {
+			if (scas_runtime.options.explicit_import) {
+				tokenized_expression_t *changed_expression = malloc(sizeof(tokenized_expression_t));
+				memcpy(changed_expression, expression, sizeof(tokenized_expression_t));
+				int ignored_error;
+				char *fixed_symbol;
+				transform_local_labels(changed_expression, state->last_global_label);
+				evaluate_expression(expression, state->equates, &ignored_error, &fixed_symbol);
+				unresolved_symbol_t *unresolved_sym = malloc(sizeof(unresolved_symbol_t));
+				unresolved_sym->name = malloc(strlen(fixed_symbol) + 1);
+				strcpy(unresolved_sym->name,fixed_symbol);
+				unresolved_sym->column = state->column;
+				unresolved_sym->line_number = *(int*)stack_peek(state->line_number_stack);
+				unresolved_sym->line = malloc(strlen(state->line) + 1);
+				strcpy(unresolved_sym->line, state->line);
+				const char *file_name = stack_peek(state->file_name_stack);
+				unresolved_sym->file_name = malloc(sizeof(file_name) + 1);
+				strcpy(unresolved_sym->file_name, file_name);
+				list_add(state->object->unresolved, unresolved_sym);
+			}
+
+			scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", argv[i]);
+			late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
+			late_imm->address = state->current_area->data_length;
+			late_imm->instruction_address = state->current_area->data_length;
+			late_imm->base_address = state->current_area->data_length;
+			late_imm->width = 32;
+			late_imm->type = IMM_TYPE_ABSOLUTE;
+			late_imm->expression = expression;
+			list_add(state->current_area->late_immediates, late_imm);
+			state->instruction_buffer[0] = 0;
+			state->instruction_buffer[1] = 0;
+			state->instruction_buffer[2] = 0;
+			state->instruction_buffer[3] = 0;
+		} else if (error == EXPRESSION_BAD_SYNTAX) {
+			ERROR(ERROR_INVALID_SYNTAX, state->column);
+		} else {
+			if ((result & 0xFFFFFFFF) != result && ~result >> 32) {
+				ERROR(ERROR_VALUE_TRUNCATED, state->column);
+			} else {
+				state->instruction_buffer[3] = (uint8_t)((result >> 24) & 0xFF);
+				state->instruction_buffer[2] = (uint8_t)((result >> 16) & 0xFF);
+				state->instruction_buffer[1] = (uint8_t)((result >> 8) & 0xFF);
+				state->instruction_buffer[0] = (uint8_t)(result & 0xFF);
+			}
+		}
+		append_to_area(state->current_area, state->instruction_buffer, 4);
+		state->PC += 4;
+		olen += 4;
+	}
+	if (!state->expanding_macro) {
+		add_source_map((source_map_t *)stack_peek(state->source_map_stack),
+			*(int*)stack_peek(state->line_number_stack), state->line,
+			state->current_area->data_length, olen);
+	}
+	return 1;
+}
+
 int handle_define(struct assembler_state *state, char **argv, int argc) {
 	/* Basically the same thing as handle_macro, but everything is on 1 line */
 	if (argc == 0) {
@@ -1166,6 +1243,7 @@ struct directive directives[] = {
 	{ "byte", handle_db, DELIM_COMMAS },
 	{ "db", handle_db, DELIM_COMMAS },
 	{ "define", handle_define, 0 },
+	{ "dl", handle_dl, DELIM_COMMAS },
 	{ "ds", handle_block, DELIM_COMMAS },
 	{ "dw", handle_dw, DELIM_COMMAS },
 	//{ "echo", handle_echo, DELIM_COMMAS | DELIM_WHITESPACE },
