@@ -1,13 +1,17 @@
 cmake_minimum_required(VERSION 2.8.5)
+
 project(scas C)
+set(CMAKE_C_STANDARD 99)
+# Long term goal: add -Werror
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -pedantic")
+
 if(WIN32)
-    set(CMAKE_C_FLAGS "-g -std=c99 -Wl,--allow-multiple-definition")
-else()
-    set(CMAKE_C_FLAGS "-g -std=c99")
+    set(CMAKE_C_FLAGS "-Wl,--allow-multiple-definition")
 endif()
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "bin/")
-add_definitions("-Wall")
-set(CMAKE_BUILD_TYPE Debug)
+
+if (NOT DEFINED CMAKE_BUILD_TYPE)                                                                              
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type (Debug or Release)" FORCE)                           
+endif()
 
 if(EMSCRIPTEN)
     set(CMAKE_EXE_LINKER_FLAGS "-O2")
@@ -17,11 +21,6 @@ add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_SOURCE_DIR}/generate-tables.sh
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/generate-tables.sh ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c)
-
-include_directories(
-    include/
-    scas/
-)
 
 FILE(GLOB common ${PROJECT_SOURCE_DIR}/common/*.c)
 FILE(GLOB assembler ${PROJECT_SOURCE_DIR}/assembler/*.c)
@@ -36,6 +35,11 @@ add_executable(scas
     ${linker}
     ${scas}
     ${PROJECT_BINARY_DIR}/tables/z80.c
+)
+
+include_directories(scas
+    ${CMAKE_SOURCE_DIR}/include/
+    ${CMAKE_SOURCE_DIR}/scas/
 )
 
 add_library(libscas SHARED
@@ -98,44 +102,27 @@ if(SCAS_DOCUMENTATION)
 
 	INSTALL(
 		FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/scas.1
-		DESTINATION man/man1
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man1
 	)
 
 	INSTALL(
 		FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/scdump.1
-		DESTINATION man/man1
+		DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man1
 	)
 
 	INSTALL(
 		FILES ${CMAKE_CURRENT_BINARY_DIR}/bin/scwrap.1
-		DESTINATION man/man1
+		DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man1
 	)
 
 endif()
 
 INSTALL(
-    TARGETS scas
-    RUNTIME DESTINATION bin
+    TARGETS scas scdump scwrap libscas
+    RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
 )
 
-INSTALL(
-    TARGETS scdump
-    RUNTIME DESTINATION bin
-)
-
-INSTALL(
-    TARGETS scwrap
-    RUNTIME DESTINATION bin
-)
-
-INSTALL(
-    TARGETS libscas
-    ARCHIVE DESTINATION lib
-    RUNTIME DESTINATION lib
-    LIBRARY DESTINATION lib
-)
-
-install(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
     DESTINATION include/scas
 )
