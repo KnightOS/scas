@@ -17,10 +17,12 @@ if(EMSCRIPTEN)
     set(CMAKE_EXE_LINKER_FLAGS "-O2")
 endif()
 
+add_executable(generate_tables ${PROJECT_SOURCE_DIR}/tables/generate.c)
+
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_SOURCE_DIR}/generate-tables.sh
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/generate-tables.sh ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c)
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab generate_tables
+    COMMAND generate_tables ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c)
 
 FILE(GLOB common ${PROJECT_SOURCE_DIR}/common/*.c)
 FILE(GLOB assembler ${PROJECT_SOURCE_DIR}/assembler/*.c)
