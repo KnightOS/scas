@@ -39,12 +39,12 @@ int main(int argc, const char **argv) {
         goto cleanup;
     }
 
-    if (fprintf(destination, "const char z80_tab[%lu] = {\n\t", length) < 0) {
+    if (fprintf(destination, "const char z80_tab[%lu] = {", length) < 0) {
         puts("Failed to print to file!");
         goto cleanup;
     }
     for (long i = 0; i < length; i++) {
-        if (fprintf(destination, "0x%02x,%s", buf[i], (i + 1) % 8 == 0 ? "\n\t" : " ") < 0) {
+        if (fprintf(destination, "%s0x%02x,", i % 8 == 0 ? "\n\t" : " ", buf[i]) < 0) {
             puts("Failed to print to file!");
             goto cleanup;
         }
