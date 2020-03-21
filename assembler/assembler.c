@@ -355,7 +355,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 				result = evaluate_expression(expression, state->equates, &error, &symbol);
 			}
 			if (error == EXPRESSION_BAD_SYMBOL) {
-				if (scas_runtime.options.explicit_import) {
+				if (scas_runtime.options.explicit_import && strcmp(symbol, "$") != 0) {
 					unresolved_symbol_t *unresolved_sym = malloc(sizeof(unresolved_symbol_t));
 					unresolved_sym->name = malloc(strlen(symbol)+1);
 					strcpy(unresolved_sym->name,symbol);
