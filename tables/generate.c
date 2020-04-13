@@ -1,5 +1,28 @@
+#include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+
+// a/b/sej
+
+bool make_containing_folder(const char *const path) {
+    int last_slash = strlen(path);
+    while (path[last_slash - 1] != '/') {
+        last_slash -= 1;
+        if (last_slash == 0) {
+            fprintf(stderr, "Path appears to be relative to current dir, not making any folder.\n");
+            return true;
+        }
+    }
+    char *buffer = malloc(last_slash + 1);
+    strncpy(buffer, path, last_slash);
+    fprintf(stderr, "Creating %s\n", buffer);
+    const int result = mkdir(buffer, S_IRWXU | S_IRWXG | S_IROTH);
+    free(buffer);
+    return result == 0 || errno == EEXIST;
+}
 
 int main(int argc, const char **argv) {
     if (argc != 3) {
@@ -10,6 +33,10 @@ int main(int argc, const char **argv) {
     if (!source) {
         perror("Error opening source file");
         return 1;
+    }
+    if (!make_containing_folder(argv[2])) {
+       fprintf(stderr, "Error creating output's containing folder!\n");
+       return 1;
     }
     FILE *destination = fopen(argv[2], "wb");
     if (!destination) {
