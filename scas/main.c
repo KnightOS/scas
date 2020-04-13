@@ -221,6 +221,10 @@ int main(int argc, char **argv) {
 	init_log(scas_runtime.verbosity);
 	validate_scas_runtime();
 	instruction_set_t *instruction_set = find_inst();
+	if (instruction_set == NULL) {
+    		fprintf(stderr, "Failed to load instruction set definition, unable to continue!\n");
+    		return 1;
+	}
 	scas_log(L_INFO, "Loaded instruction set: %s", instruction_set->arch);
 	list_t *include_path = split_include_path();
 	list_t *errors = create_list();
