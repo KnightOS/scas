@@ -1,4 +1,5 @@
 #include "instructions.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -87,12 +88,12 @@ operand_t *create_operand(const char *match, uint64_t val, size_t len) {
 	return op;
 }
 
-void parse_operand_line(const char *line, instruction_set_t *set) {
+bool parse_operand_line(const char *line, instruction_set_t *set) {
 	list_t *parts = split_string(line, " \t");
 	if (parts->length != 4) {
-		fprintf(stderr, "Warning: Skipping invalid definition from instruction set: %s\n", line);
+		fprintf(stderr, "Invalid definition found in instruction set: %s\n", line);
 		free_flat_list(parts);
-		return;
+		return false;
 	}
 	operand_group_t *g = find_operand_group(set, (char *)parts->items[1]);
 	if (g == NULL) {
@@ -102,21 +103,22 @@ void parse_operand_line(const char *line, instruction_set_t *set) {
 	char *end;
 	uint64_t val = (uint64_t)strtol((char *)parts->items[3], &end, 2);
 	if (*end != '\0') {
-		fprintf(stderr, "Warning: Skipping invalid definition from instruction set: %s\n", line);
+		fprintf(stderr, "Invalid definition found in instruction set: %s\n", line);
 		free_flat_list(parts);
-		return;
+		return false;
 	}
 	operand_t *op = create_operand((char *)parts->items[2], val, strlen((char *)parts->items[3]));
 	list_add(g->operands, op);
 	free_flat_list(parts);
+	return true;
 }
 
-void parse_instruction_line(const char *line, instruction_set_t *set) {
+bool parse_instruction_line(const char *line, instruction_set_t *set) {
 	list_t *parts = split_string(line, " \t");
 	if (parts->length <= 2) {
-		fprintf(stderr, "Warning: Skipping invalid definition from instruction set: %s\n", line);
+		fprintf(stderr, "Invalid definition found in instruction set: %s\n", line);
 		free_flat_list(parts);
-		return;
+		return false;
 	}
 	/* Initialize an empty instruction */
 	instruction_t *inst = malloc(sizeof(instruction_t));
@@ -206,10 +208,10 @@ void parse_instruction_line(const char *line, instruction_set_t *set) {
 			char key = value[++i];
 			instruction_operand_t *op = find_instruction_operand(inst, key);
 			if (op == NULL) {
-				fprintf(stderr, "Warning: Skipping invalid definition from instruction set (unknown operand group): %s\n", line);
+				fprintf(stderr, "Invalid definition found in instruction set (unknown operand group): %s\n", line);
 				free(_value);
 				free_flat_list(parts);
-				return;
+				return false;
 			}
 			op->shift = shift;
 			shift += op->width;
@@ -218,10 +220,10 @@ void parse_instruction_line(const char *line, instruction_set_t *set) {
 			char key = value[++i];
 			immediate_t *imm = find_instruction_immediate(inst, key);
 			if (imm == NULL) {
-				fprintf(stderr, "Warning: Skipping invalid definition from instruction set (unknown immediate value): %s\n", line);
+				fprintf(stderr, "Invalid definition found in instruction set (unknown immediate value): %s\n", line);
 				free(_value);
 				free_flat_list(parts);
-				return;
+				return false;
 			}
 			imm->shift = shift;
 			shift += imm->width;
@@ -232,26 +234,41 @@ void parse_instruction_line(const char *line, instruction_set_t *set) {
 	list_add(set->instructions, inst);
 	free(_value);
 	free_flat_list(parts);
+	return true;
 }
 
-void handle_line(char *line, instruction_set_t *result) {
+bool handle_line(char *line, instruction_set_t *result) {
 	int trimmed_start;
 	line = strip_whitespace(line, &trimmed_start);
+	bool return_value;
 	if (line[0] == '\0' || line[0] == '#') {
 		free(line);
-		return;
+		return true;
 	}
 	if (strstr(line, "ARCH ") == line) {
-		result->arch = malloc(strlen(line) - 4);
-		strcpy(result->arch, line + 5);
+		if (result->arch) {
+			fprintf(stderr, "Instruction set definition contains two ARCH directives!\n\tAttempted to override '%s' with '%s'\n", result->arch, line + 5);
+			free(line);
+			return false;
+		}
+		else {
+			result->arch = malloc(strlen(line) - 4);
+			strcpy(result->arch, line + 5);
+			return true;
+		}
 	}
 	if (strstr(line, "OPERAND ") == line) {
-		parse_operand_line(line, result);
+		const bool val = parse_operand_line(line, result);
+		free(line);
+		return val;
 	}
 	if (strstr(line, "INS ") == line) {
-		parse_instruction_line(line, result);
+		const bool val = parse_instruction_line(line, result);
+		free(line);
+		return val;
 	}
-	free(line);
+	fprintf(stderr, "Unrecognized line: %s\n", line);
+	return false;
 }
 
 instruction_set_t *load_instruction_set(FILE *file) {
@@ -261,7 +278,11 @@ instruction_set_t *load_instruction_set(FILE *file) {
 	result->arch = NULL;
 	while (!feof(file)) {
 		char *line = read_line(file);
-		handle_line(line, result);
+		if (!handle_line(line, result)) {
+			fprintf(stderr, "Error loading instruction set!\n");
+			instruction_set_free(result);
+			return NULL;
+		}
 	}
 	return result;
 }
