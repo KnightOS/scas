@@ -1,5 +1,8 @@
 # scas
 
+[![builds.sr.ht status](https://builds.sr.ht/~maxleiter/scas/commits.svg)](https://builds.sr.ht/~maxleiter/scas/commits?)
+
+
 Assembler and linker for z80.
 
 ## Status
