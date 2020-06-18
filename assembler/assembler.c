@@ -434,16 +434,12 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 			if (error == EXPRESSION_BAD_SYMBOL) {
 				if (scas_runtime.options.explicit_import && strcmp(symbol, "$") != 0) {
 					unresolved_symbol_t *unresolved_sym = malloc(sizeof(unresolved_symbol_t));
-					unresolved_sym->name = malloc(strlen(symbol)+1);
-					strcpy(unresolved_sym->name,symbol);
+					unresolved_sym->name = strdup(symbol);
 					unresolved_sym->column = state->column;
 					unresolved_sym->line_number = *(int*)stack_peek(state->line_number_stack);
-					unresolved_sym->line = malloc(strlen(state->line) + 1);
-					strcpy(unresolved_sym->line,state->line);
-					const char *file_name = stack_peek(state->file_name_stack);
-					unresolved_sym->file_name = malloc(strlen(file_name)+1);
-					strcpy(unresolved_sym->file_name,file_name);
-					list_add(state->object->unresolved,unresolved_sym);
+					unresolved_sym->line = strdup(state->line);
+					unresolved_sym->file_name = strdup(stack_peek(state->file_name_stack));
+					list_add(state->object->unresolved, unresolved_sym);
 				}
 				scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", ref->value_provided);
 				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));

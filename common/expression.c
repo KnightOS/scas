@@ -274,7 +274,13 @@ enum {
 };
 
 void free_expression(tokenized_expression_t *expression) {
+    	for (int i = 0; i < expression->tokens->length; i += 1) {
+        	free_expression_token((expression_token_t*)expression->tokens->items[i]);
+    	}
     	list_free(expression->tokens);
+    	for (int i = 0; i < expression->symbols->length; i += 1) {
+        	free_expression_token((expression_token_t*)expression->symbols->items[i]);
+    	}
     	list_free(expression->symbols);
     	free(expression);
 }
@@ -314,7 +320,7 @@ tokenized_expression_t *parse_expression(const char *str) {
 			expr = parse_digit(&current);
 			if (expr == NULL) {
 				expr = parse_symbol(&current);
-				list_add(list->symbols, expr->symbol);
+				list_add(list->symbols, strdup(expr->symbol));
 			}
 			tokenizer_state = STATE_VALUE;
 		} else if (*current == '(') {
@@ -370,7 +376,7 @@ tokenized_expression_t *parse_expression(const char *str) {
 				goto exit;
 			}
 			expr = parse_symbol(&current);
-			list_add(list->symbols, expr->symbol);
+			list_add(list->symbols, strdup(expr->symbol));
 			tokenizer_state = STATE_VALUE;
 		}
 
@@ -412,7 +418,9 @@ exit:
 }
 
 void free_expression_token(expression_token_t *token) {
-	free(token->symbol);
+	if (token->type == SYMBOL) {
+		free(token->symbol);
+	}
 	free(token);
 }
 

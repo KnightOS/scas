@@ -226,6 +226,7 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 			uint64_t result;
 			char *symbol;
 			tokenized_expression_t *expression = parse_expression(argv[i]);
+			bool keep = false;
 
 			if (expression == NULL) {
 				error = EXPRESSION_BAD_SYNTAX;
@@ -263,6 +264,7 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 				late_imm->width = 8;
 				late_imm->type = IMM_TYPE_ABSOLUTE;
 				late_imm->expression = expression;
+				keep = true;
 				list_add(state->current_area->late_immediates, late_imm);
 				*state->instruction_buffer = 0;
 			} else if (error == EXPRESSION_BAD_SYNTAX) {
@@ -277,6 +279,9 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 			++olen;
 			append_to_area(state->current_area, state->instruction_buffer, 1);
 			++state->PC;
+			if (!keep) {
+	    			free_expression(expression);
+			}
 		}
 	}
 	if (!state->expanding_macro) {
@@ -740,6 +745,7 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 		list_add(state->equates, sym);
 		scas_log(L_DEBUG, "Added equate '%s' with value 0x%08X", sym->name, sym->value);
 	}
+	free_expression(expression);
 	return 1;
 }
 
@@ -805,6 +811,7 @@ int handle_fill(struct assembler_state *state, char **argv, int argc) {
 			buffer = calloc(size, sizeof(uint8_t));
 		}
 		append_to_area(state->current_area, buffer, sizeof(uint8_t) * size);
+		free(buffer);
 		state->PC += size;
 	}
 	return 1;
