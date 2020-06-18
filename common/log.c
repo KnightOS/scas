@@ -56,8 +56,8 @@ void scas_abort(char *format, ...) {
 }
 
 void scas_log(int verbosity, char* format, ...) {
-	if (verbosity <= v) {
-		int c = verbosity;
+	if (verbosity <= v && verbosity >= 0) {
+		size_t c = verbosity;
 		if (c > sizeof(verbosity_colors) / sizeof(char *)) {
 			c = sizeof(verbosity_colors) / sizeof(char *) - 1;
 		}

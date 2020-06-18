@@ -180,8 +180,7 @@ area_t *read_area(FILE *f) {
 	uint32_t symbols, immediates;
 	fread(&symbols, sizeof(uint32_t), 1, f);
 	uint32_t len;
-	int i;
-	for (i = 0; i < symbols; ++i) {
+	for (uint32_t i = 0; i < symbols; ++i) {
 		symbol_t *sym = malloc(sizeof(symbol_t));
 		sym->exported = fgetc(f);
 		fread(&len, sizeof(uint32_t), 1, f);
@@ -195,7 +194,7 @@ area_t *read_area(FILE *f) {
 	}
 	/* TODO: Imports */
 	fread(&immediates, sizeof(uint32_t), 1, f);
-	for (i = 0; i < immediates; ++i) {
+	for (uint32_t i = 0; i < immediates; ++i) {
 		late_immediate_t *imm = malloc(sizeof(late_immediate_t));
 		imm->type = fgetc(f);
 		imm->width = fgetc(f);
@@ -216,7 +215,7 @@ area_t *read_area(FILE *f) {
 	uint64_t meta_length, meta_key;
 	fread(&meta_length, sizeof(uint64_t), 1, f);
 	scas_log(L_DEBUG, "Reading %d metadata entries", meta_length);
-	for (i = 0; i < (int)meta_length; ++i) {
+	for (uint64_t i = 0; i < meta_length; ++i) {
 		metadata_t *meta = malloc(sizeof(metadata_t));
 		meta_key = fgetc(f);
 		meta->key = malloc(meta_key);
@@ -230,7 +229,7 @@ area_t *read_area(FILE *f) {
 
 	uint64_t fileno, lineno;
 	fread(&fileno, sizeof(uint64_t), 1, f);
-	for (i = 0; i < (int)fileno; ++i) {
+	for (uint64_t i = 0; i < fileno; ++i) {
 		source_map_t *map = malloc(sizeof(source_map_t));
 		map->file_name = read_line(f);
 		map->entries = create_list();
@@ -264,8 +263,7 @@ object_t *freadobj(FILE *f, const char *name) {
 	}
 	uint32_t area_count;
 	fread(&area_count, sizeof(uint32_t), 1, f);
-	int i;
-	for (i = 0; i < area_count; ++i) {
+	for (uint32_t i = 0; i < area_count; ++i) {
 		list_add(o->areas, read_area(f));
 	}
 	return o;

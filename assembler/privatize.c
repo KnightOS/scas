@@ -28,7 +28,7 @@ void rename_symbol(area_t *a, const char *original, const char *new) {
 	}
 	metadata_t *meta = get_area_metadata(a, "scas.functions");
 	if (meta != NULL) {
-		list_t *functions = decode_function_metadata(a, meta->value, meta->value_length);
+		list_t *functions = decode_function_metadata(a, meta->value);
 		for (i = 0; i < functions->length; ++i) {
 			function_metadata_t *func = functions->items[i];
 			if (strcasecmp(func->name, original) == 0) {

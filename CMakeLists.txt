@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 2.8.5)
 
 project(scas C)
 set(CMAKE_C_STANDARD 99)
-# Long term goal: add -Werror
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -pedantic")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -pedantic -Werror")
 
 if(WIN32)
     set(CMAKE_C_FLAGS "-Wl,--allow-multiple-definition")

@@ -68,6 +68,9 @@ char *join_args(char **argv, int argc) {
 }
 
 int handle_nop(struct assembler_state *state, char **argv, int argc) {
+	(void)state;
+	(void)argv;
+	(void)argc;
 	return 1;
 }
 
@@ -407,7 +410,7 @@ int handle_define(struct assembler_state *state, char **argv, int argc) {
 		*location = _;
 		++location;
 	}
-	if ((strlen(argv[0]) + 1) == (location - argv[0])) { /* End of string? */
+	if ((strlen(argv[0]) + 1) == (size_t)(location - argv[0])) { /* End of string? */
 		list_add(define->macro_lines, "1"); /* default value is 1 */
 	} else {
 		while (isspace(*location)) {
@@ -568,6 +571,7 @@ char **printf_argv;
 int printf_argc;
 
 static uintmax_t printf_arg(size_t size) {
+	(void)size;
 	// TODO: support strings?
 
 	int error;
@@ -662,6 +666,7 @@ int handle_elseif(struct assembler_state *state, char **argv, int argc) {
 }
 
 int handle_else(struct assembler_state *state, char **argv, int argc) {
+	(void)argv;
 	if (argc != 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "else expects 0 arguments");
 		return 1;
@@ -677,6 +682,7 @@ int handle_else(struct assembler_state *state, char **argv, int argc) {
 }
 
 int handle_end(struct assembler_state *state, char **argv, int argc) {
+	(void)argv;
 	if (argc != 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "end expects 0 arguments");
 		return 1;
@@ -690,6 +696,7 @@ int handle_end(struct assembler_state *state, char **argv, int argc) {
 }
 
 int handle_endif(struct assembler_state *state, char **argv, int argc) {
+	(void)argv;
 	if (argc != 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "endif expects 0 arguments");
 		return 1;
@@ -808,6 +815,7 @@ int handle_fill(struct assembler_state *state, char **argv, int argc) {
 }
 
 int handle_even(struct assembler_state *state, char **argv, int argc) {
+	(void)argv;
 	if (argc != 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "even expects 0 arguments");
 		return 1;
@@ -834,7 +842,7 @@ int handle_function(struct assembler_state *state, char **argv, int argc) {
 		meta->value_length = sizeof(uint32_t);
 		*(uint32_t *)meta->value = 0;
 	}
-	list_t *functions = decode_function_metadata(state->current_area, meta->value, meta->value_length);
+	list_t *functions = decode_function_metadata(state->current_area, meta->value);
 	function_metadata_t *new_function = malloc(sizeof(function_metadata_t));
 
 	new_function->name = malloc(strlen(argv[0]) + 1);
@@ -1097,6 +1105,7 @@ int handle_include(struct assembler_state *state, char **argv, int argc) {
 }
 
 int handle_list(struct assembler_state *state, char **argv, int argc) {
+	(void)argv;
 	if (argc != 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "list expects 0 arguments");
 		return 1;
@@ -1107,6 +1116,9 @@ int handle_list(struct assembler_state *state, char **argv, int argc) {
 }
 
 int handle_map(struct assembler_state *state, char **argv, int argc) {
+	if (argc != 3) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "map expects three arguments");
+	}
 	// .map filename, lineno, code
 	free(((source_map_t *)stack_peek(state->source_map_stack))->file_name);
 	((source_map_t*)stack_peek(state->source_map_stack))->file_name = 
@@ -1156,7 +1168,7 @@ int handle_macro(struct assembler_state *state, char **argv, int argc) {
 				return 1;
 				// TODO: Free everything
 			}
-			else if (end == location && end == ')') {
+			else if (end == location && *end == ')') {
     				// No parameters
     				break;
 			}
@@ -1180,6 +1192,7 @@ int handle_macro(struct assembler_state *state, char **argv, int argc) {
 }
 
 int handle_nolist(struct assembler_state *state, char **argv, int argc) {
+	(void)argv;
 	if (argc != 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "nolist expects 0 arguments");
 		return 1;
@@ -1190,6 +1203,7 @@ int handle_nolist(struct assembler_state *state, char **argv, int argc) {
 }
 
 int handle_odd(struct assembler_state *state, char **argv, int argc) {
+	(void)argv;
 	if (argc != 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "odd expects 0 arguments");
 		return 1;
@@ -1231,6 +1245,8 @@ int handle_org(struct assembler_state *state, char **argv, int argc) {
 }
 
 int handle_optsdcc(struct assembler_state *state, char **argv, int argc) {
+	(void)argv;
+	(void)argc;
 	// For now this is a hack to turn off automatic source maps
 	state->auto_source_maps = false;
 	return 1;
@@ -1310,7 +1326,7 @@ int directive_compare(const void *_a, const void *_b) {
 	return strcasecmp(a->match, b->match);
 }
 
-static struct directive nop = { "!", handle_nop };
+static struct directive nop = { "!", handle_nop, 0 };
 struct directive *find_directive(struct directive dirs[], int l, char *line) {
 	if (line[1] == '!') {
 		return &nop;

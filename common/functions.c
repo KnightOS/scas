@@ -105,7 +105,7 @@ void remove_unused_functions(object_t *object) {
 		area_t *area = object->areas->items[i];
 		metadata_t *meta = get_area_metadata(area, "scas.functions");
 		if (meta) {
-			list_cat(functions, decode_function_metadata(area, meta->value, meta->value_length));
+			list_cat(functions, decode_function_metadata(area, meta->value));
 		}
 	}
 	for (i = 0; i < functions->length; ++i) {
@@ -193,7 +193,7 @@ void remove_unused_functions(object_t *object) {
 	list_free(functions);
 }
 
-list_t *decode_function_metadata(area_t *area, char *value, uint64_t value_length) {
+list_t *decode_function_metadata(area_t *area, char *value) {
 	uint32_t total;
 	list_t *result;
 	total = *(uint32_t *)value;
@@ -201,8 +201,7 @@ list_t *decode_function_metadata(area_t *area, char *value, uint64_t value_lengt
 	result = create_list();
 
 	scas_log(L_DEBUG, "Decoding metadata for %d functions", total);
-	int i;
-	for (i = 0; i < total; ++i) {
+	for (uint32_t i = 0; i < total; ++i) {
 		uint32_t len;
 		function_metadata_t *meta = calloc(1, sizeof(function_metadata_t));
 		meta->area = area;
