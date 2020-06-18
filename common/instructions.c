@@ -309,6 +309,10 @@ void instruction_set_free(instruction_set_t *set) {
 	for (i = 0; i < set->instructions->length; ++i) {
 		instruction_t *inst = set->instructions->items[i];
 		/* TODO: This leaks a few other things */
+		for (int i = 0; i < inst->operands->length; i += 1) {
+			instruction_operand_t *op = (instruction_operand_t*)inst->operands->items[i];
+			free(op->group);
+		}
 		free_flat_list(inst->operands);
 		free_flat_list(inst->immediate);
 		free(inst->match);

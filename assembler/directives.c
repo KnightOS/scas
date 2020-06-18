@@ -373,7 +373,9 @@ int handle_define(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "define expects 1+ arguments");
 	}
+	char *old = argv[0];
 	argv[0] = join_args(argv, argc);
+	free(old);
 	char *location = strchr(argv[0], '(');
 	if (location == argv[0]) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "unnamed macro");
@@ -517,11 +519,9 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 
 		if (error == EXPRESSION_BAD_SYMBOL) {
 			if (scas_runtime.options.explicit_import) {
-				tokenized_expression_t *changed_expression = malloc(sizeof(tokenized_expression_t));
-				memcpy(changed_expression, expression, sizeof(tokenized_expression_t));
 				int ignored_error;
 				char *fixed_symbol;
-				transform_local_labels(changed_expression, state->last_global_label);
+				transform_local_labels(expression, state->last_global_label);
 				evaluate_expression(expression, state->equates, &ignored_error, &fixed_symbol);
 				unresolved_symbol_t *unresolved_sym = malloc(sizeof(unresolved_symbol_t));
 				unresolved_sym->name = malloc(strlen(fixed_symbol) + 1);
@@ -711,7 +711,7 @@ int handle_endif(struct assembler_state *state, char **argv, int argc) {
 		ERROR(ERROR_TRAILING_END, state->column);
 		return 1;
 	}
-	stack_pop(state->if_stack);
+	free(stack_pop(state->if_stack));
 	scas_log(L_DEBUG, "Encountered .endif directive");
 	return 1;
 }
@@ -1400,12 +1400,11 @@ char **split_directive(char *line, int *argc, int delimiter) {
 	char *item = malloc(i - j + 1);
 	strncpy(item, line + j, i - j);
 	item[i - j] = '\0';
-	item = strip_whitespace(item, &_);
 	if (*argc == capacity) {
 		capacity++;
 		parts = realloc(parts, sizeof(char *) * capacity);
 	}
-	parts[*argc] = item;
+	parts[*argc] = strip_whitespace(item, &_);
 	++*argc;
 	return parts;
 }
