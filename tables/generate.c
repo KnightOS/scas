@@ -66,7 +66,7 @@ int main(int argc, const char **argv) {
         goto cleanup;
     }
 
-    if (fprintf(destination, "const char z80_tab[%lu] = {", length) < 0) {
+    if (fprintf(destination, "const char z80_tab[%lu] = {", length + 1) < 0) {
         puts("Failed to print to file!");
         goto cleanup;
     }
