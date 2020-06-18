@@ -584,9 +584,9 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 		.last_relative_label = 0
 	};
 	list_cat(state.macros, settings->macros);
-	int *ln = malloc(sizeof(int)); *ln = 0;
-	char *name = malloc(strlen(file_name) + 1);
-	strcpy(name, file_name);
+	int *ln = malloc(sizeof(int));
+	*ln = 0;
+	char *name = strdup(file_name);
 	stack_push(state.file_name_stack, name);
 	stack_push(state.line_number_stack, ln);
 	stack_push(state.file_stack, file);
@@ -621,6 +621,8 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 					source_map_entry_t *entry = map->entries->items[map->entries->length - 1];
 					entry->length = state.PC - entry->address;
 					if (entry->length == 0) {
+    						free(entry->source_code);
+    						free(entry);
 						list_del(map->entries, map->entries->length - 1);
 					}
 				}
@@ -692,6 +694,19 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 	stack_free(state.file_name_stack);
 	stack_free(state.line_number_stack);
 	list_free(state.extra_lines);
+	for (int i = 0; i < state.macros->length; i += 1) {
+    		macro_t *macro = state.macros->items[i];
+    		list_free(macro->parameters);
+    		free_flat_list(macro->macro_lines);
+    		free(macro);
+	}
+	list_free(state.macros);
+	for (int i = 0; i < state.equates->length; i += 1) {
+    		symbol_t *sym = (symbol_t*)state.equates->items[i];
+    		free(sym->name);
+    		free(sym);
+	}
+	list_free(state.equates);
 	stack_free(state.source_map_stack);
 	free(state.instruction_buffer);
 

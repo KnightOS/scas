@@ -74,6 +74,11 @@ void area_free(area_t *area) {
     		source_map_free((source_map_t*)area->source_map->items[i]);
 	}
 	list_free(area->source_map);
+	for (int i = 0; i < area->symbols->length; i += 1) {
+	    	symbol_t *sym = (symbol_t*)area->symbols->items[i];
+	    	free(sym->name);
+	    	free(sym);
+	}
 	list_free(area->symbols);
 	for (int i = 0; i < area->late_immediates->length; i += 1) {
 		late_immediate_t *imm = (late_immediate_t *)area->late_immediates->items[i];
