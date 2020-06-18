@@ -364,7 +364,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 					unresolved_sym->line = malloc(strlen(state->line) + 1);
 					strcpy(unresolved_sym->line,state->line);
 					const char *file_name = stack_peek(state->file_name_stack);
-					unresolved_sym->file_name = malloc(sizeof(file_name)+1);
+					unresolved_sym->file_name = malloc(strlen(file_name)+1);
 					strcpy(unresolved_sym->file_name,file_name);
 					list_add(state->object->unresolved,unresolved_sym);
 				}
