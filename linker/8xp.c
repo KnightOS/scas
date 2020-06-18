@@ -24,8 +24,7 @@ void write_8xp_header(FILE *f, int data_len) {
 
 	/* Comment */
 	fwrite(comment, sizeof(char), strlen(comment), f);
-	int i;
-	for (i = 0; i < 42 - strlen(comment); ++i) {
+	for (size_t i = 0; i < 42 - strlen(comment); ++i) {
 		fputc(' ', f);
 	}
 
@@ -35,6 +34,7 @@ void write_8xp_header(FILE *f, int data_len) {
 }
 
 void write_8xp_data(FILE *f, uint8_t *data, int len) {
+	(void)data;
 	uint16_t const_1 = 0x000D;
 	write_le16(f, const_1);
 
@@ -52,8 +52,7 @@ void write_8xp_data(FILE *f, uint8_t *data, int len) {
 	/* Variable name */
 	fwrite(scas_runtime.options.prog_name_8xp, sizeof(char),
 		strlen(scas_runtime.options.prog_name_8xp), f);
-	int i;
-	for (i = 0; i < 8 - strlen(scas_runtime.options.prog_name_8xp); ++i) {
+	for (size_t i = 0; i < 8 - strlen(scas_runtime.options.prog_name_8xp); ++i) {
 		fputc('\0', f); /* Pad to 8 chars */
 	}
 

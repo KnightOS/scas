@@ -85,8 +85,7 @@ tokenized_expression_t *fread_tokenized_expression(FILE *f) {
 	fread(&len, sizeof(uint32_t), 1, f);
 	tokenized_expression_t *expression = malloc(sizeof(tokenized_expression_t));
 	expression->tokens = create_list();
-	int i;
-	for (i = 0; i < len; ++i) {
+	for (uint32_t i = 0; i < len; ++i) {
 		expression_token_t *token = malloc(sizeof(expression_token_t));
 		token->type = fgetc(f);
 		switch (token->type) {
@@ -239,8 +238,7 @@ expression_token_t *parse_digit(const char **string) {
 }
 
 expression_token_t *parse_operator(const char **string, int is_unary) {
-	int i;
-	for (i = 0; i < sizeof(operators) / sizeof(operator_t); i++) {
+	for (size_t i = 0; i < sizeof(operators) / sizeof(operator_t); i++) {
 		operator_t op = operators[i];
 		if (op.is_unary == is_unary && strncmp(op.operator, *string, strlen(op.operator)) == 0) {
 			expression_token_t *exp = malloc(sizeof(expression_token_t));
@@ -283,13 +281,13 @@ void free_expression(tokenized_expression_t *expression) {
 
 // Based on shunting-yard
 tokenized_expression_t *parse_expression(const char *str) {
-	char *operator_cache = malloc(sizeof(operators) / sizeof(operator_t) + 1);
-	int i;
-	for (i = 0; i < sizeof(operators) / sizeof(operator_t); i++) {
+	const size_t op_count = sizeof(operators) / sizeof(operator_t);
+	char *operator_cache = malloc(op_count + 1);
+	for (size_t i = 0; i < op_count; i++) {
 		operator_t op = operators[i];
 		operator_cache[i] = op.operator[0];
 	}
-	operator_cache[i] = 0;
+	operator_cache[op_count] = 0;
 
 	int tokenizer_state = STATE_OPERATOR;
 	tokenized_expression_t *list = malloc(sizeof(tokenized_expression_t));

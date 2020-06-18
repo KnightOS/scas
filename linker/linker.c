@@ -87,8 +87,7 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 				}
 			}
 			result = result & mask;
-			int j;
-			for (j = 0; j < imm->width / 8; ++j) {
+			for (size_t j = 0; j < imm->width / 8; ++j) {
 				area->data[imm->address + j] |= (result & 0xFF);
 				result >>= 8;
 			}

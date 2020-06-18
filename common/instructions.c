@@ -128,8 +128,7 @@ bool parse_instruction_line(const char *line, instruction_set_t *set) {
 	inst->immediate = create_list();
 	inst->value = 0;
 	/* Parse match */
-	int i;
-	for (i = 0; i < strlen(inst->match); ++i) {
+	for (size_t i = 0; i < strlen(inst->match); ++i) {
 		if (inst->match[i] == '@') /* Operand */ {
 			char key = inst->match[++i];
 			i += 2; /* Skip key, < */
@@ -193,7 +192,7 @@ bool parse_instruction_line(const char *line, instruction_set_t *set) {
 	while (*value++ != ' ') { }
 	inst->width = 0;
 	int shift = 0;
-	for (i = 0; i < strlen(value); ++i) {
+	for (size_t i = 0; i < strlen(value); ++i) {
 		if (value[i] == ' ' || value[i] == '\t') {
 			continue;
 		}
@@ -240,7 +239,6 @@ bool parse_instruction_line(const char *line, instruction_set_t *set) {
 bool handle_line(char *line, instruction_set_t *result) {
 	int trimmed_start;
 	line = strip_whitespace(line, &trimmed_start);
-	bool return_value;
 	if (line[0] == '\0' || line[0] == '#') {
 		free(line);
 		return true;
@@ -254,6 +252,7 @@ bool handle_line(char *line, instruction_set_t *result) {
 		else {
 			result->arch = malloc(strlen(line) - 4);
 			strcpy(result->arch, line + 5);
+			free(line);
 			return true;
 		}
 	}
@@ -268,6 +267,7 @@ bool handle_line(char *line, instruction_set_t *result) {
 		return val;
 	}
 	fprintf(stderr, "Unrecognized line: %s\n", line);
+	free(line);
 	return false;
 }
 

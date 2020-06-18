@@ -107,6 +107,7 @@ void transform_relative_labels(tokenized_expression_t *expression, int last_rela
 }
 
 int try_empty_line(struct assembler_state *state, char **line) {
+	(void)state;
 	return strlen(*line) == 0;
 }
 
@@ -349,13 +350,13 @@ int try_add_label(struct assembler_state *state, char **line) {
 	} else if (strncmp("_", *line, i) == 0) {
 		const char *fmtstring = "relative@%d";
 		int len = log10_u64(state->last_relative_label);
-		const size = strlen(fmtstring) - 2 + len + 1;
+		const int size = strlen(fmtstring) - 2 + len + 1;
 		sym->name = malloc(size);
 		if (!sym->name) {
 			scas_log(L_ERROR, "OOM");
 			exit(1);
 		}
-		if (snprintf(sym->name, size, fmtstring, state->last_relative_label++) >= size) {
+		if (snprintf(sym->name, size, fmtstring, state->last_relative_label++) != size - 1) {
 			scas_log(L_ERROR, "Unreachable.");
 			exit(1);
 		}
@@ -541,8 +542,7 @@ int try_split_line(struct assembler_state *state, char **line) {
 		"#define",
 		".define"
 	};
-	int i;
-	for (i = 0; i < sizeof(blacklist) / sizeof(char *); ++i) {
+	for (size_t i = 0; i < sizeof(blacklist) / sizeof(char *); ++i) {
 		if (code_strstr(*line, blacklist[i]) == *line) {
 			return 0;
 		}
