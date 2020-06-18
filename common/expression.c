@@ -300,7 +300,8 @@ tokenized_expression_t *parse_expression(const char *str) {
 			break;
 		} else if (isdigit(*current) || *current == '\'') {
 			if (tokenizer_state == STATE_VALUE) {
-				return 0;
+				free(list);
+				list = NULL;
 			}
 
 			expr = parse_digit(&current);
@@ -311,7 +312,8 @@ tokenized_expression_t *parse_expression(const char *str) {
 			tokenizer_state = STATE_VALUE;
 		} else if (*current == '(') {
 			if (tokenizer_state == STATE_VALUE) {
-				return 0;
+				free(list);
+				list = NULL;
 			}
 			expr = malloc(sizeof(expression_token_t));
 			expr->type = OPEN_PARENTHESIS;
@@ -321,7 +323,8 @@ tokenized_expression_t *parse_expression(const char *str) {
 			continue;
 		} else if (*current == ')') {
 			if (stack->length == 0 || tokenizer_state == STATE_OPERATOR) {
-				return 0;
+				free(list);
+				list = NULL;
 			}
 			expr = stack->items[stack->length - 1];
 			while (expr && expr->type != OPEN_PARENTHESIS) {
@@ -330,7 +333,8 @@ tokenized_expression_t *parse_expression(const char *str) {
 
 				if (stack->length <= 0) {
 					expr = 0;
-					return 0;
+					free(list);
+					list = NULL;
 				}
 
 				expr = stack_peek(stack);
@@ -344,12 +348,14 @@ tokenized_expression_t *parse_expression(const char *str) {
 		} else if(strchr(operator_cache, *current)) {
 			expr = parse_operator(&current, tokenizer_state == STATE_OPERATOR);
 			if (expr == 0) {
-				return 0;
+				free(list);
+				list = NULL;
 			}
 			tokenizer_state = STATE_OPERATOR;
 		} else {
 			if (tokenizer_state == STATE_VALUE) {
-				return 0;
+				free(list);
+				list = NULL;
 			}
 			expr = parse_symbol(&current);
 			list_add(list->symbols, expr->symbol);
@@ -357,7 +363,8 @@ tokenized_expression_t *parse_expression(const char *str) {
 		}
 
 		if (!expr) {
-			return 0;
+			free(list);
+			list = NULL;
 		}
 
 		if (expr->type == OPERATOR) {
@@ -384,7 +391,9 @@ tokenized_expression_t *parse_expression(const char *str) {
 		list_add(list->tokens, item);
 	}
 
+exit:
 	stack_free(stack);
 	free(operator_cache);
 	return list;
+
 }
