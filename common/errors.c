@@ -44,10 +44,8 @@ void add_error(list_t *errors, int code, size_t line_number, const char *line,
 	error_t *error = malloc(sizeof(error_t));
 	error->code = code;
 	error->line_number = line_number;
-	error->file_name = malloc(strlen(file_name) + 1);
-	strcpy(error->file_name, file_name);
-	error->line = malloc(strlen(line) + 1);
-	strcpy(error->line, line);
+	error->file_name = strdup(file_name);
+	error->line = strdup(line);
 	error->column = column;
 
 	const char *fmt = get_error_string(error);
@@ -139,7 +137,7 @@ void add_error_from_map(list_t *errors, int code, list_t *maps, uint64_t address
 	error->message = buf;
 	if (found) {
 		error->line_number = entry->line_number;
-		error->file_name = map->file_name;
+		error->file_name = strdup(map->file_name);
 		error->line = strdup(entry->source_code);
 	} else {
 		error->line_number = 0;
