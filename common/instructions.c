@@ -321,8 +321,8 @@ void instruction_set_free(instruction_set_t *set) {
 		for (n = 0; n < group->operands->length; ++n) {
 			operand_t *op = group->operands->items[n];
 			free(op->match);
-			free(op);
 		}
+		free_flat_list(group->operands);
 		free(group->name);
 		free(group);
 	}
