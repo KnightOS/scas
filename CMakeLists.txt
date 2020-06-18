@@ -20,9 +20,9 @@ endif()
 add_executable(generate_tables ${PROJECT_SOURCE_DIR}/tables/generate.c)
 
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c ${CMAKE_BINARY_DIR}/tables/z80.h
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab generate_tables
-    COMMAND generate_tables ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c)
+    COMMAND generate_tables ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c ${CMAKE_BINARY_DIR}/tables/generated.h)
 
 FILE(GLOB common ${PROJECT_SOURCE_DIR}/common/*.c)
 FILE(GLOB assembler ${PROJECT_SOURCE_DIR}/assembler/*.c)
@@ -42,6 +42,7 @@ add_executable(scas
 include_directories(scas
     ${CMAKE_SOURCE_DIR}/include/
     ${CMAKE_SOURCE_DIR}/scas/
+    ${CMAKE_BINARY_DIR}/tables/
 )
 
 add_library(libscas SHARED

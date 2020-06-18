@@ -25,8 +25,8 @@ bool make_containing_folder(const char *const path) {
 }
 
 int main(int argc, const char **argv) {
-    if (argc != 3) {
-        printf("Usage: %s SOURCE DESTINATION\n", argv[0]);
+    if (argc != 4) {
+        printf("Usage: %s SOURCE DESTINATION HEADER\n", argv[0]);
         return 1;
     }
     FILE *source = fopen(argv[1], "rb");
@@ -42,6 +42,13 @@ int main(int argc, const char **argv) {
     if (!destination) {
         perror("Error opening destination file");
         fclose(source);
+        return 1;
+    }
+    FILE *header = fopen(argv[3], "wb");
+    if (!header) {
+        perror("Error opening header file");
+        fclose(source);
+        fclose(destination);
         return 1;
     }
     int return_code = 1;
@@ -70,6 +77,10 @@ int main(int argc, const char **argv) {
         puts("Failed to print to file!");
         goto cleanup;
     }
+    if (fprintf(header, "#ifndef Z80_TABLE\n#define Z80_TABLE\n\nextern const char z80_tab[%lu];\n\n#endif\n", length + 1) < 0) {
+        puts("Failed to write header!");
+        goto cleanup;
+    }
     for (long i = 0; i < length; i++) {
         if (fprintf(destination, "%s0x%02x,", i % 8 == 0 ? "\n\t" : " ", buf[i]) < 0) {
             puts("Failed to print to file!");
@@ -87,8 +98,16 @@ cleanup:
         puts("Failed to flush file!");
         return_code = 1;
     }
+    if (fflush(header) != 0) {
+        puts("Failed to flush header file!");
+        return_code = 1;
+    }
     if (fclose(destination) != 0) {
         puts("Failed to close output file!");
+        return_code = 1;
+    }
+    if (fclose(header) != 0) {
+        puts("Failed to close header file!");
         return_code = 1;
     }
     if (fclose(source) != 0) {
