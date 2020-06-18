@@ -352,6 +352,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 			char *symbol;
 			uint64_t result;
 			tokenized_expression_t *expression = parse_expression(ref->value_provided);
+			bool keep_expression = false;
 			if (expression == NULL) {
 				error = EXPRESSION_BAD_SYNTAX;
 			} else {
@@ -380,6 +381,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 				late_imm->width = imm->width;
 				late_imm->type = imm->type;
 				late_imm->expression = expression;
+				keep_expression = true;
 				list_add(state->current_area->late_immediates, late_imm);
 			} else if (error == EXPRESSION_BAD_SYNTAX) {
 				ERROR(ERROR_INVALID_SYNTAX, state->column);
