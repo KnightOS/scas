@@ -22,5 +22,7 @@ instruction_match_t *match_instruction(instruction_set_t *set, const char *str);
 // first_byte must point to the first byte of the instruction, which must be
 // enclosed within a NULL-terminated buffer.
 instruction_match_t *match_opcode(instruction_set_t *set, char *first_byte);
+// free the memory allocated by one of the two above functions
+void match_free(instruction_match_t *match);
 
 #endif

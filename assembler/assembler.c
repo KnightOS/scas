@@ -431,6 +431,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 		append_to_area(state->current_area, state->instruction_buffer, bytes_width);
 		state->PC += bytes_width;
 		deindent_log();
+		match_free(match);
 	}
 	return 1;
 }
