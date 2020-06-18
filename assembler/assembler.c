@@ -87,20 +87,21 @@ void transform_relative_labels(tokenized_expression_t *expression, int last_rela
 
 		const char *fmtstring = "relative@%d";
 		int len = log10_u64(relative_label);
-		const size_t size = strlen(fmtstring) - 2 + len + 1;
+		const int size = strlen(fmtstring) - 2 + len + 1;
 		token->symbol = malloc(size);
-		if (snprintf(token->symbol, size, fmtstring, relative_label) >= size) {
+		if (snprintf(token->symbol, size, fmtstring, relative_label) != size - 1) {
     			scas_log(L_ERROR, "UNREACHABLE");
     			exit(1);
 		}
+
 		scas_log(L_ERROR, "Transformed relative label with offset %d to %s, %d - %d", offset, token->symbol, i, j);
 		for (int k = 0; k < j - i; k++) {
-			expression_token_t *toremove = expression->tokens->items[i + 1];
+//			expression_token_t *toremove = expression->tokens->items[i];
 			/* these should actually all be OPERATORs
 			if (toremove->type == SYMBOL)
 				free(toremove->symbol); */
-			free(toremove);
-			list_del(expression->tokens, i + 1);
+		//	free(toremove);
+		//	list_del(expression->tokens, i + 1);
 		}
 	}
 }
@@ -487,6 +488,9 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 						result >>= 8;
 					}
 				}
+			}
+			if (!keep_expression && expression) {
+    				free_expression(expression);
 			}
 		}
 		int bytes_width = match->instruction->width / 8;
