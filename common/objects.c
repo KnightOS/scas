@@ -16,19 +16,30 @@ object_t *create_object() {
 	o->exports = create_list();
 	o->imports = create_list();
 	o->unresolved = create_list();
+	o->merged = false;
 	return o;
 }
 
 void object_free(object_t *o) {
+	for (int i = 0; i < o->areas->length; i += 1) {
+    		area_t *area = (area_t*)o->areas->items[i];
+    		if (o->merged) {
+        		merged_area_free(area);
+    		}
+    		else {
+	    		area_free(area);
+    		}
+	}
 	list_free(o->areas);
 	list_free(o->unresolved);
 	list_free(o->imports);
+	list_free(o->exports);
+	free(o);
 }
 
 area_t *create_area(const char *name) {
 	area_t *a = malloc(sizeof(area_t));
-	a->name = malloc(strlen(name) + 1);
-	strcpy(a->name, name);
+	a->name = strdup(name);
 	a->late_immediates = create_list();
 	a->symbols = create_list();
 	a->source_map = create_list();
@@ -38,6 +49,29 @@ area_t *create_area(const char *name) {
 	a->data_capacity = 1024;
 	a->data = malloc(a->data_capacity);
 	return a;
+}
+
+void merged_area_free(area_t *area) {
+	list_free(area->metadata);
+	list_free(area->source_map);
+	list_free(area->symbols);
+	list_free(area->late_immediates);
+	free(area->name);
+	free(area->data);
+	free(area);
+}
+
+void area_free(area_t *area) {
+	list_free(area->metadata);
+	for (int i = 0; i < area->source_map->length; i += 1) {
+    		source_map_free((source_map_t*)area->source_map->items[i]);
+	}
+	list_free(area->source_map);
+	list_free(area->symbols);
+	list_free(area->late_immediates);
+	free(area->name);
+	free(area->data);
+	free(area);
 }
 
 metadata_t *get_area_metadata(area_t *area, const char *key) {
@@ -271,11 +305,21 @@ object_t *freadobj(FILE *f, const char *name) {
 
 source_map_t *create_source_map(area_t *area, const char *file_name) {
 	source_map_t *map = malloc(sizeof(source_map_t));
-	map->file_name = malloc(strlen(file_name) + 1);
-	strcpy(map->file_name, file_name);
+	map->file_name = strdup(file_name);
 	map->entries = create_list();
 	list_add(area->source_map, map);
 	return map;
+}
+
+void source_map_free(source_map_t *map) {
+	for (int i = 0; i < map->entries->length; i += 1) {
+    		source_map_entry_t *entry = (source_map_entry_t*)map->entries->items[i];
+    		free(entry->source_code);
+    		free(entry);
+	}
+	list_free(map->entries);
+	free(map->file_name);
+	free(map);
 }
 
 void add_source_map(source_map_t *map, int line_number, const char *line, uint64_t address, uint64_t length) {
@@ -283,7 +327,6 @@ void add_source_map(source_map_t *map, int line_number, const char *line, uint64
 	entry->line_number = line_number;
 	entry->address = address;
 	entry->length = length;
-	entry->source_code = malloc(strlen(line) + 1);
-	strcpy(entry->source_code, line);
+	entry->source_code = strdup(line);
 	list_add(map->entries, entry);
 }
