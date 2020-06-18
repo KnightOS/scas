@@ -60,6 +60,12 @@ char *get_operand_string(instruction_t *inst, int *i, const char *code, int j) {
 	return res;
 }
 
+void match_free(instruction_match_t *match) {
+    list_free(match->immediate_values);
+    list_free(match->operands);
+    free(match);
+}
+
 instruction_match_t *try_match(instruction_set_t *set, instruction_t *inst, const char *str) {
 	instruction_match_t *result = malloc(sizeof(instruction_match_t));
 	result->operands = create_list();
