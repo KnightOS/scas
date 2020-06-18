@@ -20,8 +20,7 @@ void rename_symbol(area_t *a, const char *original, const char *new) {
 			if (tok->type == SYMBOL) {
 				if (strcasecmp(tok->symbol, original) == 0) {
 					free(tok->symbol);
-					tok->symbol = malloc(strlen(new) + 1);
-					strcpy(tok->symbol, new);
+					tok->symbol = strdup(new);
 				}
 			}
 		}

@@ -732,6 +732,7 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	} else {
 		result = evaluate_expression(expression, state->equates, &error, &symbol);
+		free_expression(expression);
 	}
 	if (error == EXPRESSION_BAD_SYMBOL) {
 		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
@@ -747,7 +748,6 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 		list_add(state->equates, sym);
 		scas_log(L_DEBUG, "Added equate '%s' with value 0x%08X", sym->name, sym->value);
 	}
-	free_expression(expression);
 	return 1;
 }
 
@@ -923,6 +923,7 @@ int handle_if(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	} else {
 		result = evaluate_expression(expression, state->equates, &error, &symbol);
+		free_expression(expression);
 	}
 	if (error == EXPRESSION_BAD_SYNTAX) {
 		ERROR(ERROR_INVALID_SYNTAX, state->column);
@@ -1239,6 +1240,7 @@ int handle_org(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	} else {
 		result = evaluate_expression(expression, state->equates, &error, &symbol);
+		free_expression(expression);
 	}
 	if (error == EXPRESSION_BAD_SYMBOL) {
 		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
