@@ -410,20 +410,17 @@ int handle_define(struct assembler_state *state, char **argv, int argc) {
 		while (*location && !isspace(*location)) ++location;
 		char _ = *location;
 		*location = '\0';
-		define->name = malloc(strlen(argv[0]) + 1);
-		strcpy(define->name, argv[0]);
+		define->name = strdup(argv[0]);
 		*location = _;
 		++location;
 	}
 	if ((strlen(argv[0]) + 1) == (size_t)(location - argv[0])) { /* End of string? */
-		list_add(define->macro_lines, "1"); /* default value is 1 */
+		list_add(define->macro_lines, strdup("1")); /* default value is 1 */
 	} else {
 		while (isspace(*location)) {
 			++location;
 		}
-		char *mlines = malloc(strlen(location) + 1);
-		strcpy(mlines, location);
-		list_add(define->macro_lines, mlines); /* Rest of the line */
+		list_add(define->macro_lines, strdup(location)); /* Rest of the line */
 	}
 
 	list_add(state->macros, define);
@@ -510,6 +507,7 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 		uint64_t result;
 		char *symbol;
 		tokenized_expression_t *expression = parse_expression(argv[i]);
+		bool keep = false;
 
 		if (expression == NULL) {
 			error = EXPRESSION_BAD_SYNTAX;
@@ -545,6 +543,7 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 			late_imm->width = 16;
 			late_imm->type = IMM_TYPE_ABSOLUTE;
 			late_imm->expression = expression;
+			keep = true;
 			list_add(state->current_area->late_immediates, late_imm);
 			state->instruction_buffer[0] = 0;
 			state->instruction_buffer[1] = 0;
@@ -557,6 +556,9 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 				state->instruction_buffer[1] = (uint8_t)(result >> 8);
 				state->instruction_buffer[0] = (uint8_t)(result & 0xFF);
 			}
+		}
+		if (!keep) {
+    			free_expression(expression);
 		}
 		append_to_area(state->current_area, state->instruction_buffer, 2);
 		state->PC += 2;
@@ -769,6 +771,7 @@ int handle_fill(struct assembler_state *state, char **argv, int argc) {
 		};
 		list_add(state->equates, &sym_pc);
 		size = evaluate_expression(expression, state->equates, &error, &symbol);
+		free_expression(expression);
 		list_del(state->equates, state->equates->length - 1); // Remove $
 	}
 	if (error == EXPRESSION_BAD_SYMBOL) {
@@ -792,6 +795,7 @@ int handle_fill(struct assembler_state *state, char **argv, int argc) {
 				};
 				list_add(state->equates, &sym_pc);
 				uint64_t result = evaluate_expression(expression, state->equates, &error, &symbol);
+				free_expression(expression);
 				list_del(state->equates, state->equates->length - 1); // Remove $5
 				if ((result & 0xFF) != result) {
 					ERROR(ERROR_VALUE_TRUNCATED, state->column);
@@ -1435,6 +1439,7 @@ void correct_equates(char **line) {
 		sprintf(new_line, fmtstring, name, *line + space);
 		scas_log(L_DEBUG, "Rewrote '%s' to '%s'", *line, new_line);
 		free(*line);
+		free(name);
 		*line = new_line;
 	}
 }
