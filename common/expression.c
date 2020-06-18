@@ -275,6 +275,12 @@ enum {
 	STATE_OPERATOR,
 };
 
+void free_expression(tokenized_expression_t *expression) {
+    	list_free(expression->tokens);
+    	list_free(expression->symbols);
+    	free(expression);
+}
+
 // Based on shunting-yard
 tokenized_expression_t *parse_expression(const char *str) {
 	char *operator_cache = malloc(sizeof(operators) / sizeof(operator_t) + 1);
