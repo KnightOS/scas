@@ -87,14 +87,13 @@ void transform_relative_labels(tokenized_expression_t *expression, int last_rela
 
 		const char *fmtstring = "relative@%d";
 		int len = log10_u64(relative_label);
-		token->symbol = malloc((strlen(fmtstring) - 2)
-						+ len
-						+ 1);
-		sprintf(token->symbol, fmtstring, relative_label);
-		token->symbol[(strlen(fmtstring) - 2)
-						+ len
-						+ 1] = '\0';
-		scas_log(L_DEBUG, "Transformed relative label with offset %d to %s", offset, token->symbol);
+		const size_t size = strlen(fmtstring) - 2 + len + 1;
+		token->symbol = malloc(size);
+		if (snprintf(token->symbol, size, fmtstring, relative_label) >= size) {
+    			scas_log(L_ERROR, "UNREACHABLE");
+    			exit(1);
+		}
+		scas_log(L_ERROR, "Transformed relative label with offset %d to %s, %d - %d", offset, token->symbol, i, j);
 		for (int k = 0; k < j - i; k++) {
 			expression_token_t *toremove = expression->tokens->items[i + 1];
 			/* these should actually all be OPERATORs
@@ -349,14 +348,16 @@ int try_add_label(struct assembler_state *state, char **line) {
 	} else if (strncmp("_", *line, i) == 0) {
 		const char *fmtstring = "relative@%d";
 		int len = log10_u64(state->last_relative_label);
-		sym->name = malloc((strlen(fmtstring) - 2)
-						+ len
-						+ 1);
-		sprintf(sym->name, fmtstring, state->last_relative_label++);
-		sym->name[(strlen(fmtstring) - 2)
-						+ len
-						+ 1] = '\0';
-
+		const size = strlen(fmtstring) - 2 + len + 1;
+		sym->name = malloc(size);
+		if (!sym->name) {
+			scas_log(L_ERROR, "OOM");
+			exit(1);
+		}
+		if (snprintf(sym->name, size, fmtstring, state->last_relative_label++) >= size) {
+			scas_log(L_ERROR, "Unreachable.");
+			exit(1);
+		}
 		scas_log(L_DEBUG, "Adding relative label %s", sym->name);
 		sym->exported = 0; /* Dont export anonymous labels */
 	} else if (**line == '.') {
