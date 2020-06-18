@@ -1149,12 +1149,12 @@ int handle_macro(struct assembler_state *state, char **argv, int argc) {
 	}
 	char *location = strchr(argv[0], '(');
         
-	if (location == NULL || location == argv[0]) {
+	if (location == argv[0]) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "macro without a name");
 		return 1;
 	}
 
-	if (strchr(location + 1, '(') != NULL) {
+	if (location && strchr(location + 1, '(') != NULL) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "macro contains excess parentheses");
 		return 1;
 	}
