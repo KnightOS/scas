@@ -94,7 +94,7 @@ void transform_relative_labels(tokenized_expression_t *expression, int last_rela
     			exit(1);
 		}
 
-		scas_log(L_ERROR, "Transformed relative label with offset %d to %s, %d - %d", offset, token->symbol, i, j);
+		scas_log(L_DEBUG, "Transformed relative label with offset %d to %s, %d - %d", offset, token->symbol, i, j);
 		for (int k = 0; k < j - i; k++) {
 //			expression_token_t *toremove = expression->tokens->items[i];
 			/* these should actually all be OPERATORs
