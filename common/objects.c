@@ -31,6 +31,13 @@ void object_free(object_t *o) {
     		}
 	}
 	list_free(o->areas);
+	for (int i = 0; i < o->unresolved->length; i += 1) {
+		unresolved_symbol_t *u = (unresolved_symbol_t*)o->unresolved->items[i];
+		free(u->name);
+		free(u->line);
+		free(u->file_name);
+		free(u);
+	}
 	list_free(o->unresolved);
 	list_free(o->imports);
 	list_free(o->exports);
@@ -68,6 +75,11 @@ void area_free(area_t *area) {
 	}
 	list_free(area->source_map);
 	list_free(area->symbols);
+	for (int i = 0; i < area->late_immediates->length; i += 1) {
+		late_immediate_t *imm = (late_immediate_t *)area->late_immediates->items[i];
+    		free_expression(imm->expression);
+    		free(imm);
+	}
 	list_free(area->late_immediates);
 	free(area->name);
 	free(area->data);

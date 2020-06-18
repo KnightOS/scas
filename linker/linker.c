@@ -218,5 +218,6 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	settings->write_output(output, final->data, (int)final->data_length);
 	scas_log(L_DEBUG, "Final binary written: %d bytes", ftell(output));
 	object_free(merged);
+	area_free(final);
 	list_free(symbols);
 }

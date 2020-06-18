@@ -44,8 +44,7 @@ char *strip_whitespace(char *_str, int *trimmed_start) {
 		}
 		_str++;
 	}
-	char *str = malloc(strlen(_str) + 1);
-	strcpy(str, _str);
+	char *str = strdup(_str);
 	free(strold);
 	int i;
 	for (i = 0; str[i] != '\0'; ++i);

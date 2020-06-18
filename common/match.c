@@ -60,9 +60,9 @@ char *get_operand_string(instruction_t *inst, int *i, const char *code, int j) {
 }
 
 void match_free(instruction_match_t *match) {
-    list_free(match->immediate_values);
-    list_free(match->operands);
-    free(match);
+	free_flat_list(match->immediate_values);
+	free_flat_list(match->operands);
+	free(match);
 }
 
 instruction_match_t *try_match(instruction_set_t *set, instruction_t *inst, const char *str) {
@@ -146,6 +146,7 @@ instruction_match_t *try_match(instruction_set_t *set, instruction_t *inst, cons
 			operand_t *op = find_operand(group, value);
 			if (op == NULL) {
 				match = 0;
+				free(value);
 				break;
 			}
 			instruction_operand_t *inst_op = find_instruction_operand(inst, key);
