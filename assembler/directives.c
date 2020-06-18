@@ -978,6 +978,7 @@ int handle_ifndef(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	int *r = malloc(sizeof(int));
+	*r = 0;
 	int i;
 	for (i = 0; !*r && i < state->equates->length; ++i) {
 		symbol_t *sym = state->equates->items[i];
@@ -1123,12 +1124,12 @@ int handle_macro(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	char *location = strchr(argv[0], '(');
-
-	if (location == argv[0]) {
+        
+	if (location == NULL || location == argv[0]) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "macro without a name");
 		return 1;
 	}
-	
+
 	if (strchr(location + 1, '(') != NULL) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "macro contains excess parentheses");
 		return 1;
