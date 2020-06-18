@@ -1151,10 +1151,14 @@ int handle_macro(struct assembler_state *state, char **argv, int argc) {
 				end = strchr(location, ')');
 			}
 
-			if (!end || end == location) {
+			if (!end) {
 				ERROR(ERROR_INVALID_DIRECTIVE, state->column, "unterminated parameter list");
 				return 1;
 				// TODO: Free everything
+			}
+			else if (end == location && end == ')') {
+    				// No parameters
+    				break;
 			}
 			char *parameter = malloc(end - location + 1);
 			strncpy(parameter, location, end - location);
