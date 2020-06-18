@@ -295,7 +295,11 @@ instruction_set_t *load_instruction_set_s(const char *set) {
 	int offset = 0;
 	while (set[offset]) {
 		char *line = read_line_s(set, &offset);
-		handle_line(line, result);
+		if (!handle_line(line, result)) {
+			fprintf(stderr, "Error loading instruction set!\n");
+			instruction_set_free(result);
+			return NULL;
+		}
 	}
 	return result;
 }
