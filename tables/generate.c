@@ -18,8 +18,13 @@ bool make_containing_folder(const char *const path) {
     }
     char *buffer = malloc(last_slash + 1);
     strncpy(buffer, path, last_slash);
-    fprintf(stderr, "Creating %s\n", buffer);
     const int result = mkdir(buffer, S_IRWXU | S_IRWXG | S_IROTH);
+    if (errno == 0) {
+        fprintf(stderr, "Created %s\n", buffer);
+    }
+    else if (errno != EEXIST) {
+        fprintf(stderr, "Failed to create %s\n", buffer);
+    }
     free(buffer);
     return result == 0 || errno == EEXIST;
 }
