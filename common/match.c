@@ -26,9 +26,7 @@ char *get_operand_string(instruction_t *inst, int *i, const char *code, int j) {
 		}
 	}
 	if (delimiter == '\0') {
-		res = malloc(strlen(code + j) + 1);
-		strcpy(res, code + j);
-		return res;
+    		return strdup(code + j);
 	}
 	const char *significant_delimiters = "%@&^";
 	if (strchr(significant_delimiters, delimiter)) {
@@ -60,7 +58,12 @@ char *get_operand_string(instruction_t *inst, int *i, const char *code, int j) {
 }
 
 void match_free(instruction_match_t *match) {
-	free_flat_list(match->immediate_values);
+	for (int i = 0; i < match->immediate_values->length; i += 1) {
+		immediate_ref_t *ref = (immediate_ref_t*)match->immediate_values->items[i];
+		free(ref->value_provided);
+		free(ref);
+	}
+	list_free(match->immediate_values);
 	free_flat_list(match->operands);
 	free(match);
 }

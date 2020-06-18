@@ -140,8 +140,7 @@ void add_error_from_map(list_t *errors, int code, list_t *maps, uint64_t address
 	if (found) {
 		error->line_number = entry->line_number;
 		error->file_name = map->file_name;
-		error->line = malloc(strlen(entry->source_code) + 1);
-		strcpy(error->line, entry->source_code);
+		error->line = strdup(entry->source_code);
 	} else {
 		error->line_number = 0;
 		error->file_name = NULL;

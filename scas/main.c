@@ -322,7 +322,9 @@ int main(int argc, char **argv) {
 			fprintf(stderr, "%s:%d:%d: error #%d: %s\n", error->file_name,
 					(int)error->line_number, (int)error->column, error->code,
 					error->message);
-			fprintf(stderr, "%s\n", error->line);
+			if (error->line) {
+				fprintf(stderr, "%s\n", error->line);
+			}
 			if (error->column != 0) {
 				int j;
 				for (j = error->column; j > 0; --j) {
@@ -332,6 +334,11 @@ int main(int argc, char **argv) {
 			} else {
 				fprintf(stderr, "\n");
 			}
+			if (error->line) {
+    				free (error->line);
+			}
+			free(error->message);
+			free(error);
 		}
 		remove(scas_runtime.output_file);
 	}
