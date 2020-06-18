@@ -750,7 +750,7 @@ int handle_fill(struct assembler_state *state, char **argv, int argc) {
 	}
 	int error;
 	uint16_t size;
-	uint8_t value;
+	uint8_t value = 0;
 	char *symbol;
 	tokenized_expression_t *expression = parse_expression(argv[0]);
 	if (expression == NULL) {
@@ -793,9 +793,6 @@ int handle_fill(struct assembler_state *state, char **argv, int argc) {
 				}
 				value = result & 0xFF;
 			}
-		}
-		else {
-			value = 0;
 		}
 		uint8_t *buffer;
 		if (value != 0) {
