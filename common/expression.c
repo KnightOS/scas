@@ -213,6 +213,7 @@ expression_token_t *parse_digit(const char **string) {
 				expression_token_t *expr = malloc(sizeof(expression_token_t));
 				expr->type = NUMBER;
 				expr->number = (uint64_t)temp[1];
+				free(temp);
 				*string = end + 1;
 				return expr;
 			}

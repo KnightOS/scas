@@ -337,6 +337,7 @@ int main(int argc, char **argv) {
 			if (error->line) {
     				free (error->line);
 			}
+			free(error->file_name);
 			free(error->message);
 			free(error);
 		}

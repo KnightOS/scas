@@ -423,71 +423,65 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 			char *symbol;
 			uint64_t result;
 			tokenized_expression_t *expression = parse_expression(ref->value_provided);
-			bool keep_expression = false;
 			if (expression == NULL) {
-				error = EXPRESSION_BAD_SYNTAX;
+				ERROR(ERROR_INVALID_SYNTAX, state->column);
 			} else {
 				transform_local_labels(expression, state->last_global_label);
 				transform_relative_labels(expression, state->last_relative_label);
 				result = evaluate_expression(expression, state->equates, &error, &symbol);
-			}
-			if (error == EXPRESSION_BAD_SYMBOL) {
-				if (scas_runtime.options.explicit_import && strcmp(symbol, "$") != 0) {
-					unresolved_symbol_t *unresolved_sym = malloc(sizeof(unresolved_symbol_t));
-					unresolved_sym->name = strdup(symbol);
-					unresolved_sym->column = state->column;
-					unresolved_sym->line_number = *(int*)stack_peek(state->line_number_stack);
-					unresolved_sym->line = strdup(state->line);
-					unresolved_sym->file_name = strdup(stack_peek(state->file_name_stack));
-					list_add(state->object->unresolved, unresolved_sym);
-				}
-				scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", ref->value_provided);
-				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
-				late_imm->instruction_address = state->current_area->data_length;
-				late_imm->base_address = state->PC + (match->instruction->width / 8);
-				late_imm->address = state->current_area->data_length + (imm->shift / 8);
-				late_imm->width = imm->width;
-				late_imm->type = imm->type;
-				late_imm->expression = expression;
-				keep_expression = true;
-				list_add(state->current_area->late_immediates, late_imm);
-			} else if (error == EXPRESSION_BAD_SYNTAX) {
-				ERROR(ERROR_INVALID_SYNTAX, state->column);
-			} else {
-				if (imm->type == IMM_TYPE_RELATIVE) {
-					result = result - ((state->PC + scas_runtime.options.origin)
-						+ (match->instruction->width / 8));
-				} else if (imm->type == IMM_TYPE_RESTART) {
-					if ((result & ~0x07) != result || result > 0x38) {
-						/* We get an ERROR_VALUE_TRUNCATED if we just let it proceed */
-					} else {
-						result >>= 3;
+				if (error == EXPRESSION_BAD_SYMBOL) {
+					if (scas_runtime.options.explicit_import && strcmp(symbol, "$") != 0) {
+						unresolved_symbol_t *unresolved_sym = malloc(sizeof(unresolved_symbol_t));
+						unresolved_sym->name = strdup(symbol);
+						unresolved_sym->column = state->column;
+						unresolved_sym->line_number = *(int*)stack_peek(state->line_number_stack);
+						unresolved_sym->line = strdup(state->line);
+						unresolved_sym->file_name = strdup(stack_peek(state->file_name_stack));
+						list_add(state->object->unresolved, unresolved_sym);
 					}
-				}
-				scas_log(L_DEBUG, "Resolved '%s' early with result 0x%08X", ref->value_provided, result);
-				uint64_t mask = 1;
-				int shift = imm->width;
-				while (--shift) {
-					mask <<= 1;
-					mask |= 1;
-				}
-				if ((result & mask) != result && ~result >> imm->width) {
-					ERROR(ERROR_VALUE_TRUNCATED, state->column);
+					scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", ref->value_provided);
+					late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
+					late_imm->instruction_address = state->current_area->data_length;
+					late_imm->base_address = state->PC + (match->instruction->width / 8);
+					late_imm->address = state->current_area->data_length + (imm->shift / 8);
+					late_imm->width = imm->width;
+					late_imm->type = imm->type;
+					late_imm->expression = expression;
+					list_add(state->current_area->late_immediates, late_imm);
 				} else {
-					result = result & mask;
-					int bits = imm->width;
-					while (bits > 0) {
-						bits -= 8;
-						if (bits < 0) {
-							bits = 0;
+    					free_expression(expression);
+					if (imm->type == IMM_TYPE_RELATIVE) {
+						result = result - ((state->PC + scas_runtime.options.origin)
+							+ (match->instruction->width / 8));
+					} else if (imm->type == IMM_TYPE_RESTART) {
+						if ((result & ~0x07) != result || result > 0x38) {
+							/* We get an ERROR_VALUE_TRUNCATED if we just let it proceed */
+						} else {
+							result >>= 3;
 						}
-						instruction |= (result & 0xFF) << (match->instruction->width - imm->shift - imm->width) << bits;
-						result >>= 8;
+					}
+					scas_log(L_DEBUG, "Resolved '%s' early with result 0x%08X", ref->value_provided, result);
+					uint64_t mask = 1;
+					int shift = imm->width;
+					while (--shift) {
+						mask <<= 1;
+						mask |= 1;
+					}
+					if ((result & mask) != result && ~result >> imm->width) {
+						ERROR(ERROR_VALUE_TRUNCATED, state->column);
+					} else {
+						result = result & mask;
+						int bits = imm->width;
+						while (bits > 0) {
+							bits -= 8;
+							if (bits < 0) {
+								bits = 0;
+							}
+							instruction |= (result & 0xFF) << (match->instruction->width - imm->shift - imm->width) << bits;
+							result >>= 8;
+						}
 					}
 				}
-			}
-			if (!keep_expression && expression) {
-    				free_expression(expression);
 			}
 		}
 		int bytes_width = match->instruction->width / 8;
@@ -691,6 +685,7 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 		free(stack_pop(state.if_stack));
 	}
 	stack_free(state.if_stack);
+	stack_free(state.file_stack);
 	stack_free(state.file_name_stack);
 	stack_free(state.line_number_stack);
 	list_free(state.extra_lines);
@@ -698,6 +693,7 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
     		macro_t *macro = state.macros->items[i];
     		list_free(macro->parameters);
     		free_flat_list(macro->macro_lines);
+    		free(macro->name);
     		free(macro);
 	}
 	list_free(state.macros);
