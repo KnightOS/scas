@@ -77,7 +77,7 @@ int main(int argc, const char **argv) {
         }
     }
 
-    if (fwrite("\n};\n", 1, 4, destination) != 4) {
+    if (fwrite("\n\t0,\n};\n", 1, 4, destination) != 4) {
         puts("Failed to write to file!");
         goto cleanup;
     }
