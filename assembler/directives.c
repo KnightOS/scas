@@ -1474,8 +1474,8 @@ int try_handle_directive(struct assembler_state *state, char **line) {
 		indent_log();
 		int ret = d->function(state, argv, argc);
 		deindent_log();
-		while (argc--) {
-			free(argv[argc]);
+		for (int i = 0; i < argc; i += 1) {
+    			free(argv[i]);
 		}
 		free(argv);
 		return ret;
