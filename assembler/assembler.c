@@ -194,6 +194,10 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 			int k;
 			for (k = 0; k < macro->parameters->length; ++k) {
 				char *p = macro->parameters->items[k];
+				if (!strcmp(p, "")) {
+    					scas_log(L_ERROR, "Attempt to insert '%s' where no parameter is expected...", (char*)userparams->items[k]);
+    					break;
+				}
 				scas_log(L_DEBUG, "Replacing '%s' with '%s' for line '%s'", 
 					p, (char *)userparams->items[k], (char *)newlines->items[j]);
 				substitute_parameter((char **)&newlines->items[j], p, (char *)userparams->items[k]);
