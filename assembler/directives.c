@@ -433,6 +433,8 @@ int handle_undef(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 
+	scas_log(L_DEBUG, "Looking for %s", argv[0]);
+
 	int i;
 	for (i = 0; i < state->macros->length; i++) {
 		macro_t *m = state->macros->items[i];

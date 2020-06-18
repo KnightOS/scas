@@ -172,6 +172,9 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 	if (strstr(*line, "macro") == *line + 1) { // Cannot expand macros while defining them
 		return 0;
 	}
+	if (strstr(*line, "undefine") == *line + 1) { // Should not expand while removing
+		return 0;
+	}
 	if (strstr(*line, "ifdef") == *line + 1) { // Should not expand when testing for existence
 		return 0;
 	}
