@@ -108,7 +108,6 @@ uint64_t evaluate_expression(tokenized_expression_t *expression, list_t
 		*symbols, int *error, char **symbol) {
 	stack_type *stack = create_stack();
 	list_t *to_free = create_list();
-	expression_token_t *token;
 	expression_token_t *resolved;
 	operator_t op;
 	uint64_t res = 0;
@@ -158,7 +157,7 @@ uint64_t evaluate_expression(tokenized_expression_t *expression, list_t
 	if (stack->length == 0) {
 		*error = 1;
 	} else {
-		token = stack_pop(stack);
+		expression_token_t *token = stack_pop(stack);
 		if (token->type != NUMBER) {
 			*error = 1;
 		} else {
@@ -279,10 +278,7 @@ void free_expression(tokenized_expression_t *expression) {
         	free_expression_token((expression_token_t*)expression->tokens->items[i]);
     	}
     	list_free(expression->tokens);
-    	for (int i = 0; i < expression->symbols->length; i += 1) {
-        	free_expression_token((expression_token_t*)expression->symbols->items[i]);
-    	}
-    	list_free(expression->symbols);
+    	free_flat_list(expression->symbols);
     	free(expression);
 }
 
@@ -313,7 +309,7 @@ tokenized_expression_t *parse_expression(const char *str) {
 			break;
 		} else if (isdigit(*current) || *current == '\'') {
 			if (tokenizer_state == STATE_VALUE) {
-				free(list);
+				free_expression(list);
 				list = NULL;
 				goto exit;
 			}
@@ -326,7 +322,7 @@ tokenized_expression_t *parse_expression(const char *str) {
 			tokenizer_state = STATE_VALUE;
 		} else if (*current == '(') {
 			if (tokenizer_state == STATE_VALUE) {
-				free(list);
+				free_expression(list);
 				list = NULL;
 				goto exit;
 			}
@@ -338,7 +334,7 @@ tokenized_expression_t *parse_expression(const char *str) {
 			continue;
 		} else if (*current == ')') {
 			if (stack->length == 0 || tokenizer_state == STATE_OPERATOR) {
-				free(list);
+				free_expression(list);
 				list = NULL;
 				goto exit;
 			}
@@ -349,7 +345,7 @@ tokenized_expression_t *parse_expression(const char *str) {
 
 				if (stack->length <= 0) {
 					expr = 0;
-					free(list);
+					free_expression(list);
 					list = NULL;
 					goto exit;
 				}
@@ -365,14 +361,14 @@ tokenized_expression_t *parse_expression(const char *str) {
 		} else if(strchr(operator_cache, *current)) {
 			expr = parse_operator(&current, tokenizer_state == STATE_OPERATOR);
 			if (expr == 0) {
-				free(list);
+				free_expression(list);
 				list = NULL;
 				goto exit;
 			}
 			tokenizer_state = STATE_OPERATOR;
 		} else {
 			if (tokenizer_state == STATE_VALUE) {
-				free(list);
+				free_expression(list);
 				list = NULL;
 				goto exit;
 			}
@@ -382,7 +378,7 @@ tokenized_expression_t *parse_expression(const char *str) {
 		}
 
 		if (!expr) {
-			free(list);
+			free_expression(list);
 			list = NULL;
 			goto exit;
 		}

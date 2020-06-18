@@ -88,6 +88,7 @@ void transform_relative_labels(tokenized_expression_t *expression, int last_rela
 		const char *fmtstring = "relative@%d";
 		int len = log10_u64(relative_label);
 		const int size = strlen(fmtstring) - 2 + len + 1;
+		free(token->symbol);
 		token->symbol = malloc(size);
 		if (snprintf(token->symbol, size, fmtstring, relative_label) != size - 1) {
     			scas_log(L_ERROR, "UNREACHABLE");
