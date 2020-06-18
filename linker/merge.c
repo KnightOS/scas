@@ -89,6 +89,7 @@ void merge_areas(object_t *merged, object_t *source) {
 object_t *merge_objects(list_t *objects) {
 	scas_log(L_INFO, "Merging %d objects into one", objects->length);
 	object_t *merged = create_object();
+	merged->merged = true;
 	int i;
 	for (i = 0; i < objects->length; ++i) {
 		object_t *o = objects->items[i];

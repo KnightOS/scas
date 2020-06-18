@@ -357,6 +357,9 @@ int main(int argc, char **argv) {
 	scas_log(L_DEBUG, "Exiting with status code %d, cleaning up", ret);
 	list_free(scas_runtime.input_files);
 	free_flat_list(include_path);
+	for (int i = 0; i < objects->length; i += 1) {
+    		object_free((object_t*)objects->items[i]);
+	}
 	list_free(objects);
 	list_free(errors);
 	list_free(warnings);
