@@ -155,6 +155,12 @@ void parse_arguments(int argc, char **argv) {
 				list_add(macro->macro_lines, strdup(value));
 				macro->name = strdup(name);
 				list_add(scas_runtime.macros, macro);
+			} else if (argv[i][1] == 'h' || strcmp("--help", argv[i]) == 0) {
+				printf("Usage: scas [options] FILE(s)\n");
+				printf("-c\tassemble only, but do not link\n");
+				printf("-I\tadd directories to the include path\n");
+				printf("More options by reading the manual (man scas)\n");
+				exit(0);
 			} else {
 				scas_abort("Invalid option %s", argv[i]);
 			}
