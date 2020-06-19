@@ -42,7 +42,8 @@ void init_scas_runtime() {
 	scas_runtime.verbosity = L_SILENT;
 
 	scas_runtime.options.explicit_export = false;
-	scas_runtime.options.explicit_import = true;
+	// TODO: reenable
+	scas_runtime.options.explicit_import = false;
 	scas_runtime.options.auto_relocation = false;
 	scas_runtime.options.remove_unused_functions = true;
 	scas_runtime.options.output_format = output_bin;
