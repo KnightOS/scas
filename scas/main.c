@@ -160,7 +160,7 @@ void parse_arguments(int argc, char **argv) {
 				printf("-c\tassemble only, but do not link\n");
 				printf("-I\tadd directories to the include path\n");
 				printf("More options by reading the manual (man scas)\n");
-                exit(0);
+				exit(0);
 			} else {
 				scas_abort("Invalid option %s", argv[i]);
 			}
