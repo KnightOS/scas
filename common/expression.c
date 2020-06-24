@@ -85,6 +85,7 @@ tokenized_expression_t *fread_tokenized_expression(FILE *f) {
 	fread(&len, sizeof(uint32_t), 1, f);
 	tokenized_expression_t *expression = malloc(sizeof(tokenized_expression_t));
 	expression->tokens = create_list();
+	expression->symbols = NULL;
 	for (uint32_t i = 0; i < len; ++i) {
 		expression_token_t *token = malloc(sizeof(expression_token_t));
 		token->type = fgetc(f);
@@ -278,7 +279,9 @@ void free_expression(tokenized_expression_t *expression) {
         	free_expression_token((expression_token_t*)expression->tokens->items[i]);
     	}
     	list_free(expression->tokens);
-    	free_flat_list(expression->symbols);
+    	if (expression->symbols) {
+	    	free_flat_list(expression->symbols);
+    	}
     	free(expression);
 }
 
