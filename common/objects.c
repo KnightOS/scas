@@ -92,8 +92,7 @@ void area_free(area_t *area) {
 }
 
 metadata_t *get_area_metadata(area_t *area, const char *key) {
-	int i;
-	for (i = 0; i < area->metadata->length; ++i) {
+	for (int i = 0; i < area->metadata->length; ++i) {
 		metadata_t *meta = area->metadata->items[i];
 		if (strcmp(meta->key, key) == 0) {
 			return meta;
@@ -269,10 +268,10 @@ area_t *read_area(FILE *f) {
 	scas_log(L_DEBUG, "Reading %d metadata entries", meta_length);
 	for (uint64_t i = 0; i < meta_length; ++i) {
 	scas_log(L_DEBUG, "Reading metadata entry %lld of %lld", i, meta_length);
-
 		metadata_t *meta = malloc(sizeof(metadata_t));
 		meta_key = fgetc(f);
-		meta->key = malloc(meta_key);
+		meta->key = malloc(meta_key + 1);
+		meta->key[meta_key] = 0;
 		fread(meta->key, sizeof(char), meta_key, f);
 		fread(&meta->value_length, sizeof(uint64_t), 1, f);
 		meta->value = malloc(meta->value_length);
