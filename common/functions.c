@@ -103,7 +103,9 @@ void remove_unused_functions(object_t *object) {
 		area_t *area = object->areas->items[i];
 		metadata_t *meta = get_area_metadata(area, "scas.functions");
 		if (meta) {
-			list_cat(functions, decode_function_metadata(area, meta->value));
+    			list_t *decoded = decode_function_metadata(area, meta->value);
+			list_cat(functions, decoded);
+			list_free(decoded);
 		}
 	}
 	for (i = 0; i < functions->length; ++i) {
@@ -113,6 +115,11 @@ void remove_unused_functions(object_t *object) {
 		symbol_t *end = get_symbol_by_name(meta->area, meta->end_symbol);
 		if (!start || !end) {
 			scas_log(L_ERROR, "Warning: function %s has unknown start and end symbols", meta->name);
+	    		function_metadata_t *func = functions->items[i];
+	    		free(func->name);
+	    		free(func->start_symbol);
+	    		free(func->end_symbol);
+	    		free(func);
 			list_del(functions, i);
 			--i;
 		} else {
@@ -150,7 +157,8 @@ void remove_unused_functions(object_t *object) {
 				symbol_t *sym = func->area->symbols->items[k];
 				if (sym->type == SYMBOL_LABEL) {
 					if (sym->value >= func->start_address && sym->value < func->end_address) {
-						list_del(func->area->symbols, k--);
+						list_del(func->area->symbols, k);
+						k -= 1;
 					} else if (sym->value >= func->end_address) {
 						sym->value -= length;
 					}
@@ -172,6 +180,8 @@ void remove_unused_functions(object_t *object) {
 				for (k = 0; k < map->entries->length; ++k) {
 					source_map_entry_t *entry = map->entries->items[k];
 					if (entry->address >= func->start_address && entry->address < func->end_address) {
+						free(entry->source_code);
+						free(entry);
 						list_del(map->entries, k--);
 					} else if (entry->address >= func->end_address) {
 						entry->address -= length;
@@ -186,6 +196,13 @@ void remove_unused_functions(object_t *object) {
 				}
 			}
 		}
+	}
+	for (int i = 0; i < functions->length; i++) {
+    		function_metadata_t *func = functions->items[i];
+    		free(func->name);
+    		free(func->start_symbol);
+    		free(func->end_symbol);
+    		free(func);
 	}
 	list_free(functions);
 }
