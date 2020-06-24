@@ -311,8 +311,17 @@ int main(int argc, char **argv) {
 	} else {
 		scas_log(L_INFO, "Skipping linking - writing to object file");
 		object_t *merged = merge_objects(objects);
-		fwriteobj(out, merged);
-		fflush(out);
+		if (merged) {
+			fwriteobj(out, merged);
+			object_free(merged);
+			fflush(out);
+		}
+		else {
+			scas_log(L_ERROR, "Failed to merge");
+			if (out != stdout) {
+			remove(scas_runtime.output_file);
+		}
+		}
 		fclose(out);
 	}
 	if (errors->length != 0) {
