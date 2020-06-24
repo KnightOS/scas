@@ -22,13 +22,13 @@ object_t *create_object() {
 
 void object_free(object_t *o) {
 	for (int i = 0; i < o->areas->length; i += 1) {
-    		area_t *area = (area_t*)o->areas->items[i];
-    		if (o->merged) {
-        		merged_area_free(area);
-    		}
-    		else {
-	    		area_free(area);
-    		}
+		area_t *area = (area_t*)o->areas->items[i];
+		if (o->merged) {
+		merged_area_free(area);
+		}
+		else {
+			area_free(area);
+		}
 	}
 	list_free(o->areas);
 	for (int i = 0; i < o->unresolved->length; i += 1) {
@@ -71,19 +71,19 @@ void merged_area_free(area_t *area) {
 void area_free(area_t *area) {
 	list_free(area->metadata);
 	for (int i = 0; i < area->source_map->length; i += 1) {
-    		source_map_free((source_map_t*)area->source_map->items[i]);
+		source_map_free((source_map_t*)area->source_map->items[i]);
 	}
 	list_free(area->source_map);
 	for (int i = 0; i < area->symbols->length; i += 1) {
-	    	symbol_t *sym = (symbol_t*)area->symbols->items[i];
-	    	free(sym->name);
-	    	free(sym);
+		symbol_t *sym = (symbol_t*)area->symbols->items[i];
+		free(sym->name);
+		free(sym);
 	}
 	list_free(area->symbols);
 	for (int i = 0; i < area->late_immediates->length; i += 1) {
 		late_immediate_t *imm = (late_immediate_t *)area->late_immediates->items[i];
-    		free_expression(imm->expression);
-    		free(imm);
+		free_expression(imm->expression);
+		free(imm);
 	}
 	list_free(area->late_immediates);
 	free(area->name);
@@ -265,8 +265,11 @@ area_t *read_area(FILE *f) {
 
 	uint64_t meta_length, meta_key;
 	fread(&meta_length, sizeof(uint64_t), 1, f);
+	meta_length = (int)meta_length;
 	scas_log(L_DEBUG, "Reading %d metadata entries", meta_length);
 	for (uint64_t i = 0; i < meta_length; ++i) {
+	scas_log(L_DEBUG, "Reading metadata entry %lld of %lld", i, meta_length);
+
 		metadata_t *meta = malloc(sizeof(metadata_t));
 		meta_key = fgetc(f);
 		meta->key = malloc(meta_key);
@@ -280,14 +283,14 @@ area_t *read_area(FILE *f) {
 
 	uint64_t fileno, lineno;
 	fread(&fileno, sizeof(uint64_t), 1, f);
+	fileno = (int)fileno;
 	for (uint64_t i = 0; i < fileno; ++i) {
 		source_map_t *map = malloc(sizeof(source_map_t));
 		map->file_name = read_line(f);
 		map->entries = create_list();
 		fread(&lineno, sizeof(uint64_t), 1, f);
 		scas_log(L_DEBUG, "Reading source map for '%s', %d entries", map->file_name, lineno);
-		int j;
-		for (j = 0; j < (int)lineno; ++j) {
+		for (int j = 0; j < (int)lineno; ++j) {
 			source_map_entry_t *entry = malloc(sizeof(source_map_entry_t));
 			fread(&entry->line_number, sizeof(uint64_t), 1, f);
 			fread(&entry->address, sizeof(uint64_t), 1, f);
@@ -330,9 +333,9 @@ source_map_t *create_source_map(area_t *area, const char *file_name) {
 
 void source_map_free(source_map_t *map) {
 	for (int i = 0; i < map->entries->length; i += 1) {
-    		source_map_entry_t *entry = (source_map_entry_t*)map->entries->items[i];
-    		free(entry->source_code);
-    		free(entry);
+		source_map_entry_t *entry = (source_map_entry_t*)map->entries->items[i];
+		free(entry->source_code);
+		free(entry);
 	}
 	list_free(map->entries);
 	free(map->file_name);
