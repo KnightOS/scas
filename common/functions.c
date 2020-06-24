@@ -78,11 +78,9 @@ void mark_precious(list_t *functions, late_immediate_t *imm, object_t *object, i
 
 void mark_dependencies_precious(function_metadata_t *parent, list_t *functions, object_t *object) {
 	scas_log(L_DEBUG, "Marking dependencies of %s as precious", parent->name);
-	int i;
-	for (i = 0; i < object->areas->length; ++i) {
+	for (int i = 0; i < object->areas->length; ++i) {
 		area_t *area = object->areas->items[i];
-		int j;
-		for (j = 0; j < area->late_immediates->length; ++j) {
+		for (int j = 0; j < area->late_immediates->length; ++j) {
 			late_immediate_t *imm = area->late_immediates->items[j];
 			if (imm->base_address >= parent->start_address && imm->base_address <= parent->end_address) {
 				mark_precious(functions, imm, object, 1);
@@ -141,7 +139,6 @@ void remove_unused_functions(object_t *object) {
 			mark_dependencies_precious(func, functions, object);
 		}
 	}
-	qsort(functions->items, functions->length, sizeof(function_metadata_t *), compare_functions);
 	for (i = 0; i < functions->length; ++i) {
 		function_metadata_t *func = functions->items[i];
 		if (!func->precious) {
