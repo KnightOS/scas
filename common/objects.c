@@ -114,12 +114,17 @@ metadata_t *get_area_metadata(area_t *area, const char *key) {
 }
 
 void set_area_metadata(area_t *area, const char *key, char *value, uint64_t value_length) {
-	int i;
-	for (i = 0; i < area->metadata->length; ++i) {
+	bool dupe = true;
+	for (int i = 0; i < area->metadata->length; ++i) {
 		metadata_t *meta = area->metadata->items[i];
 		if (strcmp(meta->key, key) == 0) {
     			free(meta->key);
-    			free(meta->value);
+    			if (meta->value != value) {
+    				free(meta->value);
+    			}
+    			else {
+        			dupe = false;
+    			}
     			free(meta);
 			list_del(area->metadata, i);
 			break;
@@ -128,7 +133,12 @@ void set_area_metadata(area_t *area, const char *key, char *value, uint64_t valu
 	metadata_t *newmeta = malloc(sizeof(metadata_t));
 	newmeta->key = strdup(key);
 	newmeta->value_length = value_length;
-	newmeta->value = value;
+	if (dupe) {
+		newmeta->value = strdup(value);
+	}
+	else {
+    		newmeta->value = value;
+	}
 	scas_log(L_DEBUG, "Set area metadata '%s' to new value with length %d", newmeta->key, newmeta->value_length);
 	list_add(area->metadata, newmeta);
 }
@@ -289,7 +299,8 @@ area_t *read_area(FILE *f) {
 		meta->key[meta_key] = 0;
 		fread(meta->key, sizeof(char), meta_key, f);
 		fread(&meta->value_length, sizeof(uint64_t), 1, f);
-		meta->value = malloc(meta->value_length);
+		meta->value = malloc(meta->value_length + 1);
+		meta->value[meta->value_length] = 0;
 		fread(meta->value, sizeof(char), meta->value_length, f);
 		list_add(area->metadata, meta);
 		scas_log(L_DEBUG, "Read metadata %s with value length %d", meta->key, meta->value_length);

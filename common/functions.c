@@ -209,12 +209,16 @@ void remove_unused_functions(object_t *object) {
 
 list_t *decode_function_metadata(area_t *area, char *value) {
 	uint32_t total;
-	list_t *result;
+	list_t *result = create_list();
 	total = *(uint32_t *)value;
 	value += sizeof(uint32_t);
-	result = create_list();
 
-	scas_log(L_DEBUG, "Decoding metadata for %d functions", total);
+	if (total > 10000) {
+		scas_log(L_ERROR, "More than 10,000 functions detected. This is probably an internal error.");
+		list_free(result);
+		return NULL;
+	}
+	scas_log(L_DEBUG, "Decoding metadata for %d functions", (int)total);
 	for (uint32_t i = 0; i < total; ++i) {
 		uint32_t len;
 		function_metadata_t *meta = calloc(1, sizeof(function_metadata_t));

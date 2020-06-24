@@ -51,7 +51,7 @@ void relocate_area(area_t *area, uint64_t address, bool immediates) {
 	}
 }
 
-void merge_areas(object_t *merged, object_t *source) {
+bool merge_areas(object_t *merged, object_t *source) {
 	int i;
 	for (i = 0; i < source->areas->length; ++i) {
 		area_t *source_area = source->areas->items[i];
@@ -71,11 +71,18 @@ void merge_areas(object_t *merged, object_t *source) {
 		metadata_t *old_functions = get_area_metadata(merged_area, "scas.functions");
 		if (new_functions) {
 			list_t *decoded = decode_function_metadata(source_area, new_functions->value);
+			if (!decoded) {
+				return false;
+			}
 			list_t *merged;
 			if (old_functions) {
 				merged = decode_function_metadata(source_area, old_functions->value);
 			} else {
 				merged = create_list();
+			}
+			if (!merged) {
+				list_free(decoded);
+				return false;
 			}
 			list_cat(merged, decoded);
 			list_free(decoded);
@@ -89,9 +96,11 @@ void merge_areas(object_t *merged, object_t *source) {
 			}
 	    		free_flat_list(merged);
 			set_area_metadata(merged_area, "scas.functions", merged_metadata, len);
+			free(merged_metadata);
 		}
 		list_cat(merged_area->source_map, source_area->source_map);
 	}
+	return true;
 }
 
 object_t *merge_objects(list_t *objects) {
@@ -102,7 +111,10 @@ object_t *merge_objects(list_t *objects) {
 	for (i = 0; i < objects->length; ++i) {
 		object_t *o = objects->items[i];
 		scas_log(L_DEBUG, "Merging object %d", i);
-		merge_areas(merged, o);
+		if (!merge_areas(merged, o)) {
+			object_free(merged);
+			return NULL;
+		}
 	}
 	return merged;
 }
