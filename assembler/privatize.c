@@ -32,23 +32,20 @@ void rename_symbol(area_t *a, const char *original, const char *new) {
 			function_metadata_t *func = functions->items[i];
 			if (strcasecmp(func->name, original) == 0) {
 				free(func->name);
-				func->name = malloc(strlen(new) + 1);
-				strcpy(func->name, new);
+				func->name = strdup(new);
 			}
 			if (strcasecmp(func->start_symbol, original) == 0) {
 				free(func->start_symbol);
-				func->start_symbol = malloc(strlen(new) + 1);
-				strcpy(func->start_symbol, new);
+				func->start_symbol = strdup(new);
 			}
 			if (strcasecmp(func->end_symbol, original) == 0) {
 				free(func->end_symbol);
-				func->end_symbol = malloc(strlen(new) + 1);
-				strcpy(func->end_symbol, new);
+				func->end_symbol = strdup(new);
 			}
 		}
-		meta->value = encode_function_metadata(functions, &meta->value_length);
+		char *value = encode_function_metadata(functions, &meta->value_length);
 		list_free(functions);
-		set_area_metadata(a, "scas.functions", meta->value, meta->value_length);
+		set_area_metadata(a, "scas.functions", value, meta->value_length);
 	}
 }
 
@@ -89,12 +86,11 @@ void privatize_area(object_t *o, area_t *a, list_t *exports) {
 				1 +
 				strlen(checksum) +
 				1);
-			strcpy(new_name, s->name);
-			strcat(new_name, "@");
-			strcat(new_name, checksum);
+			char *marker = strcpy(new_name, s->name);
+			marker = strcat(marker, "@");
+			marker = strcat(marker, checksum);
 			scas_log(L_DEBUG, "Renaming private symbol '%s' to '%s'", s->name, new_name);
-			int j;
-			for (j = 0; j < o->areas->length; ++j) {
+			for (int j = 0; j < o->areas->length; ++j) {
 				area_t *_a = o->areas->items[j];
 				rename_symbol(_a, s->name, new_name);
 			}
