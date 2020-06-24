@@ -24,7 +24,7 @@ void object_free(object_t *o) {
 	for (int i = 0; i < o->areas->length; i += 1) {
 		area_t *area = (area_t*)o->areas->items[i];
 		if (o->merged) {
-		merged_area_free(area);
+			merged_area_free(area);
 		}
 		else {
 			area_free(area);
@@ -59,6 +59,12 @@ area_t *create_area(const char *name) {
 }
 
 void merged_area_free(area_t *area) {
+	for (int i = 0; i < area->metadata->length; ++i) {
+		metadata_t *meta = area->metadata->items[i];
+		free(meta->key);
+		free(meta->value);
+		free(meta);
+	}
 	list_free(area->metadata);
 	list_free(area->source_map);
 	list_free(area->symbols);
@@ -69,6 +75,12 @@ void merged_area_free(area_t *area) {
 }
 
 void area_free(area_t *area) {
+	for (int i = 0; i < area->metadata->length; ++i) {
+		metadata_t *meta = area->metadata->items[i];
+		free(meta->key);
+		free(meta->value);
+		free(meta);
+	}
 	list_free(area->metadata);
 	for (int i = 0; i < area->source_map->length; i += 1) {
 		source_map_free((source_map_t*)area->source_map->items[i]);
@@ -106,13 +118,15 @@ void set_area_metadata(area_t *area, const char *key, char *value, uint64_t valu
 	for (i = 0; i < area->metadata->length; ++i) {
 		metadata_t *meta = area->metadata->items[i];
 		if (strcmp(meta->key, key) == 0) {
+    			free(meta->key);
+    			free(meta->value);
+    			free(meta);
 			list_del(area->metadata, i);
 			break;
 		}
 	}
 	metadata_t *newmeta = malloc(sizeof(metadata_t));
-	newmeta->key = malloc(strlen(key) + 1);
-	strcpy(newmeta->key, key);
+	newmeta->key = strdup(key);
 	newmeta->value_length = value_length;
 	newmeta->value = value;
 	scas_log(L_DEBUG, "Set area metadata '%s' to new value with length %d", newmeta->key, newmeta->value_length);
@@ -227,6 +241,7 @@ area_t *read_area(FILE *f) {
 	char *name = read_line(f);
 	area_t *area = create_area(name);
 	scas_log(L_DEBUG, "Reading area '%s' from file", name);
+	free(name);
 	uint32_t symbols, immediates;
 	fread(&symbols, sizeof(uint32_t), 1, f);
 	uint32_t len;
