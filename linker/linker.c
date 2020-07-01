@@ -160,14 +160,13 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	list_t *symbols = create_list(); // TODO: Use a hash table
 
 	/* Create a new area for relocatable references */
-	area_t *runtime;
+	area_t *runtime = NULL;
 	if (settings->automatic_relocation) {
 		const char *sym_name = "__scas_relocatable_data";
 		runtime = create_area("__scas_relocatable");
 		symbol_t *sym = malloc(sizeof(symbol_t));
 		sym->type = SYMBOL_LABEL;
-		sym->name = malloc(strlen(sym_name) + 1);
-		strcpy(sym->name, sym_name);
+		sym->name = strdup(sym_name);
 		sym->value = 0;
 		sym->defined_address = 0;
 		sym->exported = 0;
@@ -178,6 +177,11 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	}
 
 	object_t *merged = merge_objects(objects);
+	if (!merged) {
+		list_free(symbols);
+		return;
+	}
+
 	area_t *final = create_area("FINAL");
 
 	runtime = get_area_by_name(merged, "__scas_relocatable");
