@@ -114,8 +114,7 @@ uint64_t evaluate_expression(tokenized_expression_t *expression, list_t
 	uint64_t res = 0;
 	*error = 0;
 
-	int i;
-	for (i = 0; i < expression->tokens->length; ++i) {
+	for (int i = 0; i < expression->tokens->length; ++i) {
 		expression_token_t *token = expression->tokens->items[i];
 		switch (token->type) {
 			case SYMBOL:
@@ -123,13 +122,12 @@ uint64_t evaluate_expression(tokenized_expression_t *expression, list_t
 				resolved->type = NUMBER;
 				resolved->number = 0;
 
-				int found = 0;
-				int j;
-				for (j = 0; j < symbols->length; ++j) {
+				bool found = false;
+				for (int j = 0; j < symbols->length; ++j) {
 					symbol_t *sym = symbols->items[j];
 					if (strcasecmp(sym->name, token->symbol) == 0) {
 						resolved->number = sym->value;
-						found = 1;
+						found = true;
 						break;
 					}
 				}
