@@ -280,7 +280,7 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 			append_to_area(state->current_area, state->instruction_buffer, 1);
 			++state->PC;
 			if (!keep) {
-	    			free_expression(expression);
+				free_expression(expression);
 			}
 		}
 	}
@@ -558,7 +558,7 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 			}
 		}
 		if (!keep) {
-    			free_expression(expression);
+			free_expression(expression);
 		}
 		append_to_area(state->current_area, state->instruction_buffer, 2);
 		state->PC += 2;
@@ -1177,8 +1177,8 @@ int handle_macro(struct assembler_state *state, char **argv, int argc) {
 				// TODO: Free everything
 			}
 			else if (end == location && *end == ')') {
-    				// No parameters
-    				break;
+				// No parameters
+				break;
 			}
 			char *parameter = malloc(end - location + 1);
 			strncpy(parameter, location, end - location);
@@ -1476,7 +1476,7 @@ int try_handle_directive(struct assembler_state *state, char **line) {
 		int ret = d->function(state, argv, argc);
 		deindent_log();
 		for (int i = 0; i < argc; i += 1) {
-    			free(argv[i]);
+			free(argv[i]);
 		}
 		free(argv);
 		return ret;

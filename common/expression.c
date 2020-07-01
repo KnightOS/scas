@@ -275,14 +275,14 @@ enum {
 };
 
 void free_expression(tokenized_expression_t *expression) {
-    	for (int i = 0; i < expression->tokens->length; i += 1) {
-        	free_expression_token((expression_token_t*)expression->tokens->items[i]);
-    	}
-    	list_free(expression->tokens);
-    	if (expression->symbols) {
-	    	free_flat_list(expression->symbols);
-    	}
-    	free(expression);
+	for (int i = 0; i < expression->tokens->length; i += 1) {
+		free_expression_token((expression_token_t*)expression->tokens->items[i]);
+	}
+	list_free(expression->tokens);
+	if (expression->symbols) {
+		free_flat_list(expression->symbols);
+	}
+	free(expression);
 }
 
 // Based on shunting-yard

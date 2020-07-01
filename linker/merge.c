@@ -89,12 +89,12 @@ bool merge_areas(object_t *merged, object_t *source) {
 			uint64_t len;
 			char *merged_metadata = encode_function_metadata(merged, &len);
 			for (int i = 0; i < merged->length; i++) {
-    				function_metadata_t *func = merged->items[i];
-	    			free(func->name);
-	    			free(func->start_symbol);
-	    			free(func->end_symbol);
+				function_metadata_t *func = merged->items[i];
+				free(func->name);
+				free(func->start_symbol);
+				free(func->end_symbol);
 			}
-	    		free_flat_list(merged);
+			free_flat_list(merged);
 			set_area_metadata(merged_area, "scas.functions", merged_metadata, len);
 			free(merged_metadata);
 		}
