@@ -134,7 +134,8 @@ void set_area_metadata(area_t *area, const char *key, char *value, uint64_t valu
 	newmeta->key = strdup(key);
 	newmeta->value_length = value_length;
 	if (dupe) {
-		newmeta->value = strdup(value);
+		newmeta->value = malloc(value_length);
+		memcpy(newmeta->value, value, value_length);
 	}
 	else {
 		newmeta->value = value;

@@ -52,8 +52,7 @@ void relocate_area(area_t *area, uint64_t address, bool immediates) {
 }
 
 bool merge_areas(object_t *merged, object_t *source) {
-	int i;
-	for (i = 0; i < source->areas->length; ++i) {
+	for (int i = 0; i < source->areas->length; ++i) {
 		area_t *source_area = source->areas->items[i];
 		area_t *merged_area = get_area_by_name(merged, source_area->name);
 		if (merged_area == NULL) {
