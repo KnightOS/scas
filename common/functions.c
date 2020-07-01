@@ -103,7 +103,7 @@ void remove_unused_functions(object_t *object) {
 		area_t *area = object->areas->items[i];
 		metadata_t *meta = get_area_metadata(area, "scas.functions");
 		if (meta) {
-    			list_t *decoded = decode_function_metadata(area, meta->value);
+			list_t *decoded = decode_function_metadata(area, meta->value);
 			list_cat(functions, decoded);
 			list_free(decoded);
 		}
@@ -115,11 +115,11 @@ void remove_unused_functions(object_t *object) {
 		symbol_t *end = get_symbol_by_name(meta->area, meta->end_symbol);
 		if (!start || !end) {
 			scas_log(L_ERROR, "Warning: function %s has unknown start and end symbols", meta->name);
-	    		function_metadata_t *func = functions->items[i];
-	    		free(func->name);
-	    		free(func->start_symbol);
-	    		free(func->end_symbol);
-	    		free(func);
+			function_metadata_t *func = functions->items[i];
+			free(func->name);
+			free(func->start_symbol);
+			free(func->end_symbol);
+			free(func);
 			list_del(functions, i);
 			--i;
 		} else {
@@ -198,11 +198,11 @@ void remove_unused_functions(object_t *object) {
 		}
 	}
 	for (int i = 0; i < functions->length; i++) {
-    		function_metadata_t *func = functions->items[i];
-    		free(func->name);
-    		free(func->start_symbol);
-    		free(func->end_symbol);
-    		free(func);
+		function_metadata_t *func = functions->items[i];
+		free(func->name);
+		free(func->start_symbol);
+		free(func->end_symbol);
+		free(func);
 	}
 	list_free(functions);
 }
