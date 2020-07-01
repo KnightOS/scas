@@ -287,9 +287,9 @@ int main(int argc, char **argv) {
 		out = stdout;
 	} else {
 		out = fopen(scas_runtime.output_file, "w+");
-	}
-	if (!out) {
-		scas_abort("Unable to open '%s' for output.", scas_runtime.output_file);
+		if (!out) {
+			scas_abort("Unable to open '%s' for output.", scas_runtime.output_file);
+		}
 	}
 
 	if ((scas_runtime.jobs & LINK) == LINK) {
