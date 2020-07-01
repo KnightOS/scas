@@ -250,8 +250,7 @@ bool handle_line(char *line, instruction_set_t *result) {
 			return false;
 		}
 		else {
-			result->arch = malloc(strlen(line) - 4);
-			strcpy(result->arch, line + 5);
+			result->arch = strdup(line + 5);
 			free(line);
 			return true;
 		}
