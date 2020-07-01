@@ -118,14 +118,14 @@ void set_area_metadata(area_t *area, const char *key, char *value, uint64_t valu
 	for (int i = 0; i < area->metadata->length; ++i) {
 		metadata_t *meta = area->metadata->items[i];
 		if (strcmp(meta->key, key) == 0) {
-    			free(meta->key);
-    			if (meta->value != value) {
-    				free(meta->value);
-    			}
-    			else {
-        			dupe = false;
-    			}
-    			free(meta);
+			free(meta->key);
+			if (meta->value != value) {
+				free(meta->value);
+			}
+			else {
+				dupe = false;
+			}
+			free(meta);
 			list_del(area->metadata, i);
 			break;
 		}
@@ -137,7 +137,7 @@ void set_area_metadata(area_t *area, const char *key, char *value, uint64_t valu
 		newmeta->value = strdup(value);
 	}
 	else {
-    		newmeta->value = value;
+		newmeta->value = value;
 	}
 	scas_log(L_DEBUG, "Set area metadata '%s' to new value with length %d", newmeta->key, newmeta->value_length);
 	list_add(area->metadata, newmeta);

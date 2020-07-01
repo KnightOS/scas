@@ -91,8 +91,8 @@ void transform_relative_labels(tokenized_expression_t *expression, int last_rela
 		free(token->symbol);
 		token->symbol = malloc(size);
 		if (snprintf(token->symbol, size, fmtstring, relative_label) != size - 1) {
-    			scas_log(L_ERROR, "UNREACHABLE");
-    			exit(1);
+			scas_log(L_ERROR, "UNREACHABLE");
+			exit(1);
 		}
 
 		scas_log(L_DEBUG, "Transformed relative label with offset %d to %s, %d - %d", offset, token->symbol, i, j);
@@ -242,8 +242,8 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 			for (k = 0; k < macro->parameters->length; ++k) {
 				char *p = macro->parameters->items[k];
 				if (!strcmp(p, "")) {
-    					scas_log(L_ERROR, "Attempt to insert '%s' where no parameter is expected...", (char*)userparams->items[k]);
-    					break;
+					scas_log(L_ERROR, "Attempt to insert '%s' where no parameter is expected...", (char*)userparams->items[k]);
+					break;
 				}
 				scas_log(L_DEBUG, "Replacing '%s' with '%s' for line '%s'", 
 					p, (char *)userparams->items[k], (char *)newlines->items[j]);
@@ -450,7 +450,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 					late_imm->expression = expression;
 					list_add(state->current_area->late_immediates, late_imm);
 				} else {
-    					free_expression(expression);
+					free_expression(expression);
 					if (imm->type == IMM_TYPE_RELATIVE) {
 						result = result - ((state->PC + scas_runtime.options.origin)
 							+ (match->instruction->width / 8));
@@ -616,8 +616,8 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 					source_map_entry_t *entry = map->entries->items[map->entries->length - 1];
 					entry->length = state.PC - entry->address;
 					if (entry->length == 0) {
-    						free(entry->source_code);
-    						free(entry);
+						free(entry->source_code);
+						free(entry);
 						list_del(map->entries, map->entries->length - 1);
 					}
 				}
@@ -691,17 +691,17 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 	stack_free(state.line_number_stack);
 	list_free(state.extra_lines);
 	for (int i = 0; i < state.macros->length; i += 1) {
-    		macro_t *macro = state.macros->items[i];
-    		list_free(macro->parameters);
-    		free_flat_list(macro->macro_lines);
-    		free(macro->name);
-    		free(macro);
+		macro_t *macro = state.macros->items[i];
+		list_free(macro->parameters);
+		free_flat_list(macro->macro_lines);
+		free(macro->name);
+		free(macro);
 	}
 	list_free(state.macros);
 	for (int i = 0; i < state.equates->length; i += 1) {
-    		symbol_t *sym = (symbol_t*)state.equates->items[i];
-    		free(sym->name);
-    		free(sym);
+		symbol_t *sym = (symbol_t*)state.equates->items[i];
+		free(sym->name);
+		free(sym);
 	}
 	list_free(state.equates);
 	stack_free(state.source_map_stack);

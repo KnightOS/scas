@@ -26,7 +26,7 @@ char *get_operand_string(instruction_t *inst, int *i, const char *code, int j) {
 		}
 	}
 	if (delimiter == '\0') {
-    		return strdup(code + j);
+		return strdup(code + j);
 	}
 	const char *significant_delimiters = "%@&^";
 	if (strchr(significant_delimiters, delimiter)) {

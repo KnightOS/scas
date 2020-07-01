@@ -229,8 +229,8 @@ int main(int argc, char **argv) {
 	validate_scas_runtime();
 	instruction_set_t *instruction_set = find_inst();
 	if (instruction_set == NULL) {
-    		fprintf(stderr, "Failed to load instruction set definition, unable to continue!\n");
-    		return 1;
+		fprintf(stderr, "Failed to load instruction set definition, unable to continue!\n");
+		return 1;
 	}
 	scas_log(L_INFO, "Loaded instruction set: %s", instruction_set->arch);
 	list_t *include_path = split_include_path();
@@ -319,8 +319,8 @@ int main(int argc, char **argv) {
 		else {
 			scas_log(L_ERROR, "Failed to merge");
 			if (out != stdout) {
-			remove(scas_runtime.output_file);
-		}
+				remove(scas_runtime.output_file);
+			}
 		}
 		fclose(out);
 	}
@@ -344,7 +344,7 @@ int main(int argc, char **argv) {
 				fprintf(stderr, "\n");
 			}
 			if (error->line) {
-    				free (error->line);
+				free (error->line);
 			}
 			free(error->file_name);
 			free(error->message);
@@ -375,7 +375,7 @@ int main(int argc, char **argv) {
 	list_free(scas_runtime.input_files);
 	free_flat_list(include_path);
 	for (int i = 0; i < objects->length; i += 1) {
-    		object_free((object_t*)objects->items[i]);
+		object_free((object_t*)objects->items[i]);
 	}
 	list_free(objects);
 	list_free(errors);
