@@ -685,9 +685,22 @@ int handle_else(struct assembler_state *state, char **argv, int argc) {
 		ERROR_NO_ARG(ERROR_TRAILING_END, state->column);
 		return 1;
 	}
-	int *top = stack_peek(state->if_stack);
-	*top = !*top;
-	scas_log(L_DEBUG, "Inverted if state (now %d) from else directive", *top);
+	bool nested_false = false;
+	for (int i = 0; i < state->if_stack->length - 1; i++) {
+		int *conditional = state->if_stack->items[i];
+		if (!*conditional) {
+		nested_false = true;
+		break;
+		}
+	}
+	if (nested_false) {
+		scas_log(L_DEBUG, "Ignoring else within falsy if directive");
+	}
+	else {
+		int *top = stack_peek(state->if_stack);
+		*top = !*top;
+		scas_log(L_DEBUG, "Inverted if state (now %d) from else directive", *top);
+	}
 	return 1;
 }
 
@@ -1148,7 +1161,7 @@ int handle_macro(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	char *location = strchr(argv[0], '(');
-        
+
 	if (location == argv[0]) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "macro without a name");
 		return 1;
