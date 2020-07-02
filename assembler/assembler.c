@@ -633,13 +633,12 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 			strcpy(state.line, line);
 			line = strip_comments(line);
 			line = strip_whitespace(line, &state.column);
-			int i;
 			int l = sizeof(line_ops) / sizeof(void*);
 			if (state.nolist || (state.if_stack->length && !*(int*)stack_peek(state.if_stack))) {
 				l = sizeof(nolist_line_ops) / sizeof(void*);
 			}
 			scas_log(L_DEBUG, "Assembler handling line '%s'", line);
-			for (i = 0; i < l; ++i) {
+			for (int i = 0; i < l; ++i) {
 				int res;
 				if (state.nolist || (state.if_stack->length && !*(int*)stack_peek(state.if_stack))) {
 					res = nolist_line_ops[i](&state, &line);
