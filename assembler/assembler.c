@@ -425,7 +425,9 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 			uint64_t result;
 			tokenized_expression_t *expression = parse_expression(ref->value_provided);
 			if (expression == NULL) {
-				ERROR(ERROR_INVALID_SYNTAX, state->column);
+				add_error(state->errors, ERROR_INVALID_SYNTAX,
+					*(int*)stack_peek(state->line_number_stack),
+					state->line, state->column, stack_peek(state->file_name_stack));
 			} else {
 				transform_local_labels(expression, state->last_global_label);
 				transform_relative_labels(expression, state->last_relative_label);
@@ -469,7 +471,9 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 						mask |= 1;
 					}
 					if ((result & mask) != result && ~result >> imm->width) {
-						ERROR(ERROR_VALUE_TRUNCATED, state->column);
+						add_error(state->errors, ERROR_VALUE_TRUNCATED,
+							*(int*)stack_peek(state->line_number_stack),
+							state->line, state->column, stack_peek(state->file_name_stack));
 					} else {
 						result = result & mask;
 						int bits = imm->width;

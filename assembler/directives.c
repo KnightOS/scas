@@ -23,6 +23,10 @@
 		*(int*)stack_peek(state->line_number_stack), \
 		state->line, COLUMN, stack_peek(state->file_name_stack) , ##__VA_ARGS__);
 
+#define ERROR_NO_ARG(ERROR_CODE, COLUMN) add_error(state->errors, ERROR_CODE, \
+		*(int*)stack_peek(state->line_number_stack), \
+		state->line, COLUMN, stack_peek(state->file_name_stack));
+
 #define WARN(WARN_CODE, COLUMN, ...) add_warning(state->warnings, WARN_CODE, \
 		*(int*)stack_peek(state->line_number_stack), \
 		state->line, COLUMN, stack_peek(state->file_name_stack) , ##__VA_ARGS__);
@@ -113,7 +117,7 @@ int handle_asciip(struct assembler_state *state, char **argv, int argc) {
 		uint8_t _len = len;
 		if (_len != len) {
 			/* Would it be obvious that this is because the string is too long? */
-			ERROR(ERROR_VALUE_TRUNCATED, state->column);
+			ERROR_NO_ARG(ERROR_VALUE_TRUNCATED, state->column);
 		}
 		MAP_SOURCE(len + 1);
 		append_to_area(state->current_area, &_len, sizeof(uint8_t));
@@ -147,7 +151,7 @@ int handle_block(struct assembler_state *state, char **argv, int argc) {
 	if (error == EXPRESSION_BAD_SYMBOL) {
 		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
 	} else if (error == EXPRESSION_BAD_SYNTAX) {
-		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 	} else {
 		uint8_t *buffer = calloc(256, sizeof(uint8_t));
 		MAP_SOURCE(result);
@@ -182,7 +186,7 @@ int handle_bndry(struct assembler_state *state, char **argv, int argc) {
 	if (error == EXPRESSION_BAD_SYMBOL) {
 		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
 	} else if (error == EXPRESSION_BAD_SYNTAX) {
-		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 	} else {
 		if (state->PC % result != 0) {
 			uint8_t *buf = calloc(1024, sizeof(uint8_t));
@@ -268,10 +272,10 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 				list_add(state->current_area->late_immediates, late_imm);
 				*state->instruction_buffer = 0;
 			} else if (error == EXPRESSION_BAD_SYNTAX) {
-				ERROR(ERROR_INVALID_SYNTAX, state->column);
+				ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 			} else {
 				if ((result & 0xFF) != result && ~result >> 8) {
-					ERROR(ERROR_VALUE_TRUNCATED, state->column);
+					ERROR_NO_ARG(ERROR_VALUE_TRUNCATED, state->column);
 				} else {
 					*state->instruction_buffer = (uint8_t)result;
 				}
@@ -345,10 +349,10 @@ int handle_dl(struct assembler_state *state, char **argv, int argc) {
 			state->instruction_buffer[2] = 0;
 			state->instruction_buffer[3] = 0;
 		} else if (error == EXPRESSION_BAD_SYNTAX) {
-			ERROR(ERROR_INVALID_SYNTAX, state->column);
+			ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 		} else {
 			if ((result & 0xFFFFFFFF) != result && ~result >> 32) {
-				ERROR(ERROR_VALUE_TRUNCATED, state->column);
+				ERROR_NO_ARG(ERROR_VALUE_TRUNCATED, state->column);
 			} else {
 				state->instruction_buffer[3] = (uint8_t)((result >> 24) & 0xFF);
 				state->instruction_buffer[2] = (uint8_t)((result >> 16) & 0xFF);
@@ -548,10 +552,10 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 			state->instruction_buffer[0] = 0;
 			state->instruction_buffer[1] = 0;
 		} else if (error == EXPRESSION_BAD_SYNTAX) {
-			ERROR(ERROR_INVALID_SYNTAX, state->column);
+			ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 		} else {
 			if ((result & 0xFFFF) != result && ~result >> 16) {
-				ERROR(ERROR_VALUE_TRUNCATED, state->column);
+				ERROR_NO_ARG(ERROR_VALUE_TRUNCATED, state->column);
 			} else {
 				state->instruction_buffer[1] = (uint8_t)(result >> 8);
 				state->instruction_buffer[0] = (uint8_t)(result & 0xFF);
@@ -587,7 +591,7 @@ static uintmax_t printf_arg(size_t size) {
 	struct assembler_state *state = printf_state;
 
 	if (!printf_argc) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column);
+		ERROR_NO_ARG(ERROR_INVALID_DIRECTIVE, state->column);
 		return 0;
 	}
 
@@ -603,10 +607,10 @@ static uintmax_t printf_arg(size_t size) {
 		result = evaluate_expression(expression, state->equates, &error, &symbol);
 	}
 	if (error == EXPRESSION_BAD_SYMBOL) {
-		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 		return 0;
 	} else if (error == EXPRESSION_BAD_SYNTAX) {
-		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 		return 0;
 	}
 
@@ -642,7 +646,7 @@ int handle_elseif(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	if (state->if_stack->length == 0) {
-		ERROR(ERROR_TRAILING_END, state->column);
+		ERROR_NO_ARG(ERROR_TRAILING_END, state->column);
 		return 1;
 	}
 	if (*(int *)stack_peek(state->if_stack)) {
@@ -653,13 +657,13 @@ int handle_elseif(struct assembler_state *state, char **argv, int argc) {
 	char *symbol;
 	uint64_t result;
 	if (expression == NULL) {
-		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 		return 1;
 	} else {
 		result = evaluate_expression(expression, state->equates, &error, &symbol);
 	}
 	if (error == EXPRESSION_BAD_SYNTAX) {
-		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 		return 1;
 	} else if (error == EXPRESSION_BAD_SYMBOL) {
 		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
@@ -678,7 +682,7 @@ int handle_else(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	if (state->if_stack->length == 0) {
-		ERROR(ERROR_TRAILING_END, state->column);
+		ERROR_NO_ARG(ERROR_TRAILING_END, state->column);
 		return 1;
 	}
 	int *top = stack_peek(state->if_stack);
@@ -708,7 +712,7 @@ int handle_endif(struct assembler_state *state, char **argv, int argc) {
 		return 1;
 	}
 	if (state->if_stack->length == 0) {
-		ERROR(ERROR_TRAILING_END, state->column);
+		ERROR_NO_ARG(ERROR_TRAILING_END, state->column);
 		return 1;
 	}
 	free(stack_pop(state->if_stack));
@@ -728,7 +732,7 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 	char *symbol;
 	uint64_t result;
 	if (expression == NULL) {
-		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 		return 1;
 	} else {
 		result = evaluate_expression(expression, state->equates, &error, &symbol);
@@ -737,7 +741,7 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 	if (error == EXPRESSION_BAD_SYMBOL) {
 		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
 	} else if (error == EXPRESSION_BAD_SYNTAX) {
-		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 	} else {
 		symbol_t *sym = malloc(sizeof(symbol_t));
 		sym->name = malloc(strlen(argv[0]) + 1);
@@ -777,7 +781,7 @@ int handle_fill(struct assembler_state *state, char **argv, int argc) {
 	if (error == EXPRESSION_BAD_SYMBOL) {
 		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
 	} else if (error == EXPRESSION_BAD_SYNTAX) {
-		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 	} else {
 		if (size == 0) {
 			ERROR(ERROR_INVALID_DIRECTIVE, state->column, "Fill requires a non-zero size");
@@ -798,7 +802,7 @@ int handle_fill(struct assembler_state *state, char **argv, int argc) {
 				free_expression(expression);
 				list_del(state->equates, state->equates->length - 1); // Remove $5
 				if ((result & 0xFF) != result) {
-					ERROR(ERROR_VALUE_TRUNCATED, state->column);
+					ERROR_NO_ARG(ERROR_VALUE_TRUNCATED, state->column);
 					return 1;
 				}
 				value = result & 0xFF;
@@ -919,14 +923,14 @@ int handle_if(struct assembler_state *state, char **argv, int argc) {
 	char *symbol;
 	uint64_t result;
 	if (expression == NULL) {
-		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 		return 1;
 	} else {
 		result = evaluate_expression(expression, state->equates, &error, &symbol);
 		free_expression(expression);
 	}
 	if (error == EXPRESSION_BAD_SYNTAX) {
-		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 		return 1;
 	} else if (error == EXPRESSION_BAD_SYMBOL) {
 		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
@@ -1236,7 +1240,7 @@ int handle_org(struct assembler_state *state, char **argv, int argc) {
 	char *symbol;
 	tokenized_expression_t *expression = parse_expression(argv[0]);
 	if (!expression) {
-		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 		return 1;
 	} else {
 		result = evaluate_expression(expression, state->equates, &error, &symbol);
@@ -1245,7 +1249,7 @@ int handle_org(struct assembler_state *state, char **argv, int argc) {
 	if (error == EXPRESSION_BAD_SYMBOL) {
 		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
 	} else if (error == EXPRESSION_BAD_SYNTAX) {
-		ERROR(ERROR_INVALID_SYNTAX, state->column);
+		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 	} else {
 		state->PC = result;
 		scas_log(L_DEBUG, "Set origin to 0x%08X from org directive", state->PC);
