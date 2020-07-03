@@ -612,9 +612,18 @@ static void printf_putc(char c) {
 	putchar(c);
 }
 
-int handle_printf(struct assembler_state *state, char **argv, int argc) {
+int handle_echo(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "echo expects 1+ arguments");
+		return 1;
+	}
+	(void)argv;
+	return 1;
+}
+
+int handle_printf(struct assembler_state *state, char **argv, int argc) {
+	if (argc == 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "printf expects 1+ arguments");
 		return 1;
 	}
 	int len = strlen(argv[0]);
@@ -1279,7 +1288,7 @@ struct directive directives[] = {
 	{ "dl", handle_dl, DELIM_COMMAS },
 	{ "ds", handle_block, DELIM_COMMAS },
 	{ "dw", handle_dw, DELIM_COMMAS },
-	//{ "echo", handle_echo, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "echo", handle_echo, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "elif", handle_elseif, 0 },
 	{ "else", handle_else, 0 },
 	{ "elseif", handle_elseif, 0 },
