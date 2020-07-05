@@ -710,11 +710,7 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 		macro_free(macro);
 	}
 	list_free(state.macros);
-	for (int i = 0; i < state.equates->length; i += 1) {
-		symbol_t *sym = (symbol_t*)state.equates->items[i];
-		free(sym->name);
-		free(sym);
-	}
+	// Equates are also added to an area's symbols list, so they're cleaned up there
 	list_free(state.equates);
 	stack_free(state.source_map_stack);
 	free(state.instruction_buffer);
