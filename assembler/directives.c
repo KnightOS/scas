@@ -512,12 +512,12 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 			ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 		} else {
 			result = evaluate_expression(expression, state->equates, &error, &symbol);
+			transform_local_labels(expression, state->last_global_label);
 
 			if (error == EXPRESSION_BAD_SYMBOL) {
 				if (scas_runtime.options.explicit_import) {
 					int ignored_error;
 					char *fixed_symbol;
-					transform_local_labels(expression, state->last_global_label);
 					evaluate_expression(expression, state->equates, &ignored_error, &fixed_symbol);
 					unresolved_symbol_t *unresolved_sym = malloc(sizeof(unresolved_symbol_t));
 					unresolved_sym->name = malloc(strlen(fixed_symbol) + 1);
