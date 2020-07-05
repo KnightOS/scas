@@ -30,7 +30,7 @@ struct assembler_state {
 	list_t *errors;
 	list_t *warnings;
 	list_t *extra_lines;
-    bool expanding_macro;
+	bool expanding_macro;
 	char *line;
 	int column;
 	instruction_set_t *instruction_set;
@@ -44,8 +44,8 @@ struct assembler_state {
 	char *last_global_label;
 	assembler_settings_t *settings;
 	macro_t *most_recent_macro;
-    bool auto_source_maps;
-    uint64_t last_relative_label;
+	bool auto_source_maps;
+	uint64_t last_relative_label;
 };
 
 object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *settings);

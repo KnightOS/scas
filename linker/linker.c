@@ -52,6 +52,7 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 		int error;
 		char *symbol;
 		uint64_t result = evaluate_expression(imm->expression, symbols, &error, &symbol);
+
 		list_del(symbols, symbols->length - 1); // Remove $
 		if (error == EXPRESSION_BAD_SYMBOL) {
 			scas_log(L_ERROR, "Unable to find symbol for expression");
