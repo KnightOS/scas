@@ -763,6 +763,7 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 		sym->value = result;
 		sym->exported = 0;
 		list_add(state->equates, sym);
+		list_add(state->current_area->symbols, sym);
 		scas_log(L_DEBUG, "Added equate '%s' with value 0x%08X", sym->name, sym->value);
 	}
 	return 1;
