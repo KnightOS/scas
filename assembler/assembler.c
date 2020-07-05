@@ -72,10 +72,8 @@ void transform_local_labels(tokenized_expression_t *expression, const char *last
 	}
 }
 
-void transform_relative_labels(tokenized_expression_t *expression, int last_relative_label) {
-	int i;
-	for(i = 0; i < expression->tokens->length; i++) {
-		fflush(stderr);
+void transform_relative_labels(tokenized_expression_t *expression, int last_relative_label, const char *const file_name) {
+	for(int i = 0; i < expression->tokens->length; i++) {
 		expression_token_t *token = expression->tokens->items[i];
 		if (token->type != SYMBOL || strcmp(token->symbol, "_")) {
 			continue;
@@ -85,24 +83,26 @@ void transform_relative_labels(tokenized_expression_t *expression, int last_rela
 		int offset = get_relative_label_offset(expression, &j);
 		int relative_label = offset + last_relative_label;
 
-		const char *fmtstring = "relative@%d";
+		const char *fmtstring = "relative:%d@%s";
 		int len = log10_u64(relative_label);
-		const int size = strlen(fmtstring) - 2 + len + 1;
+		const int size = strlen(fmtstring) - 2 + len - 2 + strlen(file_name) + 1;
 		free(token->symbol);
 		token->symbol = malloc(size);
-		if (snprintf(token->symbol, size, fmtstring, relative_label) != size - 1) {
+		if (snprintf(token->symbol, size, fmtstring, relative_label, file_name) != size - 1) {
 			scas_log(L_ERROR, "UNREACHABLE");
 			exit(1);
 		}
 
 		scas_log(L_DEBUG, "Transformed relative label with offset %d to %s, %d - %d", offset, token->symbol, i, j);
-		for (int k = 0; k < j - i; k++) {
-//			expression_token_t *toremove = expression->tokens->items[i];
-			/* these should actually all be OPERATORs
-			if (toremove->type == SYMBOL)
-				free(toremove->symbol); */
-		//	free(toremove);
-		//	list_del(expression->tokens, i + 1);
+		while (i + 1 < expression->tokens->length) {
+			expression_token_t *next = expression->tokens->items[i + 1];
+			if (next->type == OPERATOR && next->operator == 1) {
+				free_expression_token(next);
+				list_del(expression->tokens, i + 1);
+			}
+			else {
+				break;
+			}
 		}
 	}
 }
@@ -349,15 +349,16 @@ int try_add_label(struct assembler_state *state, char **line) {
 		scas_log(L_DEBUG, "Adding ASxxxx local label %s", sym->name);
 		free(temp);
 	} else if (strncmp("_", *line, i) == 0) {
-		const char *fmtstring = "relative@%d";
+		const char *file_name = stack_peek(state->file_name_stack);
+		const char *fmtstring = "relative:%d@%s";
 		int len = log10_u64(state->last_relative_label);
-		const int size = strlen(fmtstring) - 2 + len + 1;
+		const int size = strlen(fmtstring) - 2 + len - 2 + strlen(file_name) + 1;
 		sym->name = malloc(size);
 		if (!sym->name) {
 			scas_log(L_ERROR, "OOM");
 			exit(1);
 		}
-		if (snprintf(sym->name, size, fmtstring, state->last_relative_label++) != size - 1) {
+		if (snprintf(sym->name, size, fmtstring, state->last_relative_label++, file_name) != size - 1) {
 			scas_log(L_ERROR, "Unreachable.");
 			exit(1);
 		}
@@ -430,7 +431,8 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 					state->line, state->column, stack_peek(state->file_name_stack));
 			} else {
 				transform_local_labels(expression, state->last_global_label);
-				transform_relative_labels(expression, state->last_relative_label);
+				const char *file_name = stack_peek(state->file_name_stack);
+				transform_relative_labels(expression, state->last_relative_label, file_name);
 				result = evaluate_expression(expression, state->equates, &error, &symbol);
 				if (error == EXPRESSION_BAD_SYMBOL) {
 					if (scas_runtime.options.explicit_import && strcmp(symbol, "$") != 0) {
@@ -442,7 +444,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 						unresolved_sym->file_name = strdup(stack_peek(state->file_name_stack));
 						list_add(state->object->unresolved, unresolved_sym);
 					}
-					scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", ref->value_provided);
+					scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker (type %d)", ref->value_provided, imm->type);
 					late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
 					late_imm->instruction_address = state->current_area->data_length;
 					late_imm->base_address = state->PC + (match->instruction->width / 8);
