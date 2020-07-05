@@ -132,38 +132,39 @@ int handle_block(struct assembler_state *state, char **argv, int argc) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "block expects 1 argument");
 		return 1;
 	}
-	int error;
-	uint16_t result;
-	char *symbol;
 	tokenized_expression_t *expression = parse_expression(argv[0]);
 	if (expression == NULL) {
-		error = EXPRESSION_BAD_SYNTAX;
-	} else {
-		symbol_t sym_pc = {
-			.type = SYMBOL_LABEL,
-			.value = state->PC,
-			.name = "$"
-		};
-		list_add(state->equates, &sym_pc);
-		result = evaluate_expression(expression, state->equates, &error, &symbol);
-		list_del(state->equates, state->equates->length - 1); // Remove $
-	}
+		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
+		return 1;
+	} 
+
+	symbol_t sym_pc = {
+		.type = SYMBOL_LABEL,
+		.value = state->PC,
+		.name = "$"
+	};
+
+	list_add(state->equates, &sym_pc);
+	int error;
+	char *symbol;
+	uint16_t result = evaluate_expression(expression, state->equates, &error, &symbol);
+	list_del(state->equates, state->equates->length - 1); // Remove $
+
 	if (error == EXPRESSION_BAD_SYMBOL) {
 		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
-	} else if (error == EXPRESSION_BAD_SYNTAX) {
-		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
-	} else {
-		uint8_t *buffer = calloc(256, sizeof(uint8_t));
-		MAP_SOURCE(result);
-		while (result) {
-			append_to_area(state->current_area, buffer, result > 256 ? 256 : result);
-			if (result > 256) {
-				result -= 256;
-				state->PC += 256;
-			} else {
-				state->PC += result;
-				result = 0;
-			}
+		return 1;
+	} 
+
+	uint8_t *buffer = calloc(256, sizeof(uint8_t));
+	MAP_SOURCE(result);
+	while (result) {
+		append_to_area(state->current_area, buffer, result > 256 ? 256 : result);
+		if (result > 256) {
+			result -= 256;
+			state->PC += 256;
+		} else {
+			state->PC += result;
+			result = 0;
 		}
 	}
 	return 1;
@@ -174,33 +175,32 @@ int handle_bndry(struct assembler_state *state, char **argv, int argc) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "bndry expects 1 argument");
 		return 1;
 	}
-	int error;
-	uint64_t result;
-	char *symbol;
+
 	tokenized_expression_t *expression = parse_expression(argv[0]);
 	if (expression == NULL) {
-		error = EXPRESSION_BAD_SYNTAX;
-	} else {
-		result = evaluate_expression(expression, state->equates, &error, &symbol);
-	}
+		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
+		return 1;
+	} 
+
+	int error;
+	char *symbol;
+	uint16_t result = evaluate_expression(expression, state->equates, &error, &symbol);
 	if (error == EXPRESSION_BAD_SYMBOL) {
 		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
-	} else if (error == EXPRESSION_BAD_SYNTAX) {
-		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
-	} else {
-		if (state->PC % result != 0) {
-			uint8_t *buf = calloc(1024, sizeof(uint8_t));
-			int len = state->PC % result;
-			MAP_SOURCE(len);
-			while (len) {
-				append_to_area(state->current_area, buf, len > 256 ? 256 : len);
-				if (len > 256) {
-					len -= 256;
-					state->PC += 256;
-				} else {
-					state->PC += len;
-					len = 0;
-				}
+		return 1;
+	}
+	if (state->PC % result != 0) {
+		uint8_t *buf = calloc(1024, sizeof(uint8_t));
+		int len = state->PC % result;
+		MAP_SOURCE(len);
+		while (len) {
+			append_to_area(state->current_area, buf, len > 256 ? 256 : len);
+			if (len > 256) {
+				len -= 256;
+				state->PC += 256;
+			} else {
+				state->PC += len;
+				len = 0;
 			}
 		}
 	}
@@ -226,55 +226,50 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 			append_to_area(state->current_area, (unsigned char*)(argv[i] + 1), len);
 			state->PC += len;
 		} else {
-			int error;
-			uint64_t result;
-			char *symbol;
 			tokenized_expression_t *expression = parse_expression(argv[i]);
 			bool keep = false;
 
 			if (expression == NULL) {
-				error = EXPRESSION_BAD_SYNTAX;
-			} else {
-				result = evaluate_expression(expression, state->equates, &error, &symbol);
-			}
-
-			if (error == EXPRESSION_BAD_SYMBOL) {
-				
-				if (scas_runtime.options.explicit_import) {
-					tokenized_expression_t *changed_expression = malloc(sizeof(tokenized_expression_t));
-					memcpy(changed_expression, expression, sizeof(tokenized_expression_t));
-					int ignored_error;
-					char *fixed_symbol;
-					transform_local_labels(changed_expression, state->last_global_label);
-					evaluate_expression(expression, state->equates, &ignored_error, &fixed_symbol);
-					unresolved_symbol_t *unresolved_sym = malloc(sizeof(unresolved_symbol_t));
-					unresolved_sym->name = malloc(strlen(fixed_symbol) + 1);
-					strcpy(unresolved_sym->name, fixed_symbol);
-					unresolved_sym->column = state->column;
-					unresolved_sym->line_number = *(int*)stack_peek(state->line_number_stack);
-					unresolved_sym->line = malloc(strlen(state->line) + 1);
-					strcpy(unresolved_sym->line, state->line);
-					const char *file_name=stack_peek(state->file_name_stack);
-					unresolved_sym->file_name = malloc(sizeof(file_name) + 1);
-					strcpy(unresolved_sym->file_name, file_name);
-					list_add(state->object->unresolved, unresolved_sym);
-				}
-				
-				scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", argv[i]);
-				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
-				late_imm->address = state->current_area->data_length;
-				late_imm->instruction_address = state->current_area->data_length;
-				late_imm->base_address = state->current_area->data_length;
-				late_imm->width = 8;
-				late_imm->type = IMM_TYPE_ABSOLUTE;
-				late_imm->expression = expression;
-				keep = true;
-				list_add(state->current_area->late_immediates, late_imm);
-				*state->instruction_buffer = 0;
-			} else if (error == EXPRESSION_BAD_SYNTAX) {
 				ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 			} else {
-				if ((result & 0xFF) != result && ~result >> 8) {
+
+				int error;
+				char *symbol;
+				uint64_t result = evaluate_expression(expression, state->equates, &error, &symbol);
+
+				if (error == EXPRESSION_BAD_SYMBOL) {
+					if (scas_runtime.options.explicit_import) {
+						tokenized_expression_t *changed_expression = malloc(sizeof(tokenized_expression_t));
+						memcpy(changed_expression, expression, sizeof(tokenized_expression_t));
+						int ignored_error;
+						char *fixed_symbol;
+						transform_local_labels(changed_expression, state->last_global_label);
+						evaluate_expression(expression, state->equates, &ignored_error, &fixed_symbol);
+						unresolved_symbol_t *unresolved_sym = malloc(sizeof(unresolved_symbol_t));
+						unresolved_sym->name = malloc(strlen(fixed_symbol) + 1);
+						strcpy(unresolved_sym->name, fixed_symbol);
+						unresolved_sym->column = state->column;
+						unresolved_sym->line_number = *(int*)stack_peek(state->line_number_stack);
+						unresolved_sym->line = malloc(strlen(state->line) + 1);
+						strcpy(unresolved_sym->line, state->line);
+						const char *file_name=stack_peek(state->file_name_stack);
+						unresolved_sym->file_name = malloc(sizeof(file_name) + 1);
+						strcpy(unresolved_sym->file_name, file_name);
+						list_add(state->object->unresolved, unresolved_sym);
+					}
+
+					scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", argv[i]);
+					late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
+					late_imm->address = state->current_area->data_length;
+					late_imm->instruction_address = state->current_area->data_length;
+					late_imm->base_address = state->current_area->data_length;
+					late_imm->width = 8;
+					late_imm->type = IMM_TYPE_ABSOLUTE;
+					late_imm->expression = expression;
+					keep = true;
+					list_add(state->current_area->late_immediates, late_imm);
+					*state->instruction_buffer = 0;
+				} else if ((result & 0xFF) != result && ~result >> 8) {
 					ERROR_NO_ARG(ERROR_VALUE_TRUNCATED, state->column);
 				} else {
 					*state->instruction_buffer = (uint8_t)result;
@@ -303,16 +298,16 @@ int handle_dl(struct assembler_state *state, char **argv, int argc) {
 	uint64_t olen = 0;
 	int i;
 	for (i = 0; i < argc; ++i) {
-		int error;
-		uint64_t result;
-		char *symbol;
 		tokenized_expression_t *expression = parse_expression(argv[i]);
 
 		if (expression == NULL) {
-			error = EXPRESSION_BAD_SYNTAX;
-		} else {
-			result = evaluate_expression(expression, state->equates, &error, &symbol);
+			ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
+			return 1;
 		}
+
+		int error;
+		char *symbol;
+		uint64_t result = evaluate_expression(expression, state->equates, &error, &symbol);
 
 		if (error == EXPRESSION_BAD_SYMBOL) {
 			if (scas_runtime.options.explicit_import) {
@@ -348,8 +343,6 @@ int handle_dl(struct assembler_state *state, char **argv, int argc) {
 			state->instruction_buffer[1] = 0;
 			state->instruction_buffer[2] = 0;
 			state->instruction_buffer[3] = 0;
-		} else if (error == EXPRESSION_BAD_SYNTAX) {
-			ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 		} else {
 			if ((result & 0xFFFFFFFF) != result && ~result >> 32) {
 				ERROR_NO_ARG(ERROR_VALUE_TRUNCATED, state->column);
@@ -516,49 +509,47 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 		bool keep = false;
 
 		if (expression == NULL) {
-			error = EXPRESSION_BAD_SYNTAX;
-		} else {
-			result = evaluate_expression(expression, state->equates, &error, &symbol);
-		}
-
-		if (error == EXPRESSION_BAD_SYMBOL) {
-			if (scas_runtime.options.explicit_import) {
-				int ignored_error;
-				char *fixed_symbol;
-				transform_local_labels(expression, state->last_global_label);
-				evaluate_expression(expression, state->equates, &ignored_error, &fixed_symbol);
-				unresolved_symbol_t *unresolved_sym = malloc(sizeof(unresolved_symbol_t));
-				unresolved_sym->name = malloc(strlen(fixed_symbol) + 1);
-				strcpy(unresolved_sym->name,fixed_symbol);
-				unresolved_sym->column = state->column;
-				unresolved_sym->line_number = *(int*)stack_peek(state->line_number_stack);
-				unresolved_sym->line = malloc(strlen(state->line) + 1);
-				strcpy(unresolved_sym->line, state->line);
-				const char *file_name = stack_peek(state->file_name_stack);
-				unresolved_sym->file_name = strdup(file_name);
-				list_add(state->object->unresolved, unresolved_sym);
-			}
-
-			scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", argv[i]);
-			late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
-			late_imm->address = state->current_area->data_length;
-			late_imm->instruction_address = state->current_area->data_length;
-			late_imm->base_address = state->current_area->data_length;
-			late_imm->width = 16;
-			late_imm->type = IMM_TYPE_ABSOLUTE;
-			late_imm->expression = expression;
-			keep = true;
-			list_add(state->current_area->late_immediates, late_imm);
-			state->instruction_buffer[0] = 0;
-			state->instruction_buffer[1] = 0;
-		} else if (error == EXPRESSION_BAD_SYNTAX) {
 			ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 		} else {
-			if ((result & 0xFFFF) != result && ~result >> 16) {
-				ERROR_NO_ARG(ERROR_VALUE_TRUNCATED, state->column);
+			result = evaluate_expression(expression, state->equates, &error, &symbol);
+
+			if (error == EXPRESSION_BAD_SYMBOL) {
+				if (scas_runtime.options.explicit_import) {
+					int ignored_error;
+					char *fixed_symbol;
+					transform_local_labels(expression, state->last_global_label);
+					evaluate_expression(expression, state->equates, &ignored_error, &fixed_symbol);
+					unresolved_symbol_t *unresolved_sym = malloc(sizeof(unresolved_symbol_t));
+					unresolved_sym->name = malloc(strlen(fixed_symbol) + 1);
+					strcpy(unresolved_sym->name,fixed_symbol);
+					unresolved_sym->column = state->column;
+					unresolved_sym->line_number = *(int*)stack_peek(state->line_number_stack);
+					unresolved_sym->line = malloc(strlen(state->line) + 1);
+					strcpy(unresolved_sym->line, state->line);
+					const char *file_name = stack_peek(state->file_name_stack);
+					unresolved_sym->file_name = strdup(file_name);
+					list_add(state->object->unresolved, unresolved_sym);
+				}
+
+				scas_log(L_DEBUG, "Postponing evaluation of '%s' to linker", argv[i]);
+				late_immediate_t *late_imm = malloc(sizeof(late_immediate_t));
+				late_imm->address = state->current_area->data_length;
+				late_imm->instruction_address = state->current_area->data_length;
+				late_imm->base_address = state->current_area->data_length;
+				late_imm->width = 16;
+				late_imm->type = IMM_TYPE_ABSOLUTE;
+				late_imm->expression = expression;
+				keep = true;
+				list_add(state->current_area->late_immediates, late_imm);
+				state->instruction_buffer[0] = 0;
+				state->instruction_buffer[1] = 0;
 			} else {
-				state->instruction_buffer[1] = (uint8_t)(result >> 8);
-				state->instruction_buffer[0] = (uint8_t)(result & 0xFF);
+				if ((result & 0xFFFF) != result && ~result >> 16) {
+					ERROR_NO_ARG(ERROR_VALUE_TRUNCATED, state->column);
+				} else {
+					state->instruction_buffer[1] = (uint8_t)(result >> 8);
+					state->instruction_buffer[0] = (uint8_t)(result & 0xFF);
+				}
 			}
 		}
 		if (!keep) {
@@ -602,18 +593,15 @@ static uintmax_t printf_arg(size_t size) {
 	tokenized_expression_t *expression = parse_expression(arg);
 
 	if (expression == NULL) {
-		error = EXPRESSION_BAD_SYNTAX;
-	} else {
-		result = evaluate_expression(expression, state->equates, &error, &symbol);
+		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
+		return 0;
 	}
+	// The only error evaluate_expression can return is EXPRESSION_BAD_SYMBOL
+	result = evaluate_expression(expression, state->equates, &error, &symbol);
 	if (error == EXPRESSION_BAD_SYMBOL) {
 		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 		return 0;
-	} else if (error == EXPRESSION_BAD_SYNTAX) {
-		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
-		return 0;
 	}
-
 	return result;
 }
 
@@ -773,28 +761,31 @@ int handle_fill(struct assembler_state *state, char **argv, int argc) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "fill expects one or two arguments");
 		return 1;
 	}
-	int error;
-	uint16_t size;
+
 	uint8_t value = 0;
-	char *symbol;
+
 	tokenized_expression_t *expression = parse_expression(argv[0]);
+	
 	if (expression == NULL) {
-		error = EXPRESSION_BAD_SYNTAX;
-	} else {
-		symbol_t sym_pc = {
-			.type = SYMBOL_LABEL,
-			.value = state->PC,
-			.name = "$"
-		};
-		list_add(state->equates, &sym_pc);
-		size = evaluate_expression(expression, state->equates, &error, &symbol);
-		free_expression(expression);
-		list_del(state->equates, state->equates->length - 1); // Remove $
+		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
+		return 1;
 	}
+
+	symbol_t sym_pc = {
+		.type = SYMBOL_LABEL,
+		.value = state->PC,
+		.name = "$"
+	};
+	list_add(state->equates, &sym_pc);
+
+	int error;
+	char *symbol;
+	uint16_t size = evaluate_expression(expression, state->equates, &error, &symbol);
+	
+	free_expression(expression);
+	list_del(state->equates, state->equates->length - 1); // Remove $
 	if (error == EXPRESSION_BAD_SYMBOL) {
 		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
-	} else if (error == EXPRESSION_BAD_SYNTAX) {
-		ERROR_NO_ARG(ERROR_INVALID_SYNTAX, state->column);
 	} else {
 		if (size == 0) {
 			ERROR(ERROR_INVALID_DIRECTIVE, state->column, "Fill requires a non-zero size");
@@ -821,16 +812,8 @@ int handle_fill(struct assembler_state *state, char **argv, int argc) {
 				value = result & 0xFF;
 			}
 		}
-		uint8_t *buffer;
-		if (value != 0) {
-			buffer = malloc(sizeof(uint8_t) * size);
-			for (uint16_t i = 0; i < size; i++) {
-				buffer[i] = value;
-			}
-		}
-		else {
-			buffer = calloc(size, sizeof(uint8_t));
-		}
+		uint8_t *buffer = malloc(sizeof(uint8_t) * size);
+		memset(buffer, value, size);
 		append_to_area(state->current_area, buffer, sizeof(uint8_t) * size);
 		free(buffer);
 		state->PC += size;
@@ -1096,7 +1079,7 @@ int handle_include(struct assembler_state *state, char **argv, int argc) {
 	len = unescape_string(argv[0] + 1);
 	char *name = malloc(strlen(argv[0] + 1) + 1);
 	strcpy(name, argv[0] + 1);
-	FILE *file;
+	FILE *file = NULL;
 	int i;
 	for (i = -1; i < state->settings->include_path->length; ++i) {
 		if (i == -1) {

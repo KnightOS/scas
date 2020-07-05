@@ -154,11 +154,11 @@ uint64_t evaluate_expression(tokenized_expression_t *expression, list_t
 	}
 
 	if (stack->length == 0) {
-		*error = 1;
+		*error = EXPRESSION_BAD_SYMBOL;
 	} else {
 		expression_token_t *token = stack_pop(stack);
 		if (token->type != NUMBER) {
-			*error = 1;
+			*error = EXPRESSION_BAD_SYMBOL;
 		} else {
 			res = token->number;
 		}
