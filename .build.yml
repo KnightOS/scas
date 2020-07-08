@@ -21,7 +21,7 @@ tasks:
       make
       cd ../../kernel
       # Temporary: use scas PR
-      gco scas
+      git checkout scas
       mkdir bin/TI84pSE -p
       valgrind -s --track-origins=yes --leak-check=full --error-exitcode=1 ../scas/build/scas  --define TI84pSE --include "include/;bin/TI84pSE/;src/00/" --symbols bin/TI84pSE/00.sym --listing bin/TI84pSE/00.list src/00/base.asm -o bin/TI84pSE/00.bin -vv
       if [[ "$(grep ERROR\ SUMMARY log | cut -d\  -f4)" != "0" ]] ; then echo Memory error ; exit 1 ; fi
