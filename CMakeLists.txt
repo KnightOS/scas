@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.5)
 
 project(scas C)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -pedantic -std=c99 -D_XOPEN_SOURCE=500")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -pedantic -std=c99 -D_XOPEN_SOURCE=700")
 set(CMAKE_C_FLAGS_DEVEL "-Werror -g -Og")
 
 if(WIN32)
