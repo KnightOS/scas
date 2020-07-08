@@ -550,6 +550,13 @@ int try_split_line(struct assembler_state *state, char **line) {
 	return 0;
 }
 
+void macro_free(macro_t *macro) {
+	list_free(macro->parameters);
+	free_flat_list(macro->macro_lines);
+	free(macro->name);
+	free(macro);
+}
+
 object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *settings) {
 	struct assembler_state state = {
 		.object = create_object(),
@@ -697,10 +704,7 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 	list_free(state.extra_lines);
 	for (int i = 0; i < state.macros->length; i += 1) {
 		macro_t *macro = state.macros->items[i];
-		list_free(macro->parameters);
-		free_flat_list(macro->macro_lines);
-		free(macro->name);
-		free(macro);
+		macro_free(macro);
 	}
 	list_free(state.macros);
 	for (int i = 0; i < state.equates->length; i += 1) {
