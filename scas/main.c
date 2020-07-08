@@ -324,6 +324,7 @@ int main(int argc, char **argv) {
 		}
 		fclose(out);
 	}
+	
 	if (errors->length != 0) {
 		int i;
 		for (i = 0; i < errors->length; ++i) {
