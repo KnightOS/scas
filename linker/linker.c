@@ -191,9 +191,8 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	if (scas_runtime.options.remove_unused_functions) {
 		remove_unused_functions(merged);
 	}
-	int i;
 	uint64_t address = 0;
-	for (i = 0; i < merged->areas->length; ++i) {
+	for (int i = 0; i < merged->areas->length; ++i) {
 		area_t *area = merged->areas->items[i];
 		relocate_area(area, address, false);
 		if (settings->automatic_relocation) {
@@ -206,11 +205,11 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 		}
 		address += area->data_length;
 	}
-	for (i = 0; i < merged->areas->length; ++i) {
+	for (int i = 0; i < merged->areas->length; ++i) {
 		area_t *area = merged->areas->items[i];
 		gather_symbols(symbols, area, settings);
 	}
-	for (i = 0; i < merged->areas->length; ++i) {
+	for (int i = 0; i < merged->areas->length; ++i) {
 		area_t *area = merged->areas->items[i];
 		scas_log(L_INFO, "Linking area %s", area->name);
 		if (scas_runtime.options.origin) {
@@ -222,6 +221,20 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	}
 	settings->write_output(output, final->data, (int)final->data_length);
 	scas_log(L_DEBUG, "Final binary written: %d bytes", ftell(output));
+
+	if (scas_runtime.symbol_file) {
+		scas_log(L_DEBUG, "Generating symbol file '%s'", scas_runtime.symbol_file);
+		FILE *symfile = fopen(scas_runtime.symbol_file, "w");
+		for (int i = 0; i < symbols->length; i++) {
+    			symbol_t *symbol = symbols->items[i];
+    			if (symbol->type == SYMBOL_LABEL && symbol->exported) {
+	    			fprintf(symfile, ".equ %s, %lu\n", symbol->name, symbol->value);
+    			}
+		}
+		fflush(symfile);
+		fclose(symfile);
+	}
+
 	object_free(merged);
 	area_free(final);
 	list_free(symbols);
