@@ -329,7 +329,7 @@ int try_add_label(struct assembler_state *state, char **line) {
 
 	/* Add label */
 	symbol_t *sym = malloc(sizeof(symbol_t));
-	sym->exported = 1; /* TODO: Support explicit export */
+	sym->exported = !scas_runtime.options.explicit_export;
 	sym->type = SYMBOL_LABEL;
 	sym->value = state->PC + scas_runtime.options.origin;
 	sym->defined_address = state->current_area->data_length;
