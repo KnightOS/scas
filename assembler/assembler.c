@@ -551,7 +551,7 @@ int try_split_line(struct assembler_state *state, char **line) {
 }
 
 void macro_free(macro_t *macro) {
-	list_free(macro->parameters);
+	free_flat_list(macro->parameters);
 	free_flat_list(macro->macro_lines);
 	free(macro->name);
 	free(macro);
