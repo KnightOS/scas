@@ -438,7 +438,8 @@ int handle_undef(struct assembler_state *state, char **argv, int argc) {
 		macro_t *m = state->macros->items[i];
 		scas_log(L_DEBUG, "Found %s", m->name);
 		if (strcasecmp(m->name, argv[0]) == 0) {
-			scas_log(L_DEBUG, "Undefined Symbol \'%s\'", m->name);
+			scas_log(L_DEBUG, "Undefined macro \'%s\'", m->name);
+			macro_free(m);
 			list_del(state->macros, i);
 			return 1;
 		}
