@@ -178,6 +178,12 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 	if (strstr(*line, "ifdef") == *line + 1) { // Should not expand when testing for existence
 		return 0;
 	}
+	// Shouldn't expand macros in equates
+	if ((**line == '.' || **line == '#')) {
+		if (code_strstr(*line, ".equ") || code_strchr(*line, '=')) {
+			return 0;
+		}
+	}
 	int i;
 	for (i = 0; i < state->macros->length; i++) {
 		macro_t *macro = state->macros->items[i];
@@ -608,8 +614,8 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 		try_empty_line,
 		try_parse_inside_macro,
 		try_split_line,
-		try_expand_macro,
 		try_add_label,
+		try_expand_macro,
 		try_handle_directive,
 		try_match_instruction,
 	};
