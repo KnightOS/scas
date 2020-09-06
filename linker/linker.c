@@ -226,10 +226,10 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 		scas_log(L_DEBUG, "Generating symbol file '%s'", scas_runtime.symbol_file);
 		FILE *symfile = fopen(scas_runtime.symbol_file, "w");
 		for (int i = 0; i < symbols->length; i++) {
-    			symbol_t *symbol = symbols->items[i];
-    			if (symbol->type == SYMBOL_LABEL && symbol->exported) {
-	    			fprintf(symfile, ".equ %s, %lu\n", symbol->name, symbol->value);
-    			}
+			symbol_t *symbol = symbols->items[i];
+			if (symbol->type == SYMBOL_LABEL && symbol->exported && !strchr(symbol->name, '@')) {
+				fprintf(symfile, ".equ %s 0x%lX\n", symbol->name, symbol->value);
+			}
 		}
 		fflush(symfile);
 		fclose(symfile);
