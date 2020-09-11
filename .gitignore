@@ -11,3 +11,5 @@ test/
 build/
 .lvimrc
 tables/z80.c
+.ccls
+.ccls-cache
