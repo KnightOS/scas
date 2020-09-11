@@ -7,9 +7,8 @@ Assembler and linker for z80.
 
 ## Status
 
-Nearly done. We'd like to get relative labels working so it can compile the
-KnightOS kernel, and then there are a few more bugs that need to be sorted out.
-Should be usable now.
+We're finally just about done! All that's needed is a bit more testing before
+1.0 proper can be released.
 
 ## Compiling from Source
 
