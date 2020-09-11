@@ -23,6 +23,4 @@ tasks:
       # Temporary: use scas PR
       git checkout scas
       mkdir bin/TI84pSE -p
-      valgrind -s --track-origins=yes --leak-check=full --error-exitcode=1 ../scas/build/scas  --define TI84pSE --include "include/;bin/TI84pSE/;src/00/" --symbols bin/TI84pSE/00.sym --listing bin/TI84pSE/00.list src/00/base.asm -o bin/TI84pSE/00.bin -vv
-      valgrind -s --track-origins=yes --leak-check=full --error-exitcode=1 ../scas/build/scas  --define TI84pSE --include "include/;bin/TI84pSE/;src/01/" --symbols bin/TI84pSE/01.sym --listing bin/TI84pSE/01.list src/01/base.asm -o bin/TI84pSE/01.bin -vv
-      valgrind -s --track-origins=yes --leak-check=full --error-exitcode=1 ../scas/build/scas  --define TI84pSE --include "include/;bin/TI84pSE/;src/02/" --symbols bin/TI84pSE/02.sym --listing bin/TI84pSE/02.list src/02/base.asm -o bin/TI84pSE/02.bin -vv
+      make AS="valgrind --track-origins=yes --leak-check=full --error-exitcode=1 ../scas/build/scas"
