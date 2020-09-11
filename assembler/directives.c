@@ -152,6 +152,7 @@ int handle_block(struct assembler_state *state, char **argv, int argc) {
 
 	if (error == EXPRESSION_BAD_SYMBOL) {
 		ERROR(ERROR_UNKNOWN_SYMBOL, state->column, symbol);
+		free_expression(expression);
 		return 1;
 	} 
 
@@ -167,6 +168,8 @@ int handle_block(struct assembler_state *state, char **argv, int argc) {
 			result = 0;
 		}
 	}
+	free(buffer);
+	free_expression(expression);
 	return 1;
 }
 
