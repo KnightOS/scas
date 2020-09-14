@@ -15,6 +15,14 @@ if(EMSCRIPTEN)
     set(CMAKE_EXE_LINKER_FLAGS "-O2")
 endif()
 
+if (NOT DEFINED SCAS_DOCUMENTATION)
+	set(SCAS_DOCUMENTATION FALSE CACHE BOOL "Whether to build the documentation")
+endif()
+
+if (NOT DEFINED SCAS_LIBRARY)
+	set(SCAS_LIBRARY FALSE CACHE BOOL "Whether to build libscas")
+endif()
+
 add_executable(generate_tables ${PROJECT_SOURCE_DIR}/tables/generate.c)
 
 add_custom_command(
@@ -43,15 +51,21 @@ include_directories(scas
     ${CMAKE_BINARY_DIR}/tables/
 )
 
-add_library(libscas SHARED
-    ${common}
-    ${assembler}
-    ${linker}
-    ${PROJECT_BINARY_DIR}/tables/z80.c
-    ${PROJECT_SOURCE_DIR}/runtime.c)
+if (SCAS_LIBRARY)
+    add_library(libscas SHARED
+        ${common}
+        ${assembler}
+        ${linker}
+        ${PROJECT_BINARY_DIR}/tables/z80.c
+        ${PROJECT_SOURCE_DIR}/runtime.c)
 
-SET_TARGET_PROPERTIES(libscas
-  PROPERTIES OUTPUT_NAME scas)
+    SET_TARGET_PROPERTIES(libscas
+      PROPERTIES OUTPUT_NAME scas)
+    INSTALL(
+        TARGETS libscas
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+    )
+endif()
 
 add_executable(scdump
     ${common}
@@ -62,10 +76,6 @@ add_executable(scwrap
     ${common}
     ${scwrap}
 )
-
-if (NOT DEFINED SCAS_DOCUMENTATION)
-	set(SCAS_DOCUMENTATION FALSE CACHE BOOL "Whether to build the documentation")
-endif()
 
 if(SCAS_DOCUMENTATION)
 
@@ -119,9 +129,8 @@ if(SCAS_DOCUMENTATION)
 endif()
 
 INSTALL(
-    TARGETS scas scdump scwrap libscas
+    TARGETS scas scdump scwrap
     RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
-    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
