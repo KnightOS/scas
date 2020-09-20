@@ -337,17 +337,16 @@ int main(int argc, char **argv) {
 	}
 	
 	if (errors->length != 0) {
-		for (int i = 0; i < errors->length; ++i) {
+		for (unsigned int i = 0; i < errors->length; ++i) {
 			error_t *error = errors->items[i];
-			fprintf(stderr, "%s:%d:%d: error #%d: %s\n", error->file_name,
-					(int)error->line_number, (int)error->column, error->code,
+			fprintf(stderr, "%s:%lu:%lu: error #%d: %s\n", error->file_name,
+					error->line_number, error->column, error->code,
 					error->message);
 			if (error->line) {
 				fprintf(stderr, "%s\n", error->line);
 			}
 			if (error->column != 0) {
-				int j;
-				for (j = error->column; j > 0; --j) {
+				for (unsigned int j = error->column; j > 0; --j) {
 					fprintf(stderr, ".");
 				}
 				fprintf(stderr, "^\n");
@@ -367,16 +366,14 @@ int main(int argc, char **argv) {
 		}
 	}
 	if (warnings->length != 0) {
-		int i;
-		for (i = 0; i < errors->length; ++i) {
+		for (unsigned int i = 0; i < errors->length; ++i) {
 			warning_t *warning = warnings->items[i];
-			fprintf(stderr, "%s:%d:%d: warning #%d: %s\n", warning->file_name,
-					(int)warning->line_number, (int)warning->column, warning->code,
+			fprintf(stderr, "%s:%lu:%lu: warning #%d: %s\n", warning->file_name,
+					warning->line_number, warning->column, warning->code,
 					get_warning_string(warning));
 			fprintf(stderr, "%s\n", warning->line);
 			if (warning->column != 0) {
-				int j;
-				for (j = warning->column; j > 0; --j) {
+				for (unsigned int j = warning->column; j > 0; --j) {
 					fprintf(stderr, ".");
 				}
 				fprintf(stderr, "^\n");
@@ -384,11 +381,11 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	int ret = errors->length;
+	unsigned int ret = errors->length;
 	scas_log(L_DEBUG, "Exiting with status code %d, cleaning up", ret);
 	list_free(scas_runtime.input_files);
 	free_flat_list(include_path);
-	for (int i = 0; i < objects->length; i += 1) {
+	for (unsigned int i = 0; i < objects->length; i += 1) {
 		object_free((object_t*)objects->items[i]);
 	}
 	list_free(objects);
