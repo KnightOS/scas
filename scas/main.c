@@ -296,7 +296,7 @@ int main(int argc, char **argv) {
 			o = assemble(f, scas_runtime.input_names->items[i], &settings);
 			fclose(f);
 			scas_log(L_INFO, "Assembler returned %d errors, %d warnings for '%s'",
-					errors->length, warnings->length, scas_runtime.input_files->items[i]);
+					errors->length, warnings->length, scas_runtime.input_names->items[i]);
 		}
 		list_add(objects, o);
 		scas_log_deindent();
@@ -384,6 +384,7 @@ int main(int argc, char **argv) {
 	unsigned int ret = errors->length;
 	scas_log(L_DEBUG, "Exiting with status code %d, cleaning up", ret);
 	list_free(scas_runtime.input_files);
+	list_free(scas_runtime.input_names);
 	free_flat_list(include_path);
 	for (unsigned int i = 0; i < objects->length; i += 1) {
 		object_free((object_t*)objects->items[i]);
