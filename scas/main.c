@@ -29,6 +29,7 @@ void init_scas_runtime() {
 	scas_runtime.jobs = LINK | ASSEMBLE;
 	scas_runtime.macros = create_list();
 	scas_runtime.output_type = EXECUTABLE;
+	scas_runtime.input_names = create_list();
 	scas_runtime.input_files = create_list();
 	scas_runtime.output_file = NULL;
 	scas_runtime.output_extension = "bin";
@@ -51,6 +52,20 @@ void init_scas_runtime() {
 	scas_runtime.options.prog_name_8xp = "SCAS";
 	scas_runtime.options.prog_protected_8xp = true;
 	scas_runtime.options.origin = 0;
+}
+
+static void runtime_open_input(char *name) {
+	FILE *f = NULL;
+	if (strcasecmp(name, "-") == 0) {
+		f = stdin;
+	} else {
+		f = fopen(name, "r");
+	}
+	if (!f) {
+		scas_abort("Unable to open '%s' for assembly", name);
+	}
+	list_add(scas_runtime.input_names, name);
+	list_add(scas_runtime.input_files, f);
 }
 
 static void runtime_open(char *name) {
@@ -78,8 +93,8 @@ void validate_scas_runtime() {
 		} else {
 			ext = "o";
 		}
-		char *out_name = malloc(strlen(scas_runtime.input_files->items[0]) + strlen(ext) + 2);
-		strcpy(out_name, scas_runtime.input_files->items[0]);
+		char *out_name = malloc(strlen(scas_runtime.input_names->items[0]) + strlen(ext) + 2);
+		strcpy(out_name, scas_runtime.input_names->items[0]);
 		int i = strlen(out_name);
 		while (out_name[--i] != '.' && i != 0);
 		if (i == 0) {
@@ -91,7 +106,6 @@ void validate_scas_runtime() {
 		strcat(out_name, ext);
 		scas_log(L_DEBUG, "Assigned output file name to %s", out_name);
 		runtime_open(out_name);
-		scas_runtime.output_file = fopen(out_name, "w+");
 	}
 }
 
@@ -120,7 +134,7 @@ void parse_arguments(int argc, char **argv) {
 				scas_runtime.listing_file = argv[++i];
 			} else if (strcmp("-i", argv[i]) == 0 || strcmp("--input", argv[i]) == 0) {
 				validate_scas_optarg(i, argc, argv);
-				list_add(scas_runtime.input_files, argv[++i]);
+				runtime_open_input(argv[++i]);
 			} else if (strcmp("-c", argv[i]) == 0 || strcmp("--merge", argv[i]) == 0) {
 				scas_runtime.jobs &= ~LINK;
 			} else if (strcmp("-a", argv[i]) == 0 || strcmp("--architecture", argv[i]) == 0) {
@@ -184,7 +198,7 @@ void parse_arguments(int argc, char **argv) {
 		} else {
 			if (scas_runtime.output_file || i != argc - 1 || scas_runtime.input_files->length == 0) {
 				scas_log(L_INFO, "Added input file '%s'", argv[i]);
-				list_add(scas_runtime.input_files, argv[i]);
+				runtime_open_input(argv[i]);
 			} else if (scas_runtime.output_file == NULL && i == argc - 1) {
 				runtime_open(argv[i]);
 			}
@@ -254,19 +268,10 @@ int main(int argc, char **argv) {
 	list_t *warnings = create_list();
 
 	list_t *objects = create_list();
-	int i;
-	for (i = 0; i < scas_runtime.input_files->length; ++i) {
-		scas_log(L_INFO, "Assembling input file: '%s'", scas_runtime.input_files->items[i]);
+	for (unsigned int i = 0; i < scas_runtime.input_files->length; ++i) {
+		scas_log(L_INFO, "Assembling input file: '%s'", scas_runtime.input_names->items[i]);
 		scas_log_indent();
-		FILE *f;
-		if (strcasecmp(scas_runtime.input_files->items[i], "-") == 0) {
-			f = stdin;
-		} else {
-			f = fopen(scas_runtime.input_files->items[i], "r");
-		}
-		if (!f) {
-			scas_abort("Unable to open '%s' for assembly.", scas_runtime.input_files->items[i]);
-		}
+		FILE *f = scas_runtime.input_files->items[i];
 		char magic[7];
 		bool is_object = false;
 		if (fread(magic, sizeof(char), 7, f) == 7) {
@@ -278,8 +283,8 @@ int main(int argc, char **argv) {
 
 		object_t *o;
 		if (is_object) {
-			scas_log(L_INFO, "Loading object file '%s'", scas_runtime.input_files->items[i]);
-			o = freadobj(f, scas_runtime.input_files->items[i]);
+			scas_log(L_INFO, "Loading object file '%s'", scas_runtime.input_names->items[i]);
+			o = freadobj(f, scas_runtime.input_names->items[i]);
 		} else {
 			assembler_settings_t settings = {
 				.include_path = include_path,
@@ -288,7 +293,7 @@ int main(int argc, char **argv) {
 				.warnings = warnings,
 				.macros = scas_runtime.macros,
 			};
-			o = assemble(f, scas_runtime.input_files->items[i], &settings);
+			o = assemble(f, scas_runtime.input_names->items[i], &settings);
 			fclose(f);
 			scas_log(L_INFO, "Assembler returned %d errors, %d warnings for '%s'",
 					errors->length, warnings->length, scas_runtime.input_files->items[i]);
@@ -325,6 +330,7 @@ int main(int argc, char **argv) {
 			scas_log(L_ERROR, "Failed to merge");
 			if (scas_runtime.output_file != stdout && out_name) {
 				remove(out_name);
+				out_name = NULL;
 			}
 		}
 		fclose(scas_runtime.output_file);
