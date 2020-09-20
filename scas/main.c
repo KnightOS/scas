@@ -361,8 +361,10 @@ int main(int argc, char **argv) {
 			free(error->message);
 			free(error);
 		}
-		if (out_name) remove(out_name);
-		remove(scas_runtime.output_file);
+		if (out_name) {
+			remove(out_name);
+			out_name = NULL;
+		}
 	}
 	if (warnings->length != 0) {
 		int i;
