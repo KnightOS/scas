@@ -218,6 +218,11 @@ int try_expand_macro(struct assembler_state *state, char **line) {
 				free_flat_list(userparams);
 				continue;
 			}
+			if (match[name_length] && isalpha(match[name_length])) {
+				scas_log(L_DEBUG, "Not whole word, skipping");
+				free_flat_list(userparams);
+				continue;
+			}
 			endmatch = match + name_length;
 		}
 
