@@ -1039,6 +1039,9 @@ int handle_ifndef(struct assembler_state *state, char **argv, int argc) {
 			*r = 1;
 		}
 	}
+	if (strcmp(argv[0], "1") == 0) {
+		*r = 1;
+	}
 	*r = !*r;
 	stack_push(state->if_stack, r);
 	scas_log(L_DEBUG, "IFNDEF directive evaluated to %d", *r);
