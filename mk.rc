@@ -1,0 +1,21 @@
+mkdir -p bin/
+mkdir -p bin/common/
+mkdir -p bin/assembler/
+mkdir -p bin/linker/
+mkdir -p bin/main/
+
+pcc tables/generate.c -o bin/generate_tables
+./bin/generate_tables tables/z80.tab bin/z80.c bin/generated.h
+
+cd bin/common
+pcc ../../common/*.c -I ../../include -B -c -p
+cd ../assembler
+pcc ../../assembler/*.c -I ../../include -B -c
+cd ../linker
+pcc ../../linker/*.c -I ../../include -B -c
+cd ../main
+pcc ../../scas/*.c -I ../../include -B -c -I..
+pcc ../z80.c -c
+pcc ../../runtime.c ../../log.c -B -c -I../../include/
+cd ..
+pcc assembler/* linker/* common/* main/* -o scas

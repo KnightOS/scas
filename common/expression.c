@@ -1,3 +1,5 @@
+
+#include "list.h"
 #include "io.h"
 #include "expression.h"
 #include "log.h"
@@ -10,7 +12,6 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include <stdio.h>
 
 static operator_t operators[] = {

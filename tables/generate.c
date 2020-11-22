@@ -1,3 +1,4 @@
+#define _POSIX_SOURCE
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>

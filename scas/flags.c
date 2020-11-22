@@ -1,8 +1,8 @@
 #include "flags.h"
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
 #include <stdlib.h>
+#define _BSD_EXTENSION
 #include <ctype.h>
 #include "runtime.h"
 #include "expression.h"
@@ -25,9 +25,9 @@ int format_compare(const void *_a, const void *_b) {
 
 void parse_flag(const char *flag) {
 	flag += 2;
-	char *name = NULL;
-	char *value = NULL;
-	if ((value = strchr(flag, '='))) {
+	char *name, *value;
+	value = strchr(flag, '=');
+	if (value != NULL) {
 		name = malloc(value - flag + 1);
 		strncpy(name, flag, value - flag);
 		name[value - flag] = '\0';

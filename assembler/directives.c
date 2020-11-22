@@ -15,13 +15,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#ifndef _WIN32
-#include <strings.h>
-#endif
 
 #define ERROR(ERROR_CODE, COLUMN, ...) add_error(state->errors, ERROR_CODE, \
 		*(int*)stack_peek(state->line_number_stack), \
-		state->line, COLUMN, stack_peek(state->file_name_stack) , ##__VA_ARGS__);
+		state->line, COLUMN, stack_peek(state->file_name_stack) , __VA_ARGS__);
 
 #define ERROR_NO_ARG(ERROR_CODE, COLUMN) add_error(state->errors, ERROR_CODE, \
 		*(int*)stack_peek(state->line_number_stack), \
@@ -29,7 +26,7 @@
 
 #define WARN(WARN_CODE, COLUMN, ...) add_warning(state->warnings, WARN_CODE, \
 		*(int*)stack_peek(state->line_number_stack), \
-		state->line, COLUMN, stack_peek(state->file_name_stack) , ##__VA_ARGS__);
+		state->line, COLUMN, stack_peek(state->file_name_stack) , __VA_ARGS__);
 
 #define MAP_SOURCE(LENGTH) if (!state->expanding_macro && state->auto_source_maps) { \
 			add_source_map((source_map_t *)stack_peek(state->source_map_stack), \

@@ -8,9 +8,6 @@
 #include "stringop.h"
 #include <stdint.h>
 #include <stdlib.h>
-#ifndef _WIN32
-#include <strings.h>
-#endif
 
 area_t *get_area_by_name(object_t *object, char *name) {
 	for (unsigned int i = 0; i < object->areas->length; ++i) {

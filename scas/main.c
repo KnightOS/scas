@@ -17,9 +17,6 @@
 #include "expression.h"
 #include "runtime.h"
 #include "flags.h"
-#ifndef _WIN32
-#include <strings.h>
-#endif
 
 struct runtime scas_runtime;
 static char *out_name = NULL;

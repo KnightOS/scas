@@ -15,13 +15,10 @@
 #include "errors.h"
 #include "expression.h"
 #include "directives.h"
-#ifndef _WIN32
-#include <strings.h>
-#endif
 
 #define ERROR(ERROR_CODE, COLUMN, ...) add_error(state->errors, ERROR_CODE, \
 		*(int*)stack_peek(state->line_number_stack), \
-		state->line, COLUMN, stack_peek(state->file_name_stack), ##__VA_ARGS__);
+		state->line, COLUMN, stack_peek(state->file_name_stack), __VA_ARGS__);
 
 struct assembler_state state;
 

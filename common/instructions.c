@@ -3,13 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include "log.h"
 #include "list.h"
 #include "readline.h"
 #include "stringop.h"
 
-static __inline uint64_t swapbits(uint64_t p, uint64_t m, int k) {
+static uint64_t swapbits(uint64_t p, uint64_t m, int k) {
 	uint64_t q = ((p>>k)^p)&m;
 	return p^q^(q<<k);
 }

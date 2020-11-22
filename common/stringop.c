@@ -2,13 +2,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#include "string.h"
+#include <string.h>
 #include "list.h"
 #ifdef _WIN32
-#include <string.h>
 #include <windows.h>
-#else
-#include <strings.h>
 #endif
 
 
