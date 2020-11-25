@@ -1,3 +1,6 @@
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
 #include "io.h"
 #include "log.h"
 

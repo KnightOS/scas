@@ -1,13 +1,19 @@
-#include "privatize.h"
 #include <string.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "log.h"
-#include "functions.h"
+#include "list.h"
+#include "stack.h"
 #include "expression.h"
 #include "objects.h"
+#include "functions.h"
 #include "md5.h"
+#include "enums.h"
+#include "linker.h"
 #include "runtime.h"
+#include "privatize.h"
 
 void rename_symbol(area_t *a, const char *original, const char *new) {
 	for (unsigned int i = 0; i < a->late_immediates->length; ++i) {

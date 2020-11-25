@@ -1,13 +1,17 @@
-#include "io.h"
-#include "objects.h"
-#include "log.h"
-#include "functions.h"
-#include "readline.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
+#include "io.h"
+#include "list.h"
+#include "stack.h"
+#include "expression.h"
+#include "objects.h"
+#include "log.h"
+#include "functions.h"
+#include "readline.h"
 
 #define SCASOBJ_VERSION 2
 

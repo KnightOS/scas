@@ -1,20 +1,26 @@
-#include "directives.h"
-#include "assembler.h"
-#include "errors.h"
-#include "functions.h"
-#include "expression.h"
-#include "stringop.h"
-#include "objects.h"
-#include "runtime.h"
-#include "list.h"
-#include "log.h"
-#include "format.h"
+#include <stdio.h>
 #include <limits.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
+#include "list.h"
+#include "stack.h"
+#include "instructions.h"
+#include "linker.h"
+#include "enums.h"
+#include "errors.h"
+#include "expression.h"
+#include "stringop.h"
+#include "objects.h"
+#include "functions.h"
+#include "assembler.h"
+#include "directives.h"
+#include "runtime.h"
+#include "log.h"
+#include "format.h"
 
 #define ERROR(ERROR_CODE, COLUMN, ...) add_error(state->errors, ERROR_CODE, \
 		*(int*)stack_peek(state->line_number_stack), \

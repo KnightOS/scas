@@ -1,18 +1,19 @@
+#include <ctype.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "list.h"
 #include "io.h"
+#include "stack.h"
 #include "expression.h"
 #include "log.h"
 #include "readline.h"
-#include "stack.h"
 #include "stringop.h"
 #include "operators.h"
 #include "objects.h"
-
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
 
 static operator_t operators[] = {
 	{ "+", OP_UNARY_PLUS, 1, 3, 1, operator_unary_plus },

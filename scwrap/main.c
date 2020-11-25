@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include "log.h"
 #include "list.h"
-#include "objects.h"
+#include "stack.h"
 #include "expression.h"
+#include "objects.h"
 
 struct {
 	char *input_file;

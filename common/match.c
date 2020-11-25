@@ -1,10 +1,14 @@
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include "list.h"
 #include "stringop.h"
+#include "instructions.h"
 #include "match.h"
 #include "log.h"
-#include "instructions.h"
 
 /* 
  * Used to get the value provided in code for an operand or immediate value 

@@ -1,31 +1,9 @@
-#include "stringop.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #include "list.h"
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
-
-/* I'm fairly sure every windows toolchain
- * has this feature by now */
-#ifndef strcasecmp
-int strcasecmp(const char* s1, const char* s2)
-{
-	int c1, c2;
-	while (*s1 && *s2) {
-		c1 = tolower((int)*s1);
-		c2 = tolower((int)*s2);
-		if(c1 != c2)
-			return (c1 - c2);
-		s1++;
-		s2++;
-	}
-	return (int)(*s1 - *s2);
-}
-#endif
+#include "stringop.h"
 
 /* Note: This returns 8 characters for trimmed_start per tab character. */
 char *strip_whitespace(char *_str, int *trimmed_start) {

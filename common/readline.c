@@ -1,6 +1,6 @@
-#include "readline.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "readline.h"
 
 char *read_line(FILE *file) {
 	int i = 0, length = 0, size = 128;

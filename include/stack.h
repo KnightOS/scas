@@ -1,6 +1,3 @@
-#ifndef STACK_H
-#define STACK_H
-
 typedef struct {
 	int capacity;
 	int length;
@@ -15,5 +12,3 @@ void *stack_peek(stack_type *stack);
 void stack_shrink_to_fit(stack_type *stack);
 
 #define STACK_GROWTH_RATE 16
-
-#endif

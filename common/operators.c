@@ -1,7 +1,9 @@
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include "operators.h"
+#include "list.h"
 #include "stack.h"
+#include "operators.h"
 #include "expression.h"
 
 uint64_t operator_add(stack_type *stack, int *error) {

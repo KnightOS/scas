@@ -1,11 +1,3 @@
-#ifndef ASSEMBLER_H
-#define ASSEMBLER_H
-#include <stdio.h>
-#include <stdbool.h>
-#include "list.h"
-#include "objects.h"
-#include "instructions.h"
-
 typedef struct {
 	instruction_set_t *set;
 	list_t *include_path;
@@ -52,5 +44,3 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 void transform_local_labels(tokenized_expression_t *expression, const char *last_global_label);
 void transform_relative_labels(tokenized_expression_t *expression, int last_relative_label, const char *const file_name);
 void macro_free(macro_t *macro);
-	
-#endif

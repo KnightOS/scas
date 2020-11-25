@@ -1,6 +1,3 @@
-#ifndef ENUMS_H
-#define ENUMS_H
-
 typedef enum {
     ASSEMBLE = 1,
     LINK = 2,
@@ -12,4 +9,3 @@ typedef enum {
     EXECUTABLE
 } output_type_t;
 
-#endif

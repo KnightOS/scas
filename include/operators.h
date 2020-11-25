@@ -1,8 +1,3 @@
-#ifndef OPERATORS_H
-#define OPERATORS_H
-#include <stdint.h>
-#include "stack.h"
-
 enum {
     OP_PLUS = 1,
     OP_MINUS,
@@ -50,5 +45,3 @@ uint64_t operator_bitwise_xor(stack_type *stack, int *error);
 uint64_t operator_bitwise_or(stack_type *stack, int *error);
 uint64_t operator_logical_and(stack_type *stack, int *error);
 uint64_t operator_logical_or(stack_type *stack, int *error);
-
-#endif

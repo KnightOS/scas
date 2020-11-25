@@ -1,12 +1,3 @@
-#ifndef OBJECT_H
-#define OBJECT_H
-#include "list.h"
-#include "expression.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <stddef.h>
-#include <stdbool.h>
-
 enum {
     SYMBOL_LABEL,
     SYMBOL_EQUATE
@@ -92,5 +83,3 @@ object_t *freadobj(FILE *file, const char *name);
 void add_source_map(source_map_t *map, int line_number, const char *line, uint64_t address, uint64_t length);
 source_map_t *create_source_map(area_t *area, const char *file_name);
 void source_map_free(source_map_t *map);
-
-#endif

@@ -1,15 +1,22 @@
-#include "flags.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
+
 #define _BSD_EXTENSION
 #include <ctype.h>
-#include "runtime.h"
+
+#include "stack.h"
+#include "list.h"
+#include "enums.h"
 #include "expression.h"
 #include "log.h"
 #include "linker.h"
+#include "runtime.h"
 #include "bin.h"
 #include "8xp.h"
+#include "flags.h"
 
 /* Keep alphabetized */
 struct output_format output_formats[] = {

@@ -1,10 +1,11 @@
-#include "instructions.h"
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include "log.h"
 #include "list.h"
+#include "instructions.h"
 #include "readline.h"
 #include "stringop.h"
 

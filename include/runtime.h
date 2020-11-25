@@ -1,10 +1,3 @@
-#ifndef GLOBALS_H
-#define GLOBALS_H
-#include <stdbool.h>
-#include "list.h"
-#include "linker.h"
-#include "enums.h"
-
 struct runtime_options {
 	bool explicit_export;				/* -fexplicit-export */
 	bool explicit_import;				/* -fexplicit-import */
@@ -34,5 +27,3 @@ struct runtime {
 };
 
 extern struct runtime scas_runtime;
-
-#endif

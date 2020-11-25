@@ -1,10 +1,3 @@
-#ifndef LINKER_H
-#define LINKER_H
-#include "list.h"
-#include "objects.h"
-#include <stdio.h>
-#include <stdint.h>
-
 typedef int (*format_writer)(FILE *f, uint8_t *data, int data_length);
 
 typedef struct {
@@ -16,5 +9,3 @@ typedef struct {
 } linker_settings_t;
 
 void link_objects(FILE *output, list_t *objects, linker_settings_t *settings);
-
-#endif

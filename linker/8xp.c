@@ -1,8 +1,12 @@
-#include "8xp.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include "list.h"
+#include "enums.h"
+#include "linker.h"
+#include "8xp.h"
 #include "runtime.h"
 
 #define UNPROTECTED_8XP 0x05

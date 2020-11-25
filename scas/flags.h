@@ -1,7 +1,3 @@
-#ifndef _FLAGS_H
-#define _FLAGS_H
-#include "linker.h"
-
 struct output_format {
 	char *name;
 	format_writer writer;
@@ -9,4 +5,3 @@ struct output_format {
 
 void parse_flag(const char *flag);
 
-#endif

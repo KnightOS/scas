@@ -1,9 +1,3 @@
-#ifndef ERRORS_H
-#define ERRORS_H
-#include "list.h"
-#include <stdint.h>
-#include <stddef.h>
-
 enum {
     ERROR_INVALID_INSTRUCTION = 1,
     ERROR_VALUE_TRUNCATED,
@@ -46,4 +40,3 @@ void add_error_from_map(list_t *errors, int code, list_t *maps, uint64_t
 void add_warning(list_t *warnings, int code, size_t line_number,
 		const char *line, int column, const char *file_name, ...);
 
-#endif

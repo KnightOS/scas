@@ -1,12 +1,16 @@
-#include "errors.h"
-#include "list.h"
-#include "log.h"
-#include "objects.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 #include <stdarg.h>
+
+#include "list.h"
+#include "stack.h"
+#include "errors.h"
+#include "log.h"
+#include "expression.h"
+#include "objects.h"
 
 const char *get_error_string(error_t *error) {
 	switch (error->code) {

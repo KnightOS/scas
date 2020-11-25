@@ -1,19 +1,24 @@
-#include "assembler.h"
 #include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "privatize.h"
 #include "list.h"
+#include "stack.h"
+#include "instructions.h"
+#include "linker.h"
+#include "enums.h"
+#include "expression.h"
+#include "objects.h"
+#include "assembler.h"
+#include "privatize.h"
 #include "log.h"
 #include "runtime.h"
-#include "objects.h"
 #include "readline.h"
 #include "stringop.h"
-#include "instructions.h"
 #include "match.h"
 #include "errors.h"
-#include "expression.h"
 #include "directives.h"
 
 #define ERROR(ERROR_CODE, COLUMN, ...) add_error(state->errors, ERROR_CODE, \

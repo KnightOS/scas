@@ -1,12 +1,16 @@
-#include "functions.h"
-#include "objects.h"
-#include "list.h"
-#include "hashtable.h"
-#include "expression.h"
-#include "log.h"
-#include <stdlib.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
+
+#include "list.h"
+#include "stack.h"
+#include "expression.h"
+#include "objects.h"
+#include "functions.h"
+#include "hashtable.h"
+#include "log.h"
 
 unsigned int hash(void *data) {
 	unsigned int hash = 5381;

@@ -1,7 +1,3 @@
-#ifndef MATCH_H
-#define MATCH_H
-#include "instructions.h"
-
 typedef struct {
     char key;
     char *value_provided;
@@ -24,5 +20,3 @@ instruction_match_t *match_instruction(instruction_set_t *set, const char *str);
 instruction_match_t *match_opcode(instruction_set_t *set, char *first_byte);
 // free the memory allocated by one of the two above functions
 void match_free(instruction_match_t *match);
-
-#endif

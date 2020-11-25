@@ -1,13 +1,19 @@
-#include "merge.h"
-#include "linker.h"
-#include "objects.h"
-#include "errors.h"
-#include "functions.h"
-#include "list.h"
-#include "log.h"
-#include "stringop.h"
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
+
+#include "list.h"
+#include "linker.h"
+#include "stack.h"
+#include "expression.h"
+#include "objects.h"
+#include "merge.h"
+#include "errors.h"
+#include "functions.h"
+#include "log.h"
+#include "stringop.h"
 
 area_t *get_area_by_name(object_t *object, char *name) {
 	for (unsigned int i = 0; i < object->areas->length; ++i) {

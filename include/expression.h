@@ -1,10 +1,3 @@
-#ifndef EXPRESSION_H
-#define EXPRESSION_H
-#include "list.h"
-#include "stack.h"
-#include <stdint.h>
-#include <stdio.h>
-
 enum {
 	SYMBOL = 0x00,
 	NUMBER = 0x01,
@@ -55,5 +48,3 @@ void fwrite_tokens(FILE *f, tokenized_expression_t *expression);
 tokenized_expression_t *fread_tokenized_expression(FILE *f);
 void free_expression_token(expression_token_t *token);
 int get_relative_label_offset(tokenized_expression_t *expression, unsigned int *start);
-
-#endif

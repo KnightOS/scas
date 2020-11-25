@@ -1,20 +1,25 @@
 #define _POSIX_C_SOURCE 200809L
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+
 #include "generated.h"
+#include "list.h"
+#include "stack.h"
 #include "log.h"
 #include "stringop.h"
-#include "list.h"
 #include "enums.h"
 #include "errors.h"
+#include "expression.h"
+#include "objects.h"
+#include "instructions.h"
 #include "assembler.h"
 #include "bin.h"
 #include "linker.h"
 #include "merge.h"
-#include "expression.h"
 #include "runtime.h"
 #include "flags.h"
 

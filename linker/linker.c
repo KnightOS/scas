@@ -1,18 +1,21 @@
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "enums.h"
+#include "list.h"
+#include "stack.h"
 #include "linker.h"
+#include "expression.h"
 #include "objects.h"
 #include "errors.h"
-#include "list.h"
-#include "expression.h"
 #include "string.h"
 #include "instructions.h"
 #include "functions.h"
 #include "merge.h"
 #include "runtime.h"
 #include "log.h"
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdlib.h>
-
 
 /*
  * Notes on how this could be improved:

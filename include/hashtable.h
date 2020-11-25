@@ -1,6 +1,3 @@
-#ifndef HASHTABLE_H
-#define HASHTABLE_H
-
 typedef struct {
     unsigned int key;
     void *value;
@@ -17,5 +14,3 @@ hashtable_t *create_hashtable(int buckets, unsigned int (*hash_function)(void *)
 void free_hashtable(hashtable_t *table);
 void *hashtable_get(hashtable_t *table, void *key);
 void *hashtable_set(hashtable_t *table, void *key, void *value);
-
-#endif

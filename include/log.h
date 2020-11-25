@@ -1,8 +1,3 @@
-#ifndef LOG_H
-#define LOG_H
-
-#include <stdbool.h>
-
 typedef enum {
     L_SILENT = 0,
     L_ERROR = 1,
@@ -17,4 +12,3 @@ void scas_log_indent();
 void scas_log_deindent();
 void scas_log_set_colors(bool enabled);
 
-#endif
