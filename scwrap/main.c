@@ -37,7 +37,8 @@ int main(int argc, char **argv) {
 	if (!parse_arguments(argc, argv)) {
 		return 1;
 	}
-	scas_log_init(L_INFO);
+
+	scas_log_verbosity = L_INFO;
 
 	object_t *o = create_object();
 	area_t *a = create_area("DATA");

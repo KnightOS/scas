@@ -43,7 +43,6 @@ void init_scas_runtime() {
 		strcpy(scas_runtime.include_path, "./");
 	}
 	scas_runtime.linker_script = NULL;
-	scas_runtime.verbosity = L_SILENT;
 
 	scas_runtime.options.explicit_export = false;
 	// TODO: reenable
@@ -166,7 +165,7 @@ void parse_arguments(int argc, char **argv) {
 				int j;
 				for (j = 1; argv[i][j] != '\0'; ++j) {
 					if (argv[i][j] == 'v') {
-						scas_runtime.verbosity++;
+						scas_log_verbosity++;
 					} else {
 						scas_log(L_ERROR, "Invalid option %s", argv[i]);
 						exit(1);
@@ -263,8 +262,8 @@ list_t *split_include_path() {
 
 int main(int argc, char **argv) {
 	init_scas_runtime();
+	scas_log_verbosity = L_SILENT;
 	parse_arguments(argc, argv);
-	scas_log_init(scas_runtime.verbosity);
 	validate_scas_runtime();
 	instruction_set_t *instruction_set = find_inst();
 	if (instruction_set == NULL) {
@@ -279,7 +278,7 @@ int main(int argc, char **argv) {
 	list_t *objects = create_list();
 	for (unsigned int i = 0; i < scas_runtime.input_files->length; ++i) {
 		scas_log(L_INFO, "Assembling input file: '%s'", scas_runtime.input_names->items[i]);
-		scas_log_indent();
+		scas_log_indent += 1;
 		FILE *f = scas_runtime.input_files->items[i];
 		char magic[7];
 		bool is_object = false;
@@ -308,7 +307,7 @@ int main(int argc, char **argv) {
 					errors->length, warnings->length, scas_runtime.input_names->items[i]);
 		}
 		list_add(objects, o);
-		scas_log_deindent();
+		scas_log_indent -= 1;
 	}
 
 	if ((scas_runtime.jobs & LINK) == LINK) {

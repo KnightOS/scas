@@ -421,7 +421,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 		return 0;
 	} else {
 		scas_log(L_DEBUG, "Matched string '%s' to instruction '%s'", line, match->instruction->match);
-		scas_log_indent();
+		scas_log_indent += 1;
 		uint64_t instruction = match->instruction->value;
 		for (unsigned int i = 0; i < match->operands->length; ++i) {
 			operand_ref_t *ref = match->operands->items[i];
@@ -522,7 +522,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 		}
 		append_to_area(state->current_area, state->instruction_buffer, bytes_width);
 		state->PC += bytes_width;
-		scas_log_deindent();
+		scas_log_indent -= 1;
 		match_free(match);
 	}
 	return 1;

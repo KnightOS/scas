@@ -8,9 +8,14 @@
 #include <emscripten.h>
 #endif
 
-static scas_log_importance_t v = 0;
-static unsigned indent = 0;
-static bool colored = true;
+void scas_log_default(const char *msg) {
+	fprintf(stderr, "%s", msg);
+}
+
+scas_log_importance_t scas_log_verbosity = 0;
+unsigned scas_log_indent = 0;
+bool scas_log_colorize = true;
+void (*scas_log_function)(const char *) = scas_log_default;
 
 const char *verbosity_colors[] = {
 	"", // L_SILENT
@@ -19,42 +24,34 @@ const char *verbosity_colors[] = {
 	"\x1B[1;30m", // L_DEBUG
 };
 
-void scas_log_init(scas_log_importance_t verbosity) {
-	v = verbosity;
-}
-
-void scas_log_set_colors(bool _colored) {
-	colored = _colored;
-}
-
-void scas_log_indent() {
-	++indent;
-}
-
-void scas_log_deindent() {
-	if (indent > 0) {
-		--indent;
-	}
-}
-
 void scas_log(scas_log_importance_t verbosity, char* format, ...) {
-	if (verbosity <= v && verbosity >= 0) {
-		size_t c = verbosity;
-		if (c > sizeof(verbosity_colors) / sizeof(char *)) {
-			c = sizeof(verbosity_colors) / sizeof(char *) - 1;
-		}
-		if (colored) {
-			fprintf(stderr, "%s", verbosity_colors[c]);
-		}
-		if (verbosity == L_DEBUG || verbosity == L_INFO) {
-			for (unsigned i = 0; i < indent; ++i) {
-				fprintf(stderr, "  ");
+	if (scas_log_function) {
+		if (verbosity <= scas_log_verbosity && verbosity >= 0) {
+			size_t c = verbosity;
+			if (c > sizeof(verbosity_colors) / sizeof(char *)) {
+				c = sizeof(verbosity_colors) / sizeof(char *) - 1;
+			}
+			if (scas_log_colorize) {
+				scas_log_function(verbosity_colors[c]);
+			}
+			if (verbosity == L_DEBUG || verbosity == L_INFO) {
+				for (unsigned i = 0; i < scas_log_indent; ++i) {
+					scas_log_function("  ");
+				}
+			}
+			va_list args;
+			va_start(args, format);
+			int length = vsnprintf(NULL, 0, format, args);
+			va_end(args);
+			if (length > 0) {
+				va_start(args, format);
+				char *buf = malloc(length + 1);
+				vsnprintf(buf, length, format, args);
+				va_end(args);
+				scas_log_function(buf);
+				free(buf);
+				scas_log_function(scas_log_colorize ? "\n\x1B[0m" : "\n");
 			}
 		}
-		va_list args;
-		va_start(args, format);
-		vfprintf(stderr, format, args);
-		va_end(args);
-		fprintf(stderr, "%s\n", colored ? "\x1B[0m" : "");
 	}
 }
