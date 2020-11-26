@@ -15,7 +15,7 @@ tasks:
       cd scas
       mkdir build
       cd build
-      cmake -DCMAKE_BUILD_TYPE=Debug -GNinja ..
+      cmake -DCMAKE_BUILD_TYPE=Debug -DSCAS_LIBRARY=TRUE -GNinja ..
       samu
       cd ../../kernel
       # Temporary: use scas PR
@@ -26,6 +26,6 @@ tasks:
       rm -rf build
       mkdir build
       cd build
-      cmake -DCMAKE_BUILD_TYPE=Release -GNinja ..
+      cmake -DCMAKE_BUILD_TYPE=Release -DSCAS_LIBRARY=TRUE -GNinja ..
       samu
       # TODO: hash with release build, compare with debug?
