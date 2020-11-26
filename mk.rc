@@ -7,15 +7,27 @@ mkdir -p bin/main/
 pcc tables/generate.c -o bin/generate_tables
 ./bin/generate_tables tables/z80.tab bin/z80.c bin/generated.h
 
-cd bin/common
-pcc ../../common/*.c -I ../../include -B -c -p
-cd ../assembler
-pcc ../../assembler/*.c -I ../../include -B -c
-cd ../linker
-pcc ../../linker/*.c -I ../../include -B -c
-cd ../main
-pcc ../../scas/*.c -I ../../include -B -c -I..
-pcc ../z80.c -c
-pcc ../../runtime.c ../../log.c -B -c -I../../include/
-cd ..
+fn panic {
+	echo $"*
+	exit 1
+}
+
+fn build {
+	cd bin/$1
+	ls ../../$2/*.c | while (file=`{read}) {
+		echo compiling `{echo $file | sed 's$../../$$'}
+		pcc $file -I ../../include -B -c $3 || panic failed to build $file
+	}
+	cd ../..
+}
+
+build common common
+build assembler assembler
+build linker linker
+build main scas -I..
+build main bin/
+cd bin
+echo linking scas
 pcc assembler/* linker/* common/* main/* -o scas
+cd ..
+echo build complete!
