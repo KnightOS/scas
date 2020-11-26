@@ -7,7 +7,6 @@ typedef enum {
 
 void scas_log_init(scas_log_importance_t verbosity);
 void scas_log(scas_log_importance_t verbosity, char* format, ...);
-void scas_abort(char* format, ...);
 void scas_log_indent();
 void scas_log_deindent();
 void scas_log_set_colors(bool enabled);

@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
-#include "io.h"
 #include "list.h"
 #include "stack.h"
 #include "expression.h"
@@ -257,42 +256,79 @@ area_t *read_area(FILE *f) {
 	scas_log(L_DEBUG, "Reading area '%s' from file", name);
 	free(name);
 	uint32_t symbols, immediates;
-	scas_read(&symbols, sizeof(uint32_t), 1, f);
+	if (fread(&symbols, 1, sizeof(uint32_t), f) != sizeof(uint32_t)) {
+		scas_log(L_ERROR, "Failed to read area from file");
+		area_free(area);
+		return NULL;
+	}
 	uint32_t len;
 	for (uint32_t i = 0; i < symbols; ++i) {
 		symbol_t *sym = malloc(sizeof(symbol_t));
 		sym->exported = fgetc(f);
-		scas_read(&len, sizeof(uint32_t), 1, f);
+		if (fread(&len, sizeof(uint32_t), 1, f) != 1) {
+			scas_log(L_ERROR, "TODO FIXME");
+			return NULL;
+		}
 		sym->name = calloc(len + 1, sizeof(char));
-		scas_read(sym->name, sizeof(char), len, f);
-		scas_read(&sym->value, sizeof(uint64_t), 1, f);
-		scas_read(&sym->defined_address, sizeof(uint64_t), 1, f);
+		if (fread(sym->name, 1, len, f) != len) {
+			scas_log(L_ERROR, "TODO FIXME");
+			return NULL;
+		}
+		if (fread(&sym->value, 1, sizeof(uint64_t), f) != sizeof(uint64_t)) {
+			scas_log(L_ERROR, "TODO FIXME");
+			return NULL;
+		}
+		if (fread(&sym->defined_address, 1, sizeof(uint64_t), f) != sizeof(uint64_t)) {
+			scas_log(L_ERROR, "TODO FIXME");
+			return NULL;
+		}
 		sym->type = SYMBOL_LABEL;
 		list_add(area->symbols, sym);
 		scas_log(L_DEBUG, "Read symbol '%s' with value 0x%08X%08X", sym->name, (uint32_t)(sym->value >> 32), (uint32_t)sym->value);
 	}
 	/* TODO: Imports */
-	scas_read(&immediates, sizeof(uint32_t), 1, f);
+	if (fread(&immediates, 1, sizeof(uint32_t), f) != sizeof(uint32_t)) {
+		scas_log(L_ERROR, "TODO FIXME");
+		return NULL;
+	}
 	for (uint32_t i = 0; i < immediates; ++i) {
 		late_immediate_t *imm = malloc(sizeof(late_immediate_t));
 		imm->type = fgetc(f);
 		imm->width = fgetc(f);
-		scas_read(&imm->instruction_address, sizeof(uint64_t), 1, f);
-		scas_read(&imm->base_address, sizeof(uint64_t), 1, f);
-		scas_read(&imm->address, sizeof(uint64_t), 1, f);
+		if (fread(&imm->instruction_address, sizeof(uint64_t), 1, f) != 1) {
+			scas_log(L_ERROR, "TODO FIXME");
+			return NULL;
+		}
+		if (fread(&imm->base_address, sizeof(uint64_t), 1, f) != 1) {
+			scas_log(L_ERROR, "TODO FIXME");
+			return NULL;
+		}
+		if (fread(&imm->address, sizeof(uint64_t), 1, f) != 1) {
+			scas_log(L_ERROR, "TODO FIXME");
+			return NULL;
+		}
 		imm->expression = fread_tokenized_expression(f);
 		list_add(area->late_immediates, imm);
 		scas_log(L_DEBUG, "Read immediate value at 0x%08X (width: %d)", imm->address, imm->width);
 	}
-	scas_read(&area->data_length, sizeof(uint64_t), 1, f);
+	if (fread(&area->data_length, sizeof(uint64_t), 1, f) != 1) {
+		scas_log(L_ERROR, "TODO FIXME");
+		return NULL;
+	}
 	area->data_capacity = area->data_length;
 	free(area->data);
 	area->data = malloc((int)area->data_length);
-	scas_read(area->data, sizeof(uint8_t), (int)area->data_length, f);
+	if (fread(area->data, sizeof(uint8_t), (int)area->data_length, f) != 1) {
+		scas_log(L_ERROR, "TODO FIXME");
+		return NULL;
+	}
 	scas_log(L_DEBUG, "Read %d bytes of machine code", area->data_length);
 
 	uint64_t meta_length, meta_key;
-	scas_read(&meta_length, sizeof(uint64_t), 1, f);
+	if (fread(&meta_length, sizeof(uint64_t), 1, f) != 1) {
+		scas_log(L_ERROR, "TODO FIXME");
+		return NULL;
+	}
 	meta_length = (int)meta_length;
 	scas_log(L_DEBUG, "Reading %d metadata entries", meta_length);
 	for (uint64_t i = 0; i < meta_length; ++i) {
@@ -301,29 +337,53 @@ area_t *read_area(FILE *f) {
 		meta_key = fgetc(f);
 		meta->key = malloc(meta_key + 1);
 		meta->key[meta_key] = 0;
-		scas_read(meta->key, sizeof(char), meta_key, f);
-		scas_read(&meta->value_length, sizeof(uint64_t), 1, f);
+		if (fread(meta->key, sizeof(char), meta_key, f) != 1) {
+			scas_log(L_ERROR, "TODO FIXME");
+			return NULL;
+		}
+		if (fread(&meta->value_length, sizeof(uint64_t), 1, f) != 1) {
+			scas_log(L_ERROR, "TODO FIXME");
+			return NULL;
+		}
 		meta->value = malloc(meta->value_length + 1);
 		meta->value[meta->value_length] = 0;
-		scas_read(meta->value, sizeof(char), meta->value_length, f);
+		if (fread(meta->value, sizeof(char), meta->value_length, f) != 1) {
+			scas_log(L_ERROR, "TODO FIXME");
+			return NULL;
+		}
 		list_add(area->metadata, meta);
 		scas_log(L_DEBUG, "Read metadata %s with value length %d", meta->key, meta->value_length);
 	}
 
 	uint64_t fileno, lineno;
-	scas_read(&fileno, sizeof(uint64_t), 1, f);
+	if (fread(&fileno, sizeof(uint64_t), 1, f) != 1) {
+		scas_log(L_ERROR, "TODO FIXME");
+		return NULL;
+	}
 	fileno = (int)fileno;
 	for (uint64_t i = 0; i < fileno; ++i) {
 		source_map_t *map = malloc(sizeof(source_map_t));
 		map->file_name = read_line(f);
 		map->entries = create_list();
-		scas_read(&lineno, sizeof(uint64_t), 1, f);
+		if (fread(&lineno, sizeof(uint64_t), 1, f) != 1) {
+			scas_log(L_ERROR, "TODO FIXME");
+			return NULL;
+		}
 		scas_log(L_DEBUG, "Reading source map for '%s', %d entries", map->file_name, lineno);
 		for (uint64_t j = 0; j < lineno; ++j) {
 			source_map_entry_t *entry = malloc(sizeof(source_map_entry_t));
-			scas_read(&entry->line_number, sizeof(uint64_t), 1, f);
-			scas_read(&entry->address, sizeof(uint64_t), 1, f);
-			scas_read(&entry->length, sizeof(uint64_t), 1, f);
+			if (fread(&entry->line_number, sizeof(uint64_t), 1, f) != 1) {
+				scas_log(L_ERROR, "TODO FIXME");
+				return NULL;
+			}
+			if (fread(&entry->address, sizeof(uint64_t), 1, f) != 1) {
+				scas_log(L_ERROR, "TODO FIXME");
+				return NULL;
+			}
+			if (fread(&entry->length, sizeof(uint64_t), 1, f) != 1) {
+				scas_log(L_ERROR, "TODO FIXME");
+				return NULL;
+			}
 			entry->source_code = read_line(f);
 			list_add(map->entries, entry);
 			scas_log(L_DEBUG, "Read entry at 0x%08X%08X (line %d): %s", (uint32_t)(entry->address >> 32), (uint32_t)entry->address, entry->line_number, entry->source_code);
@@ -334,18 +394,23 @@ area_t *read_area(FILE *f) {
 }
 
 object_t *freadobj(FILE *f, const char *name) {
-	object_t  *o = create_object();
 	char magic[7];
 	int len = fread(magic, sizeof(char), 7, f);
 	if (len != 7 || strncmp("SCASOBJ", magic, 7) != 0) {
-		scas_abort("'%s' is not a valid object file.", name);
+		scas_log(L_ERROR, "'%s' is not a valid object file.", name);
+		return NULL;
 	}
 	int ver = fgetc(f);
 	if (ver != SCASOBJ_VERSION) {
-		scas_abort("'%s' was built with an incompatible version of scas.", name);
+		scas_log(L_ERROR, "'%s' was built with an incompatible version of scas.", name);
+		return NULL;
 	}
 	uint32_t area_count;
-	scas_read(&area_count, sizeof(uint32_t), 1, f);
+	if (fread(&area_count, sizeof(uint32_t), 1, f) != 1) {
+		scas_log(L_ERROR, "TODO FIXME");
+		return NULL;
+	}
+	object_t  *o = create_object();
 	for (uint32_t i = 0; i < area_count; ++i) {
 		list_add(o->areas, read_area(f));
 	}

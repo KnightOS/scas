@@ -3,5 +3,5 @@ struct output_format {
 	format_writer writer;
 };
 
-void parse_flag(const char *flag);
+bool parse_flag(const char *flag);
 

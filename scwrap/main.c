@@ -21,18 +21,22 @@ void init_runtime() {
 	runtime.prefix = NULL;
 }
 
-void parse_arguments(int argc, char **argv) {
+bool parse_arguments(int argc, char **argv) {
 	if (argc != 4) {
-		scas_abort("Invalid usage. See `man scwrap` for usage info.");
+		scas_log(L_ERROR, "Invalid usage. See `man scwrap` for usage info.");
+		return false;
 	}
 	runtime.input_file = argv[1];
 	runtime.output_file = argv[2];
 	runtime.prefix = argv[3];
+	return true;
 }
 
 int main(int argc, char **argv) {
 	init_runtime();
-	parse_arguments(argc, argv);
+	if (!parse_arguments(argc, argv)) {
+		return 1;
+	}
 	scas_log_init(L_INFO);
 
 	object_t *o = create_object();
@@ -46,7 +50,8 @@ int main(int argc, char **argv) {
 		in = fopen(runtime.input_file, "r");
 	}
 	if (!in) {
-		scas_abort("Unable to open input file '%s'.", runtime.input_file);
+		scas_log(L_ERROR, "Unable to open input file '%s'.", runtime.input_file);
+		return 1;
 	}
 
 	const char *_end = "_end";
@@ -90,7 +95,8 @@ int main(int argc, char **argv) {
 		out = fopen(runtime.output_file, "w+");
 	}
 	if (!out) {
-		scas_abort("Unable to open '%s' for output.", runtime.output_file);
+		scas_log(L_ERROR, "Unable to open '%s' for output.", runtime.output_file);
+		return 1;
 	}
 	fwriteobj(out, o);
 	return 0;

@@ -29,7 +29,7 @@ void init_runtime() {
 	runtime.dump_machine_code = 0;
 }
 
-void parse_arguments(int argc, char **argv) {
+bool parse_arguments(int argc, char **argv) {
 	int i;
 	for (i = 1; i < argc; ++i) {
 		if (argv[i][0] == '-' && argv[i][1] != '\0') {
@@ -48,12 +48,14 @@ void parse_arguments(int argc, char **argv) {
 			} else if (strcmp("-x", argv[i]) == 0 || strcmp("--machine-code", argv[i]) == 0) {
 				runtime.dump_machine_code = 1;
 			} else {
-				scas_abort("Invalid option %s", argv[i]);
+				scas_log(L_ERROR, "Invalid option %s", argv[i]);
+				return false;
 			}
 		} else {
 			list_add(runtime.input_files, argv[i]);
 		}
 	}
+	return true;
 }
 
 symbol_t *find_label(uint64_t address, area_t *area) {
@@ -125,7 +127,9 @@ area_t *find_area(const char *name, object_t *o) {
 
 int main(int argc, char **argv) {
 	init_runtime();
-	parse_arguments(argc, argv);
+	if (!parse_arguments(argc, argv)) {
+		return 1;
+	}
 	scas_log_init(L_INFO);
 	scas_log_set_colors(false);
 	for (unsigned int i = 0; i < runtime.input_files->length; ++i) {
@@ -136,7 +140,8 @@ int main(int argc, char **argv) {
 			f = fopen(runtime.input_files->items[i], "r");
 		}
 		if (!f) {
-			scas_abort("Unable to open '%s' for linking.", runtime.input_files->items[i]);
+			scas_log(L_ERROR, "Unable to open '%s' for linking.", runtime.input_files->items[i]);
+			return 1;
 		}
 		object_t *o = freadobj(f, runtime.input_files->items[i]);
 		if (runtime.area == NULL) {
@@ -147,7 +152,8 @@ int main(int argc, char **argv) {
 		} else {
 			area_t *a = find_area(runtime.area, o);
 			if (a == NULL) {
-				scas_abort("Object file does not contain area '%s'.", runtime.area);
+				scas_log(L_ERROR, "Object file does not contain area '%s'.", runtime.area);
+				return 1;
 			}
 			dump_area(a);
 		}

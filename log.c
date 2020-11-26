@@ -37,22 +37,6 @@ void scas_log_deindent() {
 	}
 }
 
-void scas_abort(char *format, ...) {
-	fprintf(stderr, "ERROR: ");
-	va_list args;
-	va_start(args, format);
-	vfprintf(stderr, format, args);
-	va_end(args);
-	fprintf(stderr, "\n");
-#ifdef EMSCRIPTEN
-	EM_ASM(
-			throw 'aborting';
-		);
-#else
-	exit(1);
-#endif
-}
-
 void scas_log(scas_log_importance_t verbosity, char* format, ...) {
 	if (verbosity <= v && verbosity >= 0) {
 		size_t c = verbosity;

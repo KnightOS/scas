@@ -64,7 +64,8 @@ static void runtime_open_input(char *name) {
 		f = fopen(name, "r");
 	}
 	if (!f) {
-		scas_abort("Unable to open '%s' for assembly", name);
+		scas_log(L_ERROR, "Unable to open '%s' for assembly", name);
+		exit(1);
 	}
 	list_add(scas_runtime.input_names, name);
 	list_add(scas_runtime.input_files, f);
@@ -78,14 +79,16 @@ static void runtime_open(char *name) {
 	} else {
 		scas_runtime.output_file = fopen(name, "w+");
 		if (!scas_runtime.output_file) {
-			scas_abort("Unable to open '%s' for output", name);
+			scas_log(L_ERROR, "Unable to open '%s' for output", name);
+			exit(1);
 		}
 	}
 }
 
 void validate_scas_runtime() {
 	if (scas_runtime.input_files->length == 0) {
-		scas_abort("No input files given");
+		scas_log(L_ERROR, "No input files given");
+		exit(1);
 	}
 	if (scas_runtime.output_file == NULL) {
 		/* Auto-assign an output file name */
@@ -118,7 +121,8 @@ void validate_scas_runtime() {
  */
 void validate_scas_optarg(int optind, int argc, char *argv[]) {
 	if (optind == argc - 1 || argv[optind+1][0] == '-') {
-		scas_abort("Option requires argument: %s", argv[optind]);
+		scas_log(L_ERROR, "Option requires argument: %s", argv[optind]);
+		exit(1);
 	}
 }
 
@@ -164,7 +168,8 @@ void parse_arguments(int argc, char **argv) {
 					if (argv[i][j] == 'v') {
 						scas_runtime.verbosity++;
 					} else {
-						scas_abort("Invalid option %s", argv[i]);
+						scas_log(L_ERROR, "Invalid option %s", argv[i]);
+						exit(1);
 					}
 				}
 			} else if (argv[i][1] == 'D' || strcmp("--define", argv[i]) == 0) {
@@ -195,7 +200,8 @@ void parse_arguments(int argc, char **argv) {
 				printf("More options by reading the manual (man scas)\n");
 				exit(0);
 			} else {
-				scas_abort("Invalid option %s", argv[i]);
+				scas_log(L_ERROR, "Invalid option %s", argv[i]);
+				exit(1);
 			}
 		} else {
 			if (scas_runtime.output_file || i != argc - 1 || scas_runtime.input_files->length == 0) {
@@ -226,7 +232,8 @@ instruction_set_t *find_inst() {
 				instruction_set_t *set = load_instruction_set_s(z80_tab);
 				return set;
 			} else {
-				scas_abort("Unknown architecture: %s", scas_runtime.arch);
+				scas_log(L_ERROR, "Unknown architecture: %s", scas_runtime.arch);
+				return NULL;
 			}
 		}
 	}
@@ -261,7 +268,7 @@ int main(int argc, char **argv) {
 	validate_scas_runtime();
 	instruction_set_t *instruction_set = find_inst();
 	if (instruction_set == NULL) {
-		fprintf(stderr, "Failed to load instruction set definition, unable to continue!\n");
+		scas_log(L_ERROR, "Failed to load instruction set definition, unable to continue!\n");
 		return 1;
 	}
 	scas_log(L_INFO, "Loaded instruction set: %s", instruction_set->arch);

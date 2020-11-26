@@ -6,7 +6,6 @@
 #include <string.h>
 
 #include "list.h"
-#include "io.h"
 #include "stack.h"
 #include "expression.h"
 #include "log.h"
@@ -84,7 +83,10 @@ void fwrite_tokens(FILE *f, tokenized_expression_t *expression) {
 
 tokenized_expression_t *fread_tokenized_expression(FILE *f) {
 	uint32_t len;
-	scas_read(&len, sizeof(uint32_t), 1, f);
+	if (fread (&len, 1, sizeof(uint32_t), f) != sizeof(uint32_t)) {
+		scas_log(L_ERROR, "Failed to read expression length from file");
+		return NULL;
+	}
 	tokenized_expression_t *expression = malloc(sizeof(tokenized_expression_t));
 	expression->tokens = create_list();
 	expression->symbols = NULL;
@@ -96,7 +98,12 @@ tokenized_expression_t *fread_tokenized_expression(FILE *f) {
 				token->symbol = read_line(f);
 				break;
 			case NUMBER:
-				scas_read(&token->number, sizeof(uint64_t), 1, f);
+				if (fread(&token->number, 1, sizeof(uint64_t), f) != sizeof(uint64_t)) {
+					scas_log(L_ERROR, "Failed to read token number from file");
+					free(token);
+					free_expression(expression);
+					return NULL;
+				}
 				break;
 			case OPERATOR:
 				token->operator = fgetc(f);

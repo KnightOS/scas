@@ -30,7 +30,7 @@ int format_compare(const void *_a, const void *_b) {
 	return strcasecmp(a->name, b->name);
 }
 
-void parse_flag(const char *flag) {
+bool parse_flag(const char *flag) {
 	flag += 2;
 	char *name, *value;
 	value = strchr(flag, '=');
@@ -73,18 +73,21 @@ void parse_flag(const char *flag) {
 				sizeof(output_formats) / sizeof(struct output_format),
 				sizeof(struct output_format), format_compare);
 		if (!res) {
-			scas_abort("Unknown output format %s", value);
+			scas_log(L_ERROR, "Unknown output format %s", value);
+			return false;
 		}
 		scas_runtime.options.output_format = res->writer;
 		scas_runtime.output_extension = res->name;
 	} else if (strcmp("8xp-name", name) == 0) {
 		if (strlen(value) > 8) {
-			scas_abort("-f8xp-name must be 8 characters or fewer.");
+			scas_log(L_ERROR, "-f8xp-name must be 8 characters or fewer.");
+			return false;
 		}
 		char *v = value;
 		while (*v) {
 			if (!isupper(*v) || !isascii(*v)) {
-				scas_abort("-f8xp-name must be all uppercase ASCII.");
+				scas_log(L_ERROR, "-f8xp-name must be all uppercase ASCII.");
+				return false;
 			}
 			v++;
 		}
@@ -100,19 +103,23 @@ void parse_flag(const char *flag) {
 	} else if (strcmp("origin", name) == 0) {
 		tokenized_expression_t *e = parse_expression(value);
 		if (!e) {
-			scas_abort("Unable to parse -forigin=%s", value);
+			scas_log(L_ERROR, "Unable to parse -forigin=%s", value);
+			return false;
 		}
 		list_t *s = create_list();
 		int _;
 		char *__;
 		uint64_t res = evaluate_expression(e, s, &_, &__);
 		if (_) {
-			scas_abort("Unable to evaluate -forigin=%s", value);
+			scas_log(L_ERROR, "Unable to evaluate -forigin=%s", value);
+			return false;
 		}
 		scas_runtime.options.origin = res;
 	} else {
-		scas_abort("Unknown flag %s", name);
+		scas_log(L_ERROR, "Unknown flag %s", name);
+		return false;
 	}
 
 	free(name);
+	return true;
 }
