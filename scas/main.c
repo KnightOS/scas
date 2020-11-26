@@ -160,6 +160,8 @@ void parse_arguments(int argc, char **argv) {
 				scas_runtime.include_path = realloc(scas_runtime.include_path, l + strlen(path) + 2);
 				strcat(scas_runtime.include_path, ":");
 				strcat(scas_runtime.include_path, path);
+			} else if (strcmp(argv[i], "--color") == 0){
+				scas_log_colorize = true;
 			} else if (argv[i][1] == 'v') {
 				int j;
 				for (j = 1; argv[i][j] != '\0'; ++j) {

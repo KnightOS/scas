@@ -60,6 +60,10 @@ Options
 *-v[vv...]*::
 	Specifies different levels of log verbosity.
 
+*--color*::
+	Colorize log output. This is the default on platforms which use ELF as their
+file format (Linux).
+
 Examples
 --------
 
