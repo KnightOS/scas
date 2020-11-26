@@ -42,7 +42,6 @@ add_executable(scas
     ${assembler}
     ${linker}
     ${scas}
-    ${PROJECT_SOURCE_DIR}/log.c
     ${PROJECT_BINARY_DIR}/tables/z80.c
 )
 
@@ -58,7 +57,7 @@ if (SCAS_LIBRARY)
         ${assembler}
         ${linker}
         ${PROJECT_BINARY_DIR}/tables/z80.c
-        ${PROJECT_SOURCE_DIR}/runtime.c)
+)
 
     SET_TARGET_PROPERTIES(libscas
       PROPERTIES OUTPUT_NAME scas)
@@ -71,13 +70,11 @@ endif()
 add_executable(scdump
     ${common}
     ${scdump}
-    ${PROJECT_SOURCE_DIR}/log.c
 )
 
 add_executable(scwrap
     ${common}
     ${scwrap}
-    ${PROJECT_SOURCE_DIR}/log.c
 )
 
 if(SCAS_DOCUMENTATION)

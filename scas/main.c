@@ -23,7 +23,6 @@
 #include "runtime.h"
 #include "flags.h"
 
-struct runtime scas_runtime;
 static char *out_name = NULL;
 
 void init_scas_runtime() {

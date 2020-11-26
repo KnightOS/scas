@@ -25,11 +25,10 @@ fn build {
 }
 
 build common common
-# not supposed to be built into libscas, but we're not building that so it doesn't matter
-build common ./
 build assembler assembler
 build linker linker
 build main scas -I..
+# Generated table
 build main bin/
 build dump scdump
 build wrap scwrap
