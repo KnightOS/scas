@@ -1,3 +1,4 @@
+#!/bin/rc
 mkdir -p bin/
 mkdir -p bin/common/
 mkdir -p bin/assembler/
