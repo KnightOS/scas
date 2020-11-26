@@ -261,7 +261,7 @@ list_t *split_include_path() {
 
 int main(int argc, char **argv) {
 	init_scas_runtime();
-	scas_log_verbosity = L_SILENT;
+	scas_log_verbosity = L_ERROR;
 	parse_arguments(argc, argv);
 	validate_scas_runtime();
 	instruction_set_t *instruction_set = find_inst();
