@@ -18,18 +18,6 @@
 #include "8xp.h"
 #include "flags.h"
 
-/* Keep alphabetized */
-struct output_format output_formats[] = {
-	{ "bin", output_bin },
-	{ "8xp", output_8xp }
-};
-
-int format_compare(const void *_a, const void *_b) {
-	const struct output_format *a = _a;
-	const struct output_format *b = _b;
-	return strcasecmp(a->name, b->name);
-}
-
 bool parse_flag(const char *flag) {
 	flag += 2;
 	char *name, *value;
@@ -67,17 +55,15 @@ bool parse_flag(const char *flag) {
 	} else if (strcmp("no-remove-unused-funcs", name) == 0) {
 		scas_runtime.options.remove_unused_functions = !yes;
 	} else if (strcmp("format", name) == 0) {
-		struct output_format o = { .name=value };
-		struct output_format *res =
-			bsearch(&o, output_formats,
-				sizeof(output_formats) / sizeof(struct output_format),
-				sizeof(struct output_format), format_compare);
-		if (!res) {
+		if (strcmp(value, "bin") == 0) {
+			scas_runtime.options.output_format = output_bin;
+		} else if (strcmp(value, "8xp") == 0){
+			scas_runtime.options.output_format = output_8xp;
+		} else {
 			scas_log(L_ERROR, "Unknown output format %s", value);
 			return false;
 		}
-		scas_runtime.options.output_format = res->writer;
-		scas_runtime.output_extension = res->name;
+		scas_runtime.output_extension = value;
 	} else if (strcmp("8xp-name", name) == 0) {
 		if (strlen(value) > 8) {
 			scas_log(L_ERROR, "-f8xp-name must be 8 characters or fewer.");
