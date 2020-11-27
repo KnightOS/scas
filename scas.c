@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#define _BSD_EXTENSION
 #include <ctype.h>
 
 #include "generated.h"
@@ -17,11 +18,11 @@
 #include "objects.h"
 #include "instructions.h"
 #include "assembler.h"
+#include "8xp.h"
 #include "bin.h"
 #include "linker.h"
 #include "merge.h"
 #include "runtime.h"
-#include "flags.h"
 
 static char *out_name = NULL;
 
@@ -123,6 +124,99 @@ void validate_scas_optarg(int optind, int argc, char *argv[]) {
 		exit(1);
 	}
 }
+
+bool parse_flag(const char *flag) {
+	flag += 2;
+	char *name, *value;
+	value = strchr(flag, '=');
+	if (value != NULL) {
+		name = malloc(value - flag + 1);
+		strncpy(name, flag, value - flag);
+		name[value - flag] = '\0';
+		value++;
+	} else {
+		name = malloc(strlen(flag) + 1);
+		strcpy(name, flag);
+		value = "yes";
+	}
+
+	bool yes = !strcasecmp("yes", value);
+	if (!strcasecmp("no", value)) {
+		yes = false;
+	}
+
+	if (strcmp("explicit-export", name) == 0) {
+		scas_runtime.options.explicit_export = yes;
+	} else if (strcmp("no-explicit-export", name) == 0) {
+		scas_runtime.options.explicit_export = !yes;
+	} else if (strcmp("explicit-import", name) == 0) {
+		scas_runtime.options.explicit_import = yes;
+	} else if (strcmp("no-explicit-import", name) == 0) {
+		scas_runtime.options.explicit_import = !yes;
+	} else if (strcmp("auto-relocation", name) == 0) {
+		scas_runtime.options.auto_relocation = yes;
+	} else if (strcmp("no-auto-relocation", name) == 0) {
+		scas_runtime.options.auto_relocation = !yes;
+	} else if (strcmp("remove-unused-funcs", name) == 0) {
+		scas_runtime.options.remove_unused_functions = yes;
+	} else if (strcmp("no-remove-unused-funcs", name) == 0) {
+		scas_runtime.options.remove_unused_functions = !yes;
+	} else if (strcmp("format", name) == 0) {
+		if (strcmp(value, "bin") == 0) {
+			scas_runtime.options.output_format = output_bin;
+		} else if (strcmp(value, "8xp") == 0){
+			scas_runtime.options.output_format = output_8xp;
+		} else {
+			scas_log(L_ERROR, "Unknown output format %s", value);
+			return false;
+		}
+		scas_runtime.output_extension = value;
+	} else if (strcmp("8xp-name", name) == 0) {
+		if (strlen(value) > 8) {
+			scas_log(L_ERROR, "-f8xp-name must be 8 characters or fewer.");
+			return false;
+		}
+		char *v = value;
+		while (*v) {
+			if (!isupper(*v) || !isascii(*v)) {
+				scas_log(L_ERROR, "-f8xp-name must be all uppercase ASCII.");
+				return false;
+			}
+			v++;
+		}
+		scas_runtime.options.prog_name_8xp = value;
+	} else if (strcmp("8xp-protected", name) == 0) {
+		scas_runtime.options.prog_protected_8xp = yes;
+	} else if (strcmp("no-8xp-protected", name) == 0) {
+		scas_runtime.options.prog_protected_8xp = !yes;
+	} else if (strcmp("8xp-archived", name) == 0) {
+		scas_runtime.options.prog_archived_8xp = yes;
+	} else if (strcmp("no-8xp-archived", name) == 0) {
+		scas_runtime.options.prog_archived_8xp = !yes;
+	} else if (strcmp("origin", name) == 0) {
+		tokenized_expression_t *e = parse_expression(value);
+		if (!e) {
+			scas_log(L_ERROR, "Unable to parse -forigin=%s", value);
+			return false;
+		}
+		list_t *s = create_list();
+		int _;
+		char *__;
+		uint64_t res = evaluate_expression(e, s, &_, &__);
+		if (_) {
+			scas_log(L_ERROR, "Unable to evaluate -forigin=%s", value);
+			return false;
+		}
+		scas_runtime.options.origin = res;
+	} else {
+		scas_log(L_ERROR, "Unknown flag %s", name);
+		return false;
+	}
+
+	free(name);
+	return true;
+}
+
 
 void parse_arguments(int argc, char **argv) {
 	int i;
@@ -404,3 +498,4 @@ int main(int argc, char **argv) {
 	instruction_set_free(instruction_set);
 	return ret;
 }
+

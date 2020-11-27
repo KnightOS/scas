@@ -1,11 +1,10 @@
 #!/bin/rc
-mkdir -p bin/
+mkdir -p bin/main/
 mkdir -p bin/common/
 mkdir -p bin/assembler/
 mkdir -p bin/dump/
 mkdir -p bin/wrap/
 mkdir -p bin/linker/
-mkdir -p bin/main/
 
 pcc tables/generate.c -o bin/generate_tables
 ./bin/generate_tables tables/z80.tab bin/z80.c bin/generated.h
@@ -27,9 +26,9 @@ fn build {
 build common common
 build assembler assembler
 build linker linker
-build main scas -I..
+build main . -I..
 # Generated table
-build main bin/
+build main bin
 build dump scdump
 build wrap scwrap
 cd bin
