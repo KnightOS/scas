@@ -83,25 +83,25 @@ if(SCAS_DOCUMENTATION)
 	)
 
 	ADD_CUSTOM_COMMAND(
-		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/scas.1.txt
-		COMMAND a2x --no-xmllint --doctype manpage --format manpage ${CMAKE_CURRENT_SOURCE_DIR}/scas.1.txt
-		COMMAND test "${CMAKE_CURRENT_SOURCE_DIR}" != "${CMAKE_CURRENT_BINARY_DIR}/bin" && mv -f ${CMAKE_CURRENT_SOURCE_DIR}/scas.1 ${CMAKE_CURRENT_BINARY_DIR}/bin || true
+		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/doc/scas.1.txt
+		COMMAND a2x --no-xmllint --doctype manpage --format manpage ${CMAKE_CURRENT_SOURCE_DIR}/doc/scas.1.txt
+		COMMAND mv -f ${CMAKE_CURRENT_SOURCE_DIR}/doc/scas.1 ${CMAKE_CURRENT_BINARY_DIR}/bin || true
 		OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/bin/scas.1
 		VERBATIM
 	)
 	set_directory_properties(${CMAKE_CURRENT_BINARY_DIR} ADDITIONAL_MAKE_CLEAN_FILES scas.1)
 	ADD_CUSTOM_COMMAND(
-		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/scdump.1.txt
-		COMMAND a2x --no-xmllint --doctype manpage --format manpage ${CMAKE_CURRENT_SOURCE_DIR}/scdump.1.txt
-		COMMAND test "${CMAKE_CURRENT_SOURCE_DIR}" != "${CMAKE_CURRENT_BINARY_DIR}/bin" && mv -f ${CMAKE_CURRENT_SOURCE_DIR}/scdump.1 ${CMAKE_CURRENT_BINARY_DIR}/bin || true
+		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/doc/scdump.1.txt
+		COMMAND a2x --no-xmllint --doctype manpage --format manpage ${CMAKE_CURRENT_SOURCE_DIR}/doc/scdump.1.txt
+		COMMAND mv -f ${CMAKE_CURRENT_SOURCE_DIR}/doc/scdump.1 ${CMAKE_CURRENT_BINARY_DIR}/bin || true
 		OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/bin/scdump.1
 		VERBATIM
 	)
 	set_directory_properties(${CMAKE_CURRENT_BINARY_DIR} ADDITIONAL_MAKE_CLEAN_FILES scdump.1)
 	ADD_CUSTOM_COMMAND(
-		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/scwrap.1.txt
-		COMMAND a2x --no-xmllint --doctype manpage --format manpage ${CMAKE_CURRENT_SOURCE_DIR}/scwrap.1.txt
-		COMMAND test "${CMAKE_CURRENT_SOURCE_DIR}" != "${CMAKE_CURRENT_BINARY_DIR}/bin" && mv -f ${CMAKE_CURRENT_SOURCE_DIR}/scwrap.1 ${CMAKE_CURRENT_BINARY_DIR}/bin || true
+		DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/doc/scwrap.1.txt
+		COMMAND a2x --no-xmllint --doctype manpage --format manpage ${CMAKE_CURRENT_SOURCE_DIR}/doc/scwrap.1.txt
+		COMMAND mv -f ${CMAKE_CURRENT_SOURCE_DIR}/doc/scwrap.1 ${CMAKE_CURRENT_BINARY_DIR}/bin || true
 		OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/bin/scwrap.1
 		VERBATIM
 	)
