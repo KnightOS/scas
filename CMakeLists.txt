@@ -33,7 +33,6 @@ add_custom_command(
 FILE(GLOB common ${PROJECT_SOURCE_DIR}/common/*.c)
 FILE(GLOB assembler ${PROJECT_SOURCE_DIR}/assembler/*.c)
 FILE(GLOB linker ${PROJECT_SOURCE_DIR}/linker/*.c)
-FILE(GLOB scas ${PROJECT_SOURCE_DIR}/scas/*.c)
 FILE(GLOB scdump ${PROJECT_SOURCE_DIR}/scdump/*.c)
 FILE(GLOB scwrap ${PROJECT_SOURCE_DIR}/scwrap/*.c)
 
@@ -41,13 +40,12 @@ add_executable(scas
     ${common}
     ${assembler}
     ${linker}
-    ${scas}
+    ${PROJECT_SOURCE_DIR}/scas.c
     ${PROJECT_BINARY_DIR}/tables/z80.c
 )
 
 include_directories(scas
     ${CMAKE_SOURCE_DIR}/include/
-    ${CMAKE_SOURCE_DIR}/scas/
     ${CMAKE_BINARY_DIR}/tables/
 )
 
