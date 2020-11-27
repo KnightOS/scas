@@ -26,17 +26,16 @@ fn build {
 build common common
 build assembler assembler
 build linker linker
-build main . -I..
-# Generated table
-build main bin
-build dump scdump
-build wrap scwrap
+pcc scas.c -I include -B -c -Ibin -o bin/scas.6 || panic failed to build scas.c
+pcc scdump.c -I include -B -c -Ibin -obin/scdump.6 || panic failed to build scdump.c
+pcc scwrap.c -I include -B -c -Ibin -obin/scwrap.6 || panic failed to build scwrap.c
+pcc bin/z80.c -I include -B -c -obin/common/z80.6 || panic failed to build z80.c
 cd bin
 echo linking scas
-pcc assembler/* linker/* common/* main/* -o scas || panic failed to link scas
+pcc assembler/* linker/* common/* scas.6 -o scas || panic failed to link scas
 echo linking scdump
-pcc dump/* common/* -o scdump|| panic failed to link scdump
+pcc scdump.6 common/* -o scdump|| panic failed to link scdump
 echo linking scwrap
-pcc wrap/* common/* -o scwrap||panic failed to link scwrap
+pcc scwrap.6 common/* -o scwrap||panic failed to link scwrap
 cd ..
 echo build complete!

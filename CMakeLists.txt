@@ -33,8 +33,6 @@ add_custom_command(
 FILE(GLOB common ${PROJECT_SOURCE_DIR}/common/*.c)
 FILE(GLOB assembler ${PROJECT_SOURCE_DIR}/assembler/*.c)
 FILE(GLOB linker ${PROJECT_SOURCE_DIR}/linker/*.c)
-FILE(GLOB scdump ${PROJECT_SOURCE_DIR}/scdump/*.c)
-FILE(GLOB scwrap ${PROJECT_SOURCE_DIR}/scwrap/*.c)
 
 add_executable(scas
     ${common}
@@ -67,12 +65,12 @@ endif()
 
 add_executable(scdump
     ${common}
-    ${scdump}
+    ${PROJECT_SOURCE_DIR}/scdump.c
 )
 
 add_executable(scwrap
     ${common}
-    ${scwrap}
+    ${PROJECT_SOURCE_DIR}/scwrap.c
 )
 
 if(SCAS_DOCUMENTATION)
