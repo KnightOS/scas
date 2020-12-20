@@ -317,8 +317,8 @@ area_t *read_area(FILE *f) {
 	}
 	area->data_capacity = area->data_length;
 	free(area->data);
-	area->data = malloc((int)area->data_length);
-	if (fread(area->data, sizeof(uint8_t), (int)area->data_length, f) != 1) {
+	area->data = malloc(area->data_length);
+	if (fread(area->data, 1, area->data_length, f) != area->data_length) {
 		scas_log(L_ERROR, "TODO FIXME");
 		return NULL;
 	}
@@ -337,7 +337,7 @@ area_t *read_area(FILE *f) {
 		meta_key = fgetc(f);
 		meta->key = malloc(meta_key + 1);
 		meta->key[meta_key] = 0;
-		if (fread(meta->key, sizeof(char), meta_key, f) != 1) {
+		if (fread(meta->key, sizeof(char), meta_key, f) != meta_key) {
 			scas_log(L_ERROR, "TODO FIXME");
 			return NULL;
 		}
@@ -347,7 +347,7 @@ area_t *read_area(FILE *f) {
 		}
 		meta->value = malloc(meta->value_length + 1);
 		meta->value[meta->value_length] = 0;
-		if (fread(meta->value, sizeof(char), meta->value_length, f) != 1) {
+		if (fread(meta->value, sizeof(char), meta->value_length, f) != meta->value_length) {
 			scas_log(L_ERROR, "TODO FIXME");
 			return NULL;
 		}
