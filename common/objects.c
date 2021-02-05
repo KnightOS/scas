@@ -266,20 +266,20 @@ area_t *read_area(FILE *f) {
 		symbol_t *sym = malloc(sizeof(symbol_t));
 		sym->exported = fgetc(f);
 		if (fread(&len, sizeof(uint32_t), 1, f) != 1) {
-			scas_log(L_ERROR, "TODO FIXME");
+			scas_log(L_ERROR, "Failed to read in data!");
 			return NULL;
 		}
 		sym->name = calloc(len + 1, sizeof(char));
 		if (fread(sym->name, 1, len, f) != len) {
-			scas_log(L_ERROR, "TODO FIXME");
+			scas_log(L_ERROR, "Failed to read in data!");
 			return NULL;
 		}
 		if (fread(&sym->value, 1, sizeof(uint64_t), f) != sizeof(uint64_t)) {
-			scas_log(L_ERROR, "TODO FIXME");
+			scas_log(L_ERROR, "Failed to read in data!");
 			return NULL;
 		}
 		if (fread(&sym->defined_address, 1, sizeof(uint64_t), f) != sizeof(uint64_t)) {
-			scas_log(L_ERROR, "TODO FIXME");
+			scas_log(L_ERROR, "Failed to read in data!");
 			return NULL;
 		}
 		sym->type = SYMBOL_LABEL;
@@ -288,7 +288,7 @@ area_t *read_area(FILE *f) {
 	}
 	/* TODO: Imports */
 	if (fread(&immediates, 1, sizeof(uint32_t), f) != sizeof(uint32_t)) {
-		scas_log(L_ERROR, "TODO FIXME");
+		scas_log(L_ERROR, "Failed to read in data!");
 		return NULL;
 	}
 	for (uint32_t i = 0; i < immediates; ++i) {
@@ -296,15 +296,15 @@ area_t *read_area(FILE *f) {
 		imm->type = fgetc(f);
 		imm->width = fgetc(f);
 		if (fread(&imm->instruction_address, sizeof(uint64_t), 1, f) != 1) {
-			scas_log(L_ERROR, "TODO FIXME");
+			scas_log(L_ERROR, "Failed to read in data!");
 			return NULL;
 		}
 		if (fread(&imm->base_address, sizeof(uint64_t), 1, f) != 1) {
-			scas_log(L_ERROR, "TODO FIXME");
+			scas_log(L_ERROR, "Failed to read in data!");
 			return NULL;
 		}
 		if (fread(&imm->address, sizeof(uint64_t), 1, f) != 1) {
-			scas_log(L_ERROR, "TODO FIXME");
+			scas_log(L_ERROR, "Failed to read in data!");
 			return NULL;
 		}
 		imm->expression = fread_tokenized_expression(f);
@@ -312,21 +312,21 @@ area_t *read_area(FILE *f) {
 		scas_log(L_DEBUG, "Read immediate value at 0x%08X (width: %d)", imm->address, imm->width);
 	}
 	if (fread(&area->data_length, sizeof(uint64_t), 1, f) != 1) {
-		scas_log(L_ERROR, "TODO FIXME");
+		scas_log(L_ERROR, "Failed to read in data!");
 		return NULL;
 	}
 	area->data_capacity = area->data_length;
 	free(area->data);
 	area->data = malloc(area->data_length);
 	if (fread(area->data, 1, area->data_length, f) != area->data_length) {
-		scas_log(L_ERROR, "TODO FIXME");
+		scas_log(L_ERROR, "Failed to read in data!");
 		return NULL;
 	}
 	scas_log(L_DEBUG, "Read %d bytes of machine code", area->data_length);
 
 	uint64_t meta_length, meta_key;
 	if (fread(&meta_length, sizeof(uint64_t), 1, f) != 1) {
-		scas_log(L_ERROR, "TODO FIXME");
+		scas_log(L_ERROR, "Failed to read in data!");
 		return NULL;
 	}
 	meta_length = (int)meta_length;
@@ -338,17 +338,17 @@ area_t *read_area(FILE *f) {
 		meta->key = malloc(meta_key + 1);
 		meta->key[meta_key] = 0;
 		if (fread(meta->key, sizeof(char), meta_key, f) != meta_key) {
-			scas_log(L_ERROR, "TODO FIXME");
+			scas_log(L_ERROR, "Failed to read in data!");
 			return NULL;
 		}
 		if (fread(&meta->value_length, sizeof(uint64_t), 1, f) != 1) {
-			scas_log(L_ERROR, "TODO FIXME");
+			scas_log(L_ERROR, "Failed to read in data!");
 			return NULL;
 		}
 		meta->value = malloc(meta->value_length + 1);
 		meta->value[meta->value_length] = 0;
 		if (fread(meta->value, sizeof(char), meta->value_length, f) != meta->value_length) {
-			scas_log(L_ERROR, "TODO FIXME");
+			scas_log(L_ERROR, "Failed to read in data!");
 			return NULL;
 		}
 		list_add(area->metadata, meta);
@@ -357,7 +357,7 @@ area_t *read_area(FILE *f) {
 
 	uint64_t fileno, lineno;
 	if (fread(&fileno, sizeof(uint64_t), 1, f) != 1) {
-		scas_log(L_ERROR, "TODO FIXME");
+		scas_log(L_ERROR, "Failed to read in data!");
 		return NULL;
 	}
 	fileno = (int)fileno;
@@ -366,22 +366,22 @@ area_t *read_area(FILE *f) {
 		map->file_name = read_line(f);
 		map->entries = create_list();
 		if (fread(&lineno, sizeof(uint64_t), 1, f) != 1) {
-			scas_log(L_ERROR, "TODO FIXME");
+			scas_log(L_ERROR, "Failed to read in data!");
 			return NULL;
 		}
 		scas_log(L_DEBUG, "Reading source map for '%s', %d entries", map->file_name, lineno);
 		for (uint64_t j = 0; j < lineno; ++j) {
 			source_map_entry_t *entry = malloc(sizeof(source_map_entry_t));
 			if (fread(&entry->line_number, sizeof(uint64_t), 1, f) != 1) {
-				scas_log(L_ERROR, "TODO FIXME");
+				scas_log(L_ERROR, "Failed to read in data!");
 				return NULL;
 			}
 			if (fread(&entry->address, sizeof(uint64_t), 1, f) != 1) {
-				scas_log(L_ERROR, "TODO FIXME");
+				scas_log(L_ERROR, "Failed to read in data!");
 				return NULL;
 			}
 			if (fread(&entry->length, sizeof(uint64_t), 1, f) != 1) {
-				scas_log(L_ERROR, "TODO FIXME");
+				scas_log(L_ERROR, "Failed to read in data!");
 				return NULL;
 			}
 			entry->source_code = read_line(f);
@@ -407,7 +407,7 @@ object_t *freadobj(FILE *f, const char *name) {
 	}
 	uint32_t area_count;
 	if (fread(&area_count, sizeof(uint32_t), 1, f) != 1) {
-		scas_log(L_ERROR, "TODO FIXME");
+		scas_log(L_ERROR, "Failed to read in data!");
 		return NULL;
 	}
 	object_t  *o = create_object();
