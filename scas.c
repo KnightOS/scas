@@ -470,7 +470,7 @@ int main(int argc, char **argv) {
 		link(objects, errors, warnings);
 	else
 		if(!merge(objects))
-			ret = 1;
+			ret = EXIT_FAILURE;
 
 	handle_errors(errors, warnings);
 
