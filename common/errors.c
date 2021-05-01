@@ -77,10 +77,8 @@ void add_warning(list_t *warnings, int code, size_t line_number,
 	warning_t *warning = malloc(sizeof(warning_t));
 	warning->code = code;
 	warning->line_number = line_number;
-	warning->file_name = malloc(strlen(file_name) + 1);
-	strcpy(warning->file_name, file_name);
-	warning->line = malloc(strlen(line) + 1);
-	strcpy(warning->line, line);
+	warning->file_name = strdup(file_name);
+	warning->line = strdup(line);
 	warning->column = column;
 
 	const char *fmt = get_warning_string(warning);
