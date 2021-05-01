@@ -1,31 +1,21 @@
 image: archlinux
 packages:
-  - samurai
-  - cmake
+  - make
   - mkrom
   - patchrom
   - genkfs
   - mktiupgrade
   - valgrind
 sources:
-  - https://github.com/knightos/scas
+  - https://git.sr.ht/~pixelherodev/scas
   - https://github.com/knightos/kernel
 tasks:
   - build: |
       cd scas
-      mkdir build
-      cd build
-      cmake -DCMAKE_BUILD_TYPE=Debug -DSCAS_LIBRARY=TRUE -GNinja ..
-      samu
+      make bin/scas
       cd ../../kernel
       # Temporary: use scas PR
       git checkout scas
       mkdir bin/TI84pSE -p
-      make AS="valgrind --track-origins=yes --leak-check=full --error-exitcode=1 ../scas/build/scas"
-      cd ../scas
-      rm -rf build
-      mkdir build
-      cd build
-      cmake -DCMAKE_BUILD_TYPE=Release -DSCAS_LIBRARY=TRUE -GNinja ..
-      samu
-      # TODO: hash with release build, compare with debug?
+      make AS="valgrind --track-origins=yes --leak-check=full --error-exitcode=1 ../scas/bin/scas"
+
