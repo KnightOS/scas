@@ -28,7 +28,7 @@ static char *out_name = NULL;
 
 void init_scas_runtime() {
 	scas_runtime.arch = "z80";
-	scas_runtime.jobs = LINK | ASSEMBLE;
+	scas_runtime.link = 1;
 	scas_runtime.macros = create_list();
 	scas_runtime.output_type = EXECUTABLE;
 	scas_runtime.input_names = create_list();
@@ -92,7 +92,7 @@ void validate_scas_runtime() {
 	if (scas_runtime.output_file == NULL) {
 		/* Auto-assign an output file name */
 		const char *ext;
-		if ((scas_runtime.jobs & LINK) == LINK) {
+		if (scas_runtime.link) {
 			ext = scas_runtime.output_extension;
 		} else {
 			ext = "o";
@@ -234,7 +234,11 @@ void parse_arguments(int argc, char **argv) {
 				validate_scas_optarg(i, argc, argv);
 				runtime_open_input(argv[++i]);
 			} else if (strcmp("-c", argv[i]) == 0 || strcmp("--merge", argv[i]) == 0) {
-				scas_runtime.jobs &= ~LINK;
+				if(!scas_runtime.link){
+					scas_log(L_ERROR, "Error: -c passed multiple times");
+					exit(1);
+				}
+				scas_runtime.link = 0;
 			} else if (strcmp("-a", argv[i]) == 0 || strcmp("--architecture", argv[i]) == 0) {
 				validate_scas_optarg(i, argc, argv);
 				scas_runtime.arch = argv[++i];
@@ -355,7 +359,114 @@ list_t *split_include_path() {
 	return list;
 }
 
+static object_t *
+assemble_input(char *name, FILE *f, assembler_settings_t settings)
+{
+	object_t *o;
+	scas_log(L_INFO, "Assembling input file: '%s'", name);
+	scas_log_indent += 1;
+	char magic[7];
+	if(fread(magic, sizeof(char), 7, f) == 7){
+		if(strncmp("SCASOBJ", magic, 7) == 0){
+			scas_log(L_INFO, "Loading object file '%s'", name);
+			rewind(f);
+			o = freadobj(f, name);
+			scas_log_indent -= 1;
+			return o;
+		}
+	}
+	rewind(f);
+	o = assemble(f, name, &settings);
+	fclose(f);
+	scas_log(L_INFO, "Assembler returned %d errors, %d warnings for '%s'",
+			settings.errors->length, settings.warnings->length, name);
+	scas_log_indent -= 1;
+	return o;
+}
+
+static void
+link(list_t *objects, list_t *errors, list_t *warnings)
+{
+	scas_log(L_INFO, "Passing objects to linker");
+	linker_settings_t settings = {
+		.automatic_relocation = scas_runtime.options.auto_relocation,
+		.errors = errors,
+		.warnings = warnings,
+		.write_output = scas_runtime.options.output_format
+	};
+	link_objects(scas_runtime.output_file, objects, &settings);
+	scas_log(L_INFO, "Linker returned %d errors, %d warnings", errors->length, warnings->length);
+}
+
+static int
+merge(list_t *objects)
+{
+	int ret;
+	object_t *merged;
+	scas_log(L_INFO, "Skipping linking - writing to object file");
+	merged = merge_objects(objects);
+	ret = merged != NULL;
+	if(ret){
+		fwriteobj(scas_runtime.output_file, merged);
+		object_free(merged);
+		fflush(scas_runtime.output_file);
+	}
+	fclose(scas_runtime.output_file);
+	return ret;
+}
+
+static void
+handle_errors(list_t *errors, list_t *warnings)
+{
+	for (unsigned int i = 0; i < errors->length; ++i) {
+		error_t *error = errors->items[i];
+		fprintf(stderr, "%s:%lu:%lu: error #%d: %s\n", error->file_name,
+				error->line_number, error->column, error->code,
+				error->message);
+		if(error->line != NULL){
+			fputs(error->line, stderr);
+			if(error->column != 0){
+				for(unsigned int j = error->column; j > 0; j -= 1)
+					fputc('.', stderr);
+				fputs("^", stderr);
+			} else
+				fputc('\n', stderr);
+			free(error->line);
+		}
+		free(error->file_name);
+		free(error->message);
+		free(error);
+	}
+	// when handle_errors is called, the output fd shall already have been closed
+	if(errors->length > 0 && out_name != NULL){
+		remove(out_name);
+		out_name = NULL;
+	}
+	for (unsigned int i = 0; i < warnings->length; ++i) {
+		warning_t *warning = warnings->items[i];
+		fprintf(stderr, "%s:%lu:%lu: warning #%d: %s\n", warning->file_name,
+				warning->line_number, warning->column, warning->code,
+				get_warning_string(warning));
+		if(warning->line != NULL){
+			fputs(warning->line, stderr);
+			if(warning->column != 0){
+				for (unsigned int j = warning->column; j > 0; --j)
+					fputc('.', stderr);
+				fputs("^", stderr);
+			}
+			free(warning->line);
+		}
+		free(warning->message);
+		free(warning->file_name);
+		free(warning);
+	}
+}
+
 int main(int argc, char **argv) {
+	unsigned int i;
+	unsigned ret;
+	object_t *object;
+	ret = 0;
 	init_scas_runtime();
 	scas_log_verbosity = L_ERROR;
 	parse_arguments(argc, argv);
@@ -371,131 +482,39 @@ int main(int argc, char **argv) {
 	list_t *warnings = create_list();
 
 	list_t *objects = create_list();
-	for (unsigned int i = 0; i < scas_runtime.input_files->length; ++i) {
-		scas_log(L_INFO, "Assembling input file: '%s'", scas_runtime.input_names->items[i]);
-		scas_log_indent += 1;
-		FILE *f = scas_runtime.input_files->items[i];
-		char magic[7];
-		bool is_object = false;
-		if (fread(magic, sizeof(char), 7, f) == 7) {
-			if (strncmp("SCASOBJ", magic, 7) == 0) {
-				is_object = true;
-			}
-		}
-		fseek(f, 0L, SEEK_SET);
-
-		object_t *o;
-		if (is_object) {
-			scas_log(L_INFO, "Loading object file '%s'", scas_runtime.input_names->items[i]);
-			o = freadobj(f, scas_runtime.input_names->items[i]);
-		} else {
-			assembler_settings_t settings = {
-				.include_path = include_path,
-				.set = instruction_set,
-				.errors = errors,
-				.warnings = warnings,
-				.macros = scas_runtime.macros,
-			};
-			o = assemble(f, scas_runtime.input_names->items[i], &settings);
-			fclose(f);
-			scas_log(L_INFO, "Assembler returned %d errors, %d warnings for '%s'",
-					errors->length, warnings->length, scas_runtime.input_names->items[i]);
-		}
-		list_add(objects, o);
-		scas_log_indent -= 1;
+	assembler_settings_t settings = {
+		.include_path = include_path,
+		.set = instruction_set,
+		.errors = errors,
+		.warnings = warnings,
+		.macros = scas_runtime.macros,
+	};
+	for (i = 0; i < scas_runtime.input_files->length; i += 1){
+		object = assemble_input(scas_runtime.input_names->items[i], scas_runtime.input_files->items[i], settings);
+		list_add(objects, object);
 	}
 
-	if ((scas_runtime.jobs & LINK) == LINK) {
-		scas_log(L_INFO, "Passing objects to linker");
-		linker_settings_t settings = {
-			.automatic_relocation = scas_runtime.options.auto_relocation,
-			.merge_only = (scas_runtime.jobs & MERGE) == MERGE,
-			.errors = errors,
-			.warnings = warnings,
-			.write_output = scas_runtime.options.output_format
-		};
-		if (settings.merge_only) {
-			object_t *merged = merge_objects(objects);
-			fwriteobj(scas_runtime.output_file, merged);
-		} else {
-			link_objects(scas_runtime.output_file, objects, &settings);
-		}
-		scas_log(L_INFO, "Linker returned %d errors, %d warnings", errors->length, warnings->length);
-	} else {
-		scas_log(L_INFO, "Skipping linking - writing to object file");
-		object_t *merged = merge_objects(objects);
-		if (merged) {
-			fwriteobj(scas_runtime.output_file, merged);
-			object_free(merged);
-			fflush(scas_runtime.output_file);
-		}
-		else {
-			scas_log(L_ERROR, "Failed to merge");
-			if (scas_runtime.output_file != stdout && out_name) {
-				remove(out_name);
-				out_name = NULL;
-			}
-		}
-		fclose(scas_runtime.output_file);
-	}
-	
-	if (errors->length != 0) {
-		for (unsigned int i = 0; i < errors->length; ++i) {
-			error_t *error = errors->items[i];
-			fprintf(stderr, "%s:%lu:%lu: error #%d: %s\n", error->file_name,
-					error->line_number, error->column, error->code,
-					error->message);
-			if (error->line) {
-				fprintf(stderr, "%s\n", error->line);
-			}
-			if (error->column != 0) {
-				for (unsigned int j = error->column; j > 0; --j) {
-					fprintf(stderr, ".");
-				}
-				fprintf(stderr, "^\n");
-			} else {
-				fprintf(stderr, "\n");
-			}
-			if (error->line) {
-				free (error->line);
-			}
-			free(error->file_name);
-			free(error->message);
-			free(error);
-		}
-		if (out_name) {
-			remove(out_name);
-			out_name = NULL;
-		}
-	}
-	if (warnings->length != 0) {
-		for (unsigned int i = 0; i < errors->length; ++i) {
-			warning_t *warning = warnings->items[i];
-			fprintf(stderr, "%s:%lu:%lu: warning #%d: %s\n", warning->file_name,
-					warning->line_number, warning->column, warning->code,
-					get_warning_string(warning));
-			fprintf(stderr, "%s\n", warning->line);
-			if (warning->column != 0) {
-				for (unsigned int j = warning->column; j > 0; --j) {
-					fprintf(stderr, ".");
-				}
-				fprintf(stderr, "^\n");
-			}
-		}
-	}
+	if(scas_runtime.link)
+		link(objects, errors, warnings);
+	else
+		if(!merge(objects))
+			ret = EXIT_FAILURE;
 
-	unsigned int ret = errors->length;
+	handle_errors(errors, warnings);
+
+	if(ret == 0)
+		ret = errors->length;
 	scas_log(L_DEBUG, "Exiting with status code %d, cleaning up", ret);
-	list_free(scas_runtime.input_files);
-	list_free(scas_runtime.input_names);
-	free_flat_list(include_path);
-	for (unsigned int i = 0; i < objects->length; i += 1) {
-		object_free((object_t*)objects->items[i]);
-	}
-	list_free(objects);
-	list_free(errors);
-	list_free(warnings);
-	instruction_set_free(instruction_set);
+	// Remaining allocations:
+	// scas_runtime.
+	// 	input_files
+	// 	input_names
+	// include_path
+	// objects, and all its items
+	// errors
+	// warnings
+	// instruction_set
+	// No point in freeing them, as the OS will do it faster anyways
 	return ret;
 }
 

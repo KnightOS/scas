@@ -12,7 +12,7 @@ struct runtime_options {
 
 struct runtime {
 	char *arch;
-	jobs_t jobs;
+	int link;
 	list_t *macros;
 	output_type_t output_type;
 	list_t *input_files, *input_names;
