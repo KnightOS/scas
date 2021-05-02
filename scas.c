@@ -7,7 +7,9 @@
 #define _BSD_EXTENSION
 #include <ctype.h>
 
-#include "generated.h"
+#include "z80.h"
+#include "amd64.h"
+
 #include "list.h"
 #include "stack.h"
 #include "log.h"
@@ -325,10 +327,11 @@ instruction_set_t *find_inst() {
 		f = fopen(path, "r");
 		free(path);
 		if (!f) {
-			if (!strcmp(scas_runtime.arch, "z80")) {
-				// Load from internal copy
-				instruction_set_t *set = load_instruction_set_s(z80_tab);
-				return set;
+			// Fall back to internal copy if recognized
+			if (strcmp(scas_runtime.arch, "z80") == 0) {
+				return load_instruction_set_s(z80_tab);
+			} else if (strcmp(scas_runtime.arch, "amd64") == 0) {
+				return load_instruction_set_s(amd64_tab);
 			} else {
 				scas_log(L_ERROR, "Unknown architecture: %s", scas_runtime.arch);
 				return NULL;

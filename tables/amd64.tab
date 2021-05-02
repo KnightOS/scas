@@ -1,0 +1,31 @@
+# x64 Instruction Table
+
+#### INSTRUCTION
+# INS [MNOMIC] [VALUE]
+# MNOMIC is any series of case-insenstive characters with support for special
+# characters to define additional functionality. MNOMIC may not have whitespace.
+# Special Characters:
+#  '_': Required whitespace
+#  '-': Optional whitespace
+#  '%#<bits[s]>': Immediate value (# is a character to use to identify later)
+#  '^#<bits[s]>': Immediate value relative to PC (# is a character to use to identify later)
+#  '@#<group>': Operand (# is a character to use to identify later)
+#  '&': Special - RST value
+# 
+# VALUE is a value in binary, which may include references to immediate values and operands
+# in use above. For example, in the MNOMIC 'hello,-world_%A<16>_@B<a>', the value could be
+# '01011 %A 10110 @B'
+#
+#### OPERAND GROUP
+# OPERAND [GROUP NAME] [OPERAND NAME] [VALUE]
+# GROUP NAME is the name of the operand group this belongs to. This is used to reference the
+# group in a MNOMIC with the @ operator. OPERAND NAME is the name to match, such as A, B, IX,
+# etc. VALUE is the value in binary of this operand.
+
+# x64 INSTRUCTION SET
+
+#### x64 PROPERTIES
+ARCH x64
+
+INS NOP 10010000
+INS UD2 111100001011
