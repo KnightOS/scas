@@ -350,7 +350,6 @@ find_instruction_set(void)
 		free(path);
 		if(f == NULL){
 			// Fall back to internal copy if recognized
-			scas_log(L_ERROR, "Falling back to internal for ISA %s", scas_runtime.arch);
 			if(strcmp(scas_runtime.arch, "z80") == 0)
 				return load_instruction_set_s(z80_tab);
 			if(strcmp(scas_runtime.arch, "amd64") == 0)
