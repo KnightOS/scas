@@ -7,7 +7,7 @@ SOURCES=$(ASSEMBLER) $(COMMON) $(LINKER)
 
 all:bin/scas bin/scdump bin/scwrap
 
-DESTDIR=/usr
+DESTDIR=/usr/local
 MANDIR=$(DESTDIR)/share/man/
 BINDIR=$(DESTDIR)/bin/
 LIBDIR=$(DESTDIR)/lib/
