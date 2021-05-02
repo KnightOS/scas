@@ -31,26 +31,27 @@ bool make_containing_folder(const char *const path) {
 }
 
 int main(int argc, const char **argv) {
-	if (argc != 4) {
-		printf("Usage: %s SOURCE DESTINATION HEADER\n", argv[0]);
+	if (argc != 5) {
+		printf("Usage: %s NAME SOURCE DESTINATION HEADER\n", argv[0]);
 		return 1;
 	}
-	FILE *source = fopen(argv[1], "rb");
+	const char *name = argv[1];
+	FILE *source = fopen(argv[2], "rb");
 	if (!source) {
 		perror("Error opening source file");
 		return 1;
 	}
-	if (!make_containing_folder(argv[2])) {
+	if (!make_containing_folder(argv[3])) {
 	   fprintf(stderr, "Error creating output's containing folder!\n");
 	   return 1;
 	}
-	FILE *destination = fopen(argv[2], "wb");
+	FILE *destination = fopen(argv[3], "wb");
 	if (!destination) {
 		perror("Error opening destination file");
 		fclose(source);
 		return 1;
 	}
-	FILE *header = fopen(argv[3], "wb");
+	FILE *header = fopen(argv[4], "wb");
 	if (!header) {
 		perror("Error opening header file");
 		fclose(source);
@@ -79,11 +80,11 @@ int main(int argc, const char **argv) {
 		goto cleanup;
 	}
 
-	if (fprintf(destination, "const char z80_tab[%lu] = {", length + 1) < 0) {
+	if (fprintf(destination, "const char %s_tab[%lu] = {", name, length + 1) < 0) {
 		puts("Failed to print to file!");
 		goto cleanup;
 	}
-	if (fprintf(header, "#ifndef Z80_TABLE\n#define Z80_TABLE\n\nextern const char z80_tab[%lu];\n\n#endif\n", length + 1) < 0) {
+	if (fprintf(header, "extern const char %s_tab[%lu];\n", name, length + 1) < 0) {
 		puts("Failed to write header!");
 		goto cleanup;
 	}
