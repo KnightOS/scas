@@ -479,16 +479,15 @@ int main(int argc, char **argv) {
 	if(ret == 0)
 		ret = errors->length;
 	scas_log(L_DEBUG, "Exiting with status code %d, cleaning up", ret);
-	// Remaining allocations:
-	// scas_runtime.
-	// 	input_files
-	// 	input_names
-	// include_path
-	// objects, and all its items
-	// errors
-	// warnings
-	// instruction_set
-	// No point in freeing them, as the OS will do it faster anyways
+	list_free(scas_runtime.input_files);
+	list_free(scas_runtime.input_names);
+	free_flat_list(include_path);
+	for (unsigned int i = 0; i < objects->length; i += 1)
+	       object_free((object_t*)objects->items[i]);
+	list_free(objects);
+	list_free(errors);
+	list_free(warnings);
+	instruction_set_free(scas_runtime.set);
 	return ret;
 }
 
