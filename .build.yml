@@ -16,7 +16,7 @@ tasks:
       sudo make install
       cd ../scas
       make bin/scas
-      cd ../../kernel
+      cd ../kernel
       # Temporary: use scas PR
       git checkout scas
       mkdir bin/TI84pSE -p
