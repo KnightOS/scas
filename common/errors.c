@@ -68,7 +68,7 @@ void add_error(list_t *errors, int code, size_t line_number, const char *line,
 	error->message = buf;
 
 	list_add(errors, error);
-	scas_log(L_ERROR, "Added error '%s' at %s:%d:%d", buf, file_name,
+	scas_log(L_DEBUG, "Added error '%s' at %s:%d:%d", buf, file_name,
 			line_number, column);
 }
 
@@ -96,7 +96,7 @@ void add_warning(list_t *warnings, int code, size_t line_number,
 	warning->message = buf;
 
 	list_add(warnings, warning);
-	scas_log(L_ERROR, "Added warning '%s' at %s:%d:%d", buf, file_name,
+	scas_log(L_DEBUG, "Added warning '%s' at %s:%d:%d", buf, file_name,
 			line_number, column);
 }
 
@@ -136,7 +136,7 @@ void add_error_from_map(list_t *errors, int code, list_t *maps, uint64_t address
 	va_end(args);
 
 	error->message = buf;
-	scas_log(L_ERROR, "Added error '%s' at:", buf);
+	scas_log(L_DEBUG, "Added error '%s' at:", buf);
 	if (found) {
 		error->line_number = entry->line_number;
 		error->file_name = strdup(map->file_name);
