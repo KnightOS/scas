@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "enums.h"
 #include "list.h"
 #include "stack.h"
 #include "linker.h"

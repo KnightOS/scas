@@ -14,7 +14,6 @@
 #include "stack.h"
 #include "log.h"
 #include "stringop.h"
-#include "enums.h"
 #include "errors.h"
 #include "expression.h"
 #include "objects.h"

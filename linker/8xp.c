@@ -4,7 +4,6 @@
 #include <string.h>
 #include <stdint.h>
 #include "list.h"
-#include "enums.h"
 #include "linker.h"
 #include "8xp.h"
 #include "instructions.h"

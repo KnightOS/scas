@@ -10,7 +10,6 @@
 #include "stack.h"
 #include "instructions.h"
 #include "linker.h"
-#include "enums.h"
 #include "errors.h"
 #include "expression.h"
 #include "stringop.h"

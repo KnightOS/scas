@@ -63,7 +63,7 @@ bin/generate_tables: tables/generate.c
 	mkdir -p bin/
 	$(CC) $(CFLAGS) $< -o $@
 
-$(SOURCES:.c=.o) scas.o: bin/z80.h bin/amd64.h include/linker.h include/match.h include/format.h include/merge.h include/list.h include/assembler.h include/md5.h include/objects.h include/8xp.h include/stack.h include/bin.h include/directives.h include/errors.h include/instructions.h include/readline.h include/runtime.h include/stringop.h include/hashtable.h include/functions.h include/enums.h include/log.h include/expression.h include/privatize.h include/operators.h
+$(SOURCES:.c=.o) scas.o: bin/z80.h bin/amd64.h include/linker.h include/match.h include/format.h include/merge.h include/list.h include/assembler.h include/md5.h include/objects.h include/8xp.h include/stack.h include/bin.h include/directives.h include/errors.h include/instructions.h include/readline.h include/runtime.h include/stringop.h include/hashtable.h include/functions.h include/log.h include/expression.h include/privatize.h include/operators.h
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@

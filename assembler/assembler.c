@@ -8,7 +8,6 @@
 #include "stack.h"
 #include "instructions.h"
 #include "linker.h"
-#include "enums.h"
 #include "expression.h"
 #include "objects.h"
 #include "assembler.h"
