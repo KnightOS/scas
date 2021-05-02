@@ -3,11 +3,16 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include "enums.h"
 #include "log.h"
 #include "list.h"
 #include "instructions.h"
 #include "readline.h"
 #include "stringop.h"
+#include "linker.h"
+#include "runtime.h"
+
+#include "generated.h"
 
 static uint64_t swapbits(uint64_t p, uint64_t m, int k) {
 	uint64_t q = ((p>>k)^p)&m;
@@ -331,3 +336,28 @@ void instruction_set_free(instruction_set_t *set) {
 	}
 	free(set);
 }
+
+instruction_set_t *
+find_instruction_set(void)
+{
+	const char *sets_dir = "/usr/share/knightos/scas/tables/";
+	const char *ext = ".tab";
+	FILE *f = fopen(scas_runtime.arch, "r");
+	if(f == NULL){
+		char *path = malloc(strlen(scas_runtime.arch) + strlen(sets_dir) + strlen(ext) + 1);
+		sprintf(path, "%s%s%s", sets_dir, scas_runtime.arch, ext);
+		f = fopen(path, "r");
+		free(path);
+		if(f == NULL){
+			// Fall back to internal copy if recognized
+			if(strcmp(scas_runtime.arch, "z80") == 0)
+				return load_instruction_set_s(z80_tab);
+			scas_log(L_ERROR, "Unknown architecture: %s", scas_runtime.arch);
+			return NULL;
+		}
+	}
+	instruction_set_t *set = load_instruction_set(f);
+	fclose(f);
+	return set;
+}
+

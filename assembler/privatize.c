@@ -12,6 +12,7 @@
 #include "md5.h"
 #include "enums.h"
 #include "linker.h"
+#include "instructions.h"
 #include "runtime.h"
 #include "privatize.h"
 

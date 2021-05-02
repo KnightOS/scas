@@ -50,3 +50,6 @@ instruction_operand_t *find_instruction_operand(instruction_t *inst, char key);
 immediate_t *find_instruction_immediate(instruction_t *inst, char key);
 operand_group_t *find_operand_group(instruction_set_t *set, const char *name);
 operand_t *find_operand(operand_group_t *group, const char *match);
+// Loads the instruction set for scas_runtime.arch
+instruction_set_t *find_instruction_set(void);
+

@@ -4,6 +4,7 @@
 #include "list.h"
 #include "linker.h"
 #include "enums.h"
+#include "instructions.h"
 #include "runtime.h"
 
 // Defines this when building for a shared library

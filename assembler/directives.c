@@ -1241,6 +1241,23 @@ int handle_nolist(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
+int
+handle_isa(struct assembler_state *state, char **argv, int argc)
+{
+	if (argc == 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "org expects 1 argument");
+		return 1;
+	}
+	instruction_set_free(scas_runtime.set);
+	scas_runtime.arch = argv[0];
+	scas_runtime.set = find_instruction_set();
+	if(scas_runtime.set == NULL){
+		scas_log(L_ERROR, "Failed to load instruction set '%s'", scas_runtime.arch);
+		return 0;
+	}
+	return 1;
+}
+
 int handle_odd(struct assembler_state *state, char **argv, int argc) {
 	(void)argv;
 	if (argc != 0) {
@@ -1328,6 +1345,7 @@ struct directive directives[] = {
 	{ "import", handle_import, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "incbin", handle_incbin, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "include", handle_include, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "isa", handle_isa, 0 },
 	{ "lclequ", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "list", handle_list, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "local", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE },

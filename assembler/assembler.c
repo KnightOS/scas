@@ -415,7 +415,7 @@ int try_add_label(struct assembler_state *state, char **line) {
 
 int try_match_instruction(struct assembler_state *state, char **_line) {
 	char *line = *_line;
-	instruction_match_t *match = match_instruction(state->instruction_set, line);
+	instruction_match_t *match = match_instruction(scas_runtime.set, line);
 	if (match == NULL) {
 		ERROR(ERROR_INVALID_INSTRUCTION, state->column, line);
 		return 0;
@@ -592,7 +592,6 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 		.line = "",
 		.column = 0,
 
-		.instruction_set = settings->set,
 		.instruction_buffer = malloc(64 / 8),
 		.if_stack = create_stack(),
 		.equates = create_list(),

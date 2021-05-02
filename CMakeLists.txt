@@ -30,19 +30,21 @@ add_custom_command(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab generate_tables
     COMMAND generate_tables ${CMAKE_CURRENT_SOURCE_DIR}/tables/z80.tab ${CMAKE_CURRENT_BINARY_DIR}/tables/z80.c ${CMAKE_BINARY_DIR}/tables/generated.h)
 
+add_custom_target(tablegen ALL DEPENDS ${CMAKE_BINARY_DIR}/tables/z80.c)
+
 FILE(GLOB common ${PROJECT_SOURCE_DIR}/common/*.c)
 FILE(GLOB assembler ${PROJECT_SOURCE_DIR}/assembler/*.c)
 FILE(GLOB linker ${PROJECT_SOURCE_DIR}/linker/*.c)
+set(common ${common} ${CMAKE_BINARY_DIR}/tables/z80.c)
 
 add_executable(scas
     ${common}
     ${assembler}
     ${linker}
     ${PROJECT_SOURCE_DIR}/scas.c
-    ${PROJECT_BINARY_DIR}/tables/z80.c
 )
 
-include_directories(scas
+include_directories(
     ${CMAKE_SOURCE_DIR}/include/
     ${CMAKE_BINARY_DIR}/tables/
 )
@@ -52,8 +54,9 @@ if (SCAS_LIBRARY)
         ${common}
         ${assembler}
         ${linker}
-        ${PROJECT_BINARY_DIR}/tables/z80.c
-)
+    )
+
+    add_dependencies(libscas tablegen)
 
     SET_TARGET_PROPERTIES(libscas
       PROPERTIES OUTPUT_NAME scas)
@@ -72,6 +75,10 @@ add_executable(scwrap
     ${common}
     ${PROJECT_SOURCE_DIR}/scwrap.c
 )
+
+add_dependencies(scas tablegen)
+add_dependencies(scdump tablegen)
+add_dependencies(scwrap tablegen)
 
 if(SCAS_DOCUMENTATION)
 
