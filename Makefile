@@ -14,25 +14,32 @@ LIBDIR=$(DESTDIR)/lib/
 INCDIR=$(DESTDIR)/include/
 
 install: all
-	mkdir -p $(BINDIR) $(INCDIR)/knightos/scas/ $(LIBDIR)/knightos/
+	mkdir -p $(BINDIR) $(INCDIR)/scas/ $(LIBDIR)/
 	cp bin/scas bin/scwrap bin/scdump $(BINDIR)
-	cp include/* $(INCDIR)/knightos/scas/
-	cp bin/scas.a $(LIBDIR)/knightos/scas.a
+	cp include/* $(INCDIR)/scas/
+	cp bin/scas.a $(LIBDIR)/scas.a
 
 install_man: bin/scas.1 bin/scdump.1 bin/scwrap.1
 	mkdir -p $(MANDIR)/man1/
 	cp $^ $(MANDIR)/man1/
 
+install_lib: bin/libscas.so
+	mkdir -p $(LIBDIR)/
+	cp $^ $(LIBDIR)
+
 uninstall:
 	$(RM) $(BINDIR)/scas $(BINDIR)/scdump $(BINDIR)/scwrap -v
-	$(RM) $(INCDIR)/knightos/scas/ -rv
-	$(RM) $(LIBDIR)/knightos/scas.a
+	$(RM) $(INCDIR)/scas/ -rv
+	$(RM) $(LIBDIR)/scas.a
 	$(RM) $(MANDIR)/man1/scas.1
 	$(RM) $(MANDIR)/man1/scdump.1
 	$(RM) $(MANDIR)/man1/scwrap.1
 
 bin/scas.a: $(SOURCES:.c=.o)
 	$(AR) $(ARFLAGS) $@ $^
+
+bin/libscas.so: bin/scas.a
+	$(CC) $(LDFLAGS) -shared $^ -o $@
 
 bin/scas: scas.o bin/scas.a
 	$(CC) $(LDFLAGS) $^ -o $@
