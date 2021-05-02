@@ -314,35 +314,6 @@ void parse_arguments(int argc, char **argv) {
 	}
 }
 
-
-instruction_set_t *find_inst() {
-	const char *sets_dir = "/usr/share/scas/tables/";
-	const char *ext = ".tab";
-	FILE *f = fopen(scas_runtime.arch, "r");
-	if (!f) {
-		char *path = malloc(strlen(scas_runtime.arch) + strlen(sets_dir) + strlen(ext) + 1);
-		strcpy(path, sets_dir);
-		strcat(path, scas_runtime.arch);
-		strcat(path, ext);
-		f = fopen(path, "r");
-		free(path);
-		if (!f) {
-			// Fall back to internal copy if recognized
-			if (strcmp(scas_runtime.arch, "z80") == 0) {
-				return load_instruction_set_s(z80_tab);
-			} else if (strcmp(scas_runtime.arch, "amd64") == 0) {
-				return load_instruction_set_s(amd64_tab);
-			} else {
-				scas_log(L_ERROR, "Unknown architecture: %s", scas_runtime.arch);
-				return NULL;
-			}
-		}
-	}
-	instruction_set_t *set = load_instruction_set(f);
-	fclose(f);
-	return set;
-}
-
 list_t *split_include_path() {
 	list_t *list = create_list();
 	int i, j;
@@ -474,12 +445,13 @@ int main(int argc, char **argv) {
 	scas_log_verbosity = L_ERROR;
 	parse_arguments(argc, argv);
 	validate_scas_runtime();
-	instruction_set_t *instruction_set = find_inst();
+	instruction_set_t *instruction_set = find_instruction_set();
 	if (instruction_set == NULL) {
 		scas_log(L_ERROR, "Failed to load instruction set definition, unable to continue!\n");
 		return 1;
 	}
 	scas_log(L_INFO, "Loaded instruction set: %s", instruction_set->arch);
+	scas_runtime.set = instruction_set;
 	list_t *include_path = split_include_path();
 	list_t *errors = create_list();
 	list_t *warnings = create_list();
@@ -487,7 +459,6 @@ int main(int argc, char **argv) {
 	list_t *objects = create_list();
 	assembler_settings_t settings = {
 		.include_path = include_path,
-		.set = instruction_set,
 		.errors = errors,
 		.warnings = warnings,
 		.macros = scas_runtime.macros,

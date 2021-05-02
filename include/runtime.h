@@ -1,3 +1,8 @@
+typedef enum {
+    OBJECT,
+    EXECUTABLE
+} output_type_t;
+
 struct runtime_options {
 	bool explicit_export;				/* -fexplicit-export */
 	bool explicit_import;				/* -fexplicit-import */
@@ -12,6 +17,7 @@ struct runtime_options {
 
 struct runtime {
 	char *arch;
+	instruction_set_t *set;
 	int link;
 	list_t *macros;
 	output_type_t output_type;

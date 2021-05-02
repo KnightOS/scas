@@ -7,6 +7,7 @@
 #include "enums.h"
 #include "linker.h"
 #include "8xp.h"
+#include "instructions.h"
 #include "runtime.h"
 
 #define UNPROTECTED_8XP 0x05

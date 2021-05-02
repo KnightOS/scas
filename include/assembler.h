@@ -1,5 +1,4 @@
 typedef struct {
-	instruction_set_t *set;
 	list_t *include_path;
 	list_t *errors;
 	list_t *warnings;
@@ -25,7 +24,6 @@ struct assembler_state {
 	bool expanding_macro;
 	char *line;
 	int column;
-	instruction_set_t *instruction_set;
 	uint8_t *instruction_buffer;
 	stack_type *if_stack;
 	list_t *equates;

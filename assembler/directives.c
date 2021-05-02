@@ -74,14 +74,14 @@ char *join_args(char **argv, int argc) {
 	return res;
 }
 
-int handle_nop(struct assembler_state *state, char **argv, int argc) {
+static int handle_nop(struct assembler_state *state, char **argv, int argc) {
 	(void)state;
 	(void)argv;
 	(void)argc;
 	return 1;
 }
 
-int handle_asciiz(struct assembler_state *state, char **argv, int argc) {
+static int handle_asciiz(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "asciiz expects 1+ arguments");
 		return 1;
@@ -102,7 +102,7 @@ int handle_asciiz(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_asciip(struct assembler_state *state, char **argv, int argc) {
+static int handle_asciip(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "asciip expects 1+ arguments");
 		return 1;
@@ -130,7 +130,7 @@ int handle_asciip(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_block(struct assembler_state *state, char **argv, int argc) {
+static int handle_block(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "block expects 1 argument");
 		return 1;
@@ -176,7 +176,7 @@ int handle_block(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_bndry(struct assembler_state *state, char **argv, int argc) {
+static int handle_bndry(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "bndry expects 1 argument");
 		return 1;
@@ -213,7 +213,7 @@ int handle_bndry(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_db(struct assembler_state *state, char **argv, int argc) {
+static int handle_db(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "db expects 1+ arguments");
 		return 1;
@@ -296,7 +296,7 @@ int handle_db(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_dl(struct assembler_state *state, char **argv, int argc) {
+static int handle_dl(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "dl expects 1+ arguments");
 		return 1;
@@ -371,7 +371,7 @@ int handle_dl(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_define(struct assembler_state *state, char **argv, int argc) {
+static int handle_define(struct assembler_state *state, char **argv, int argc) {
 	/* Basically the same thing as handle_macro, but everything is on 1 line */
 	if (argc == 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "define expects 1+ arguments");
@@ -433,7 +433,7 @@ int handle_define(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_undef(struct assembler_state *state, char **argv, int argc) {
+static int handle_undef(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "undef expects 1 argument");
 		return 1;
@@ -455,7 +455,7 @@ int handle_undef(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_area(struct assembler_state *state, char **argv, int argc) {
+static int handle_area(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
 		/* This space intentionally left blank */
 	}
@@ -481,7 +481,7 @@ int handle_area(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_ascii(struct assembler_state *state, char **argv, int argc) {
+static int handle_ascii(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "ascii expects 1+ arguments");
 		return 1;
@@ -500,7 +500,7 @@ int handle_ascii(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_dw(struct assembler_state *state, char **argv, int argc) {
+static int handle_dw(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "dw expects 1+ arguments");
 		return 1;
@@ -575,7 +575,7 @@ int handle_dw(struct assembler_state *state, char **argv, int argc) {
 
 struct assembler_state *printf_state;
 char **printf_argv;
-int printf_argc;
+static int printf_argc;
 
 static uintmax_t printf_arg(size_t size) {
 	(void)size;
@@ -615,7 +615,7 @@ static void printf_putc(char c) {
 	putchar(c);
 }
 
-int handle_echo(struct assembler_state *state, char **argv, int argc) {
+static int handle_echo(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "echo expects 1+ arguments");
 		return 1;
@@ -624,7 +624,7 @@ int handle_echo(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_printf(struct assembler_state *state, char **argv, int argc) {
+static int handle_printf(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "printf expects 1+ arguments");
 		return 1;
@@ -643,7 +643,7 @@ int handle_printf(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_elseif(struct assembler_state *state, char **argv, int argc) {
+static int handle_elseif(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "elseif expects 1 argument");
 		return 1;
@@ -678,7 +678,7 @@ int handle_elseif(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_else(struct assembler_state *state, char **argv, int argc) {
+static int handle_else(struct assembler_state *state, char **argv, int argc) {
 	(void)argv;
 	if (argc != 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "else expects 0 arguments");
@@ -707,7 +707,7 @@ int handle_else(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_end(struct assembler_state *state, char **argv, int argc) {
+static int handle_end(struct assembler_state *state, char **argv, int argc) {
 	(void)argv;
 	if (argc != 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "end expects 0 arguments");
@@ -721,7 +721,7 @@ int handle_end(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_endif(struct assembler_state *state, char **argv, int argc) {
+static int handle_endif(struct assembler_state *state, char **argv, int argc) {
 	(void)argv;
 	if (argc != 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "endif expects 0 arguments");
@@ -736,7 +736,7 @@ int handle_endif(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_equ(struct assembler_state *state, char **argv, int argc) {
+static int handle_equ(struct assembler_state *state, char **argv, int argc) {
 	if (argc < 2) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "equ expects 2+ arguments");
 		return 1;
@@ -784,7 +784,7 @@ int handle_equ(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_fill(struct assembler_state *state, char **argv, int argc) {
+static int handle_fill(struct assembler_state *state, char **argv, int argc) {
 	if (argc < 1 || argc > 2) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "fill expects one or two arguments");
 		return 1;
@@ -849,7 +849,7 @@ int handle_fill(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_even(struct assembler_state *state, char **argv, int argc) {
+static int handle_even(struct assembler_state *state, char **argv, int argc) {
 	(void)argv;
 	if (argc != 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "even expects 0 arguments");
@@ -865,7 +865,7 @@ int handle_even(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_function(struct assembler_state *state, char **argv, int argc) {
+static int handle_function(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 3) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "function expects 3 arguments");
 		return 1;
@@ -897,7 +897,7 @@ int handle_function(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_export(struct assembler_state *state, char **argv, int argc) {
+static int handle_export(struct assembler_state *state, char **argv, int argc) {
 	if (!scas_runtime.options.explicit_export) {
 		scas_log(L_INFO, "Implicitly enabling -fexplicit-export due to use of export directive");
 		scas_runtime.options.explicit_export = 1;
@@ -914,7 +914,7 @@ int handle_export(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_import(struct assembler_state *state, char **argv, int argc) {
+static int handle_import(struct assembler_state *state, char **argv, int argc) {
 	if (!scas_runtime.options.explicit_import) {
 		WARN(WARNING_NO_EFFECT, state->column,
 				".import", "explicit_import is not enabled");
@@ -930,7 +930,7 @@ int handle_import(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_if(struct assembler_state *state, char **argv, int argc) {
+static int handle_if(struct assembler_state *state, char **argv, int argc) {
 	if (state->if_stack->length != 0 && !*(int *)stack_peek(state->if_stack)) {
 		/* Push up another falsy if if we're already in a falsy if */
 		int *r = malloc(sizeof(int));
@@ -968,7 +968,7 @@ int handle_if(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_ifdef(struct assembler_state *state, char **argv, int argc) {
+static int handle_ifdef(struct assembler_state *state, char **argv, int argc) {
 	if (state->if_stack->length != 0 && !*(int *)stack_peek(state->if_stack)) {
 		/* Push up another falsy if if we're already in a falsy if */
 		int *r = malloc(sizeof(int));
@@ -1006,7 +1006,7 @@ int handle_ifdef(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_ifndef(struct assembler_state *state, char **argv, int argc) {
+static int handle_ifndef(struct assembler_state *state, char **argv, int argc) {
 	if (state->if_stack->length != 0 && !*(int *)stack_peek(state->if_stack)) {
 		/* Push up another falsy if if we're already in a falsy if */
 		int *r = malloc(sizeof(int));
@@ -1051,7 +1051,7 @@ int handle_ifndef(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_incbin(struct assembler_state *state, char **argv, int argc) {
+static int handle_incbin(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "incbin expects 1 argument");
 		return 1;
@@ -1094,7 +1094,7 @@ int handle_incbin(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_include(struct assembler_state *state, char **argv, int argc) {
+static int handle_include(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "include expects 1 argument");
 		return 1;
@@ -1143,7 +1143,7 @@ int handle_include(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_list(struct assembler_state *state, char **argv, int argc) {
+static int handle_list(struct assembler_state *state, char **argv, int argc) {
 	(void)argv;
 	if (argc != 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "list expects 0 arguments");
@@ -1154,7 +1154,7 @@ int handle_list(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_map(struct assembler_state *state, char **argv, int argc) {
+static int handle_map(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 3) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "map expects three arguments");
 	}
@@ -1169,7 +1169,7 @@ int handle_map(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_macro(struct assembler_state *state, char **argv, int argc) {
+static int handle_macro(struct assembler_state *state, char **argv, int argc) {
 	if (argc != 1) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "macro expects 1 argument");
 		return 1;
@@ -1230,7 +1230,7 @@ int handle_macro(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_nolist(struct assembler_state *state, char **argv, int argc) {
+static int handle_nolist(struct assembler_state *state, char **argv, int argc) {
 	(void)argv;
 	if (argc != 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "nolist expects 0 arguments");
@@ -1241,7 +1241,24 @@ int handle_nolist(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_odd(struct assembler_state *state, char **argv, int argc) {
+static int
+handle_isa(struct assembler_state *state, char **argv, int argc)
+{
+	if (argc == 0) {
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "org expects 1 argument");
+		return 1;
+	}
+	instruction_set_free(scas_runtime.set);
+	scas_runtime.arch = argv[0];
+	scas_runtime.set = find_instruction_set();
+	if(scas_runtime.set == NULL){
+		scas_log(L_ERROR, "Failed to load instruction set '%s'", scas_runtime.arch);
+		return 0;
+	}
+	return 1;
+}
+
+static int handle_odd(struct assembler_state *state, char **argv, int argc) {
 	(void)argv;
 	if (argc != 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "odd expects 0 arguments");
@@ -1257,7 +1274,7 @@ int handle_odd(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_org(struct assembler_state *state, char **argv, int argc) {
+static int handle_org(struct assembler_state *state, char **argv, int argc) {
 	if (argc == 0) {
 		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "org expects 1 argument");
 		return 1;
@@ -1284,7 +1301,7 @@ int handle_org(struct assembler_state *state, char **argv, int argc) {
 	return 1;
 }
 
-int handle_optsdcc(struct assembler_state *state, char **argv, int argc) {
+static int handle_optsdcc(struct assembler_state *state, char **argv, int argc) {
 	(void)argv;
 	(void)argc;
 	// For now this is a hack to turn off automatic source maps
@@ -1328,6 +1345,7 @@ struct directive directives[] = {
 	{ "import", handle_import, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "incbin", handle_incbin, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "include", handle_include, DELIM_COMMAS | DELIM_WHITESPACE },
+	{ "isa", handle_isa, 0 },
 	{ "lclequ", handle_equ, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "list", handle_list, DELIM_COMMAS | DELIM_WHITESPACE },
 	{ "local", handle_nop, DELIM_COMMAS | DELIM_WHITESPACE },
@@ -1360,7 +1378,7 @@ struct directive if_directives[] = { /* The only directives parsed during a fals
 	{ "ifndef", handle_ifndef, 0 },
 };
 
-int directive_compare(const void *_a, const void *_b) {
+static int directive_compare(const void *_a, const void *_b) {
 	const struct directive *a = _a;
 	const struct directive *b = _b;
 	return strcasecmp(a->match, b->match);
