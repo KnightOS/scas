@@ -15,11 +15,7 @@ void scas_log_default(const char *msg) {
 scas_log_importance_t scas_log_verbosity = 0;
 unsigned scas_log_indent = 0;
 
-#ifdef __ELF__
-bool scas_log_colorize = true;
-#else
 bool scas_log_colorize = false;
-#endif
 
 void (*scas_log_function)(const char *) = scas_log_default;
 
