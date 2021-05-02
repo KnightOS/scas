@@ -1,7 +1,6 @@
 image: archlinux
 packages:
   - make
-  - mkrom
   - patchrom
   - genkfs
   - mktiupgrade
@@ -9,9 +8,13 @@ packages:
 sources:
   - https://git.sr.ht/~pixelherodev/scas
   - https://github.com/knightos/kernel
+  - https://github.com/knightos/mkrom
 tasks:
   - build: |
-      cd scas
+      cd mkrom
+      make
+      sudo make install
+      cd ../scas
       make bin/scas
       cd ../../kernel
       # Temporary: use scas PR
