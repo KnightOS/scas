@@ -1,7 +1,7 @@
 CFLAGS=-Iinclude/ -O2 -Ibin/ -Wall -Wextra -pedantic -std=c99 -D_XOPEN_SOURCE=700 -D_DEFAULT_SOURCE -g
 
 ASSEMBLER=assembler/privatize.c assembler/directives.c assembler/assembler.c
-COMMON=common/functions.c common/hashtable.c common/expression.c common/list.c common/operators.c common/runtime.c common/stringop.c common/errors.c common/stack.c common/format.c common/instructions.c common/log.c common/match.c common/md5.c common/objects.c common/readline.c
+COMMON=bin/z80.c common/functions.c common/hashtable.c common/expression.c common/list.c common/operators.c common/runtime.c common/stringop.c common/errors.c common/stack.c common/format.c common/instructions.c common/log.c common/match.c common/md5.c common/objects.c common/readline.c
 LINKER=linker/8xp.c linker/bin.c linker/linker.c linker/merge.c
 SOURCES=$(ASSEMBLER) $(COMMON) $(LINKER)
 
@@ -34,7 +34,7 @@ uninstall:
 bin/scas.a: $(SOURCES:.c=.o)
 	$(AR) $(ARFLAGS) $@ $^
 
-bin/scas: bin/z80.o scas.o bin/scas.a
+bin/scas: scas.o bin/scas.a
 	$(CC) $(LDFLAGS) $^ -o $@
 
 bin/scdump: scdump.o bin/scas.a
