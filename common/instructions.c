@@ -13,6 +13,7 @@
 
 #include "z80.h"
 #include "amd64.h"
+#include "arm64.h"
 
 static uint64_t swapbits(uint64_t p, uint64_t m, int k) {
 	uint64_t q = ((p>>k)^p)&m;
@@ -352,6 +353,8 @@ find_instruction_set(void)
 			// Fall back to internal copy if recognized
 			if(strcmp(scas_runtime.arch, "z80") == 0)
 				return load_instruction_set_s(z80_tab);
+			if(strcmp(scas_runtime.arch, "arm64") == 0)
+				return load_instruction_set_s(arm64_tab);
 			if(strcmp(scas_runtime.arch, "amd64") == 0)
 				return load_instruction_set_s(amd64_tab);
 			scas_log(L_ERROR, "Unknown architecture: %s", scas_runtime.arch);

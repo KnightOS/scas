@@ -1,7 +1,7 @@
 CFLAGS=-Iinclude/ -O2 -Ibin/ -Wall -Wextra -pedantic -std=c99 -D_XOPEN_SOURCE=700 -D_DEFAULT_SOURCE -g
 
 ASSEMBLER=assembler/privatize.c assembler/directives.c assembler/assembler.c
-COMMON=bin/amd64.c bin/z80.c common/functions.c common/hashtable.c common/expression.c common/list.c common/operators.c common/runtime.c common/stringop.c common/errors.c common/stack.c common/format.c common/instructions.c common/log.c common/match.c common/md5.c common/objects.c common/readline.c
+COMMON=bin/amd64.c bin/z80.c bin/arm64.c common/functions.c common/hashtable.c common/expression.c common/list.c common/operators.c common/runtime.c common/stringop.c common/errors.c common/stack.c common/format.c common/instructions.c common/log.c common/match.c common/md5.c common/objects.c common/readline.c
 LINKER=linker/8xp.c linker/bin.c linker/linker.c linker/merge.c
 SOURCES=$(ASSEMBLER) $(COMMON) $(LINKER)
 
@@ -20,7 +20,7 @@ install: all
 	cp bin/scas bin/scwrap bin/scdump $(BINDIR)
 	cp include/* $(INCDIR)/scas/
 	cp bin/scas.a $(LIBDIR)/scas.a
-	cp tables/amd64.tab tables/z80.tab $(DATADIR)
+	cp tables/amd64.tab tables/z80.tab tables/arm64.tab $(DATADIR)
 
 install_man: bin/scas.1 bin/scdump.1 bin/scwrap.1
 	mkdir -p $(MANDIR)/man1/
@@ -59,6 +59,10 @@ bin/z80.c: bin/generate_tables tables/z80.tab
 bin/amd64.c: bin/generate_tables tables/amd64.tab
 	./bin/generate_tables amd64 ./tables/amd64.tab ./bin/amd64.c ./bin/amd64.h
 
+bin/arm64.c: bin/generate_tables tables/arm64.tab
+	./bin/generate_tables arm64 ./tables/arm64.tab ./bin/arm64.c ./bin/arm64.h
+
+bin/arm64.h: bin/arm64.c
 bin/amd64.h: bin/amd64.c
 bin/z80.h: bin/z80.c
 
@@ -66,7 +70,7 @@ bin/generate_tables: tables/generate.c
 	mkdir -p bin/
 	$(CC) $(CFLAGS) $< -o $@
 
-$(SOURCES:.c=.o) scas.o: bin/z80.h bin/amd64.h include/linker.h include/match.h include/format.h include/merge.h include/list.h include/assembler.h include/md5.h include/objects.h include/8xp.h include/stack.h include/bin.h include/directives.h include/errors.h include/instructions.h include/readline.h include/runtime.h include/stringop.h include/hashtable.h include/functions.h include/log.h include/expression.h include/privatize.h include/operators.h
+$(SOURCES:.c=.o) scas.o: bin/z80.h bin/amd64.h bin/arm64.h include/linker.h include/match.h include/format.h include/merge.h include/list.h include/assembler.h include/md5.h include/objects.h include/8xp.h include/stack.h include/bin.h include/directives.h include/errors.h include/instructions.h include/readline.h include/runtime.h include/stringop.h include/hashtable.h include/functions.h include/log.h include/expression.h include/privatize.h include/operators.h
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
