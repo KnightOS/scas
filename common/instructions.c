@@ -340,7 +340,7 @@ void instruction_set_free(instruction_set_t *set) {
 instruction_set_t *
 find_instruction_set(void)
 {
-	const char *sets_dir = "/usr/share/knightos/scas/tables/";
+	const char *sets_dir = "/usr/local/share/knightos/scas/";
 	const char *ext = ".tab";
 	FILE *f = fopen(scas_runtime.arch, "r");
 	if(f == NULL){

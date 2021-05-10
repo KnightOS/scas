@@ -8,16 +8,19 @@ SOURCES=$(ASSEMBLER) $(COMMON) $(LINKER)
 all:bin/scas bin/scdump bin/scwrap
 
 DESTDIR=/usr/local
-MANDIR=$(DESTDIR)/share/man/
+SHAREDIR=$(DESTDIR)/share/
+DATADIR=$(SHAREDIR)/knightos/scas/
+MANDIR=$(SHAREDIR)/man/
 BINDIR=$(DESTDIR)/bin/
 LIBDIR=$(DESTDIR)/lib/
 INCDIR=$(DESTDIR)/include/
 
 install: all
-	mkdir -p $(BINDIR) $(INCDIR)/scas/ $(LIBDIR)/
+	mkdir -p $(BINDIR) $(INCDIR)/scas/ $(LIBDIR)/ $(DATADIR)
 	cp bin/scas bin/scwrap bin/scdump $(BINDIR)
 	cp include/* $(INCDIR)/scas/
 	cp bin/scas.a $(LIBDIR)/scas.a
+	cp tables/amd64.tab tables/z80.tab $(DATADIR)
 
 install_man: bin/scas.1 bin/scdump.1 bin/scwrap.1
 	mkdir -p $(MANDIR)/man1/
