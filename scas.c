@@ -7,9 +7,6 @@
 #define _BSD_EXTENSION
 #include <ctype.h>
 
-#include "z80.h"
-#include "amd64.h"
-
 #include "list.h"
 #include "stack.h"
 #include "log.h"

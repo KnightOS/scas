@@ -1,10 +1,10 @@
 </$objtype/mkfile
 
-COMMON=`{walk -f common | sed 's/\.c/.'^$O^'/g'}
+COMMON=`{walk -f common | sed 's/\.c/.'^$O^'/g'} z80.$O arm64.$O amd64.$O
 ASSEMBLER=`{walk -f assembler | sed 's/\.c/.'^$O^'/g'}
 LINKER=`{walk -f linker | sed 's/\.c/.'^$O^'/g'}
 
-$O.scas.out: scas.$O z80.$O arm64.$O amd64.$O $COMMON $ASSEMBLER $LINKER
+$O.scas.out: scas.$O $COMMON $ASSEMBLER $LINKER
 	pcc $prereq -o $target
 
 $O.scdump.out: scdump.$O $COMMON
@@ -27,25 +27,25 @@ install:V: /$objtype/bin/knightos/scas /$objtype/bin/knightos/scdump /$objtype/b
 	mkdir -p /$objtype/bin/knightos
 	cp $O.scas.out /$objtype/bin/knightos/scas
 
-/sys/lib/knightos/scas/tables/z80.tab: tables/z80.tab
+/sys/lib/knightos/scas/z80.tab: tables/z80.tab
 	mkdir -p `{basename -d $target}
 	cp $prereq $target
 
-/sys/lib/knightos/scas/tables/arm64.tab: tables/arm64.tab
+/sys/lib/knightos/scas/arm64.tab: tables/arm64.tab
 	mkdir -p `{basename -d $target}
 	cp $prereq $target
 
-/sys/lib/knightos/scas/tables/amd64.tab: tables/amd64.tab
+/sys/lib/knightos/scas/amd64.tab: tables/amd64.tab
 	mkdir -p `{basename -d $target}
 	cp $prereq $target
 
-scas.c:V: z80.h amd64.h arm64.h
+common/instructions.$O:V: z80.h amd64.h arm64.h
 z80.c:V: z80.h
 amd64.c:V: amd64.h
 arm64.c:V: arm64.h
 
 %.$O: %.c
-	pcc $prereq -I include -B -c -o $target
+	pcc $prereq -I . -I include -B -c -o $target
 
 z80.h: generate_tables
 	./generate_tables z80 tables/z80.tab z80.c z80.h
