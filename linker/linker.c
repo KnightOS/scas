@@ -96,37 +96,15 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 }
 
 /* z80 only (and possibly ez80) */
-void auto_relocate_area(area_t *area, area_t *runtime) {
+void auto_relocate_area(area_t *area, area_t *relocation_table) {
 	scas_log(L_DEBUG, "Performing automatic relocation for %s", area->name);
-	uint8_t rst0x8 = 0xCF;
-	for (unsigned int i = 0; i < area->late_immediates->length; ++i) {
+	int i;
+	for (i = 0; i < area->late_immediates->length; ++i) {
 		late_immediate_t *imm = area->late_immediates->items[i];
-		if (imm->type != IMM_TYPE_RELATIVE) {
-			if (imm->base_address != imm->address) {
-				/* Relocate this */
-				scas_log(L_DEBUG, "Adding relocation instruction for immediate at 0x%08X (inserting at 0x%08X)", imm->address, imm->instruction_address);
-				insert_in_area(area, &rst0x8, sizeof(uint8_t), imm->instruction_address);
-				++imm->address;
-				/* Move everything that comes after */
-				for (unsigned k = 0; k < area->symbols->length; ++k) {
-					symbol_t *sym = area->symbols->items[k];
-					if (sym->type == SYMBOL_LABEL && sym->value > imm->instruction_address) {
-						++sym->value;
-					}
-				}
-				for (unsigned int j = 0; j < area->late_immediates->length; ++j) {
-					late_immediate_t *_imm = area->late_immediates->items[j];
-					if (_imm->base_address > imm->base_address) {
-						++_imm->base_address;
-						++_imm->instruction_address;
-						++_imm->address;
-					}
-				}
-			} else {
-				/* Relocate this */
-				uint16_t value = (uint16_t)(imm->address + area->final_address);
-				append_to_area(runtime, (uint8_t*)&value, sizeof(uint16_t));
-			}
+		if (imm->type != IMM_TYPE_RELATIVE && imm->base_address != imm->address) {
+			/* Relocate this */
+			uint16_t value = (uint16_t)(imm->address + area->final_address);
+			append_to_area(relocation_table, (uint8_t*)&value, sizeof(uint16_t));
 		}
 	}
 }
@@ -154,19 +132,18 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	list_t *symbols = create_list(); // TODO: Use a hash table
 
 	/* Create a new area for relocatable references */
-	area_t *runtime = NULL;
+	area_t *relocation_table;
 	if (settings->automatic_relocation) {
-		const char *sym_name = "__scas_relocatable_data";
-		runtime = create_area("__scas_relocatable");
+		relocation_table = create_area("__scas_relocation_table");
 		symbol_t *sym = malloc(sizeof(symbol_t));
 		sym->type = SYMBOL_LABEL;
-		sym->name = strdup(sym_name);
+		sym->name = strdup("__scas_relocation_table");
 		sym->value = 0;
 		sym->defined_address = 0;
 		sym->exported = 0;
-		list_add(runtime->symbols, sym);
+		list_add(relocation_table->symbols, sym);
 		object_t *o = create_object();
-		list_add(o->areas, runtime);
+		list_add(o->areas, relocation_table);
 		list_add(objects, o);
 	}
 
@@ -178,7 +155,7 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 
 	area_t *final = create_area("FINAL");
 
-	runtime = get_area_by_name(merged, "__scas_relocatable");
+	relocation_table = get_area_by_name(merged, "__scas_relocation_table");
 
 	scas_log(L_INFO, "Assigning final address for all areas");
 	if (scas_runtime.options.remove_unused_functions) {
@@ -189,11 +166,11 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 		area_t *area = merged->areas->items[i];
 		relocate_area(area, address, false);
 		if (settings->automatic_relocation) {
-			if (area == runtime) {
+			if (area == relocation_table) {
 				uint16_t null_ptr = 0;
 				append_to_area(area, (uint8_t *)&null_ptr, sizeof(uint16_t));
 			} else {
-				auto_relocate_area(area, runtime);
+				auto_relocate_area(area, relocation_table);
 			}
 		}
 		address += area->data_length;
