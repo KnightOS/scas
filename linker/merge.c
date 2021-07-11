@@ -5,12 +5,12 @@
 #include <string.h>
 
 #include "list.h"
-#include "linker.h"
 #include "stack.h"
 #include "expression.h"
 #include "objects.h"
 #include "merge.h"
 #include "errors.h"
+#include "linker.h"
 #include "functions.h"
 #include "log.h"
 #include "stringop.h"

@@ -15,10 +15,10 @@
 #include "expression.h"
 #include "objects.h"
 #include "instructions.h"
+#include "linker.h"
 #include "assembler.h"
 #include "8xp.h"
 #include "bin.h"
-#include "linker.h"
 #include "merge.h"
 #include "runtime.h"
 

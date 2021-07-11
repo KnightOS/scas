@@ -4,6 +4,9 @@
 #include <string.h>
 #include <stdint.h>
 #include "list.h"
+#include "stack.h"
+#include "expression.h"
+#include "objects.h"
 #include "linker.h"
 #include "8xp.h"
 #include "instructions.h"
@@ -79,18 +82,21 @@ void write_8xp_data(FILE *f, uint8_t *data, int len) {
 	write_le16(f, dlen);
 }
 
-int output_8xp(FILE *f, uint8_t *data, int data_length) {
-	write_8xp_header(f, data_length);
-	long t = ftell(f);
-	write_8xp_data(f, data, data_length);
-	fwrite(data, sizeof(uint8_t), data_length, f);
-	/* Calculate checksum */
-	uint16_t sum = 0;
-	fseek(f, t, SEEK_SET);
+int output_8xp(FILE *f, object_t *object, linker_settings_t *settings) {
 	int a;
-	while ((a = fgetc(f)) != EOF) {
+	long t;
+	uint16_t sum = 0;
+	area_t *final = areas_merge(object->areas, settings->errors);
+	if(final == NULL)
+		return 1;
+	write_8xp_header(f, final->data_length);
+	t = ftell(f);
+	write_8xp_data(f, final->data, final->data_length);
+	fwrite(final->data, sizeof(uint8_t), final->data_length, f);
+	/* Calculate checksum */
+	fseek(f, t, SEEK_SET);
+	while((a = fgetc(f)) != EOF)
 		sum += a;
-	}
 	write_le16(f, sum);
 	return 0;
 }

@@ -5,7 +5,6 @@
 
 #include "list.h"
 #include "stack.h"
-#include "linker.h"
 #include "expression.h"
 #include "objects.h"
 #include "errors.h"
@@ -13,6 +12,7 @@
 #include "instructions.h"
 #include "functions.h"
 #include "merge.h"
+#include "linker.h"
 #include "runtime.h"
 #include "log.h"
 
@@ -22,20 +22,27 @@
  * A hashtable could also be used to handle dupes and have fast lookup
  */
 
-symbol_t *find_symbol(list_t *symbols, char *name) {
-	for (unsigned int i = 0; i < symbols->length; ++i) {
+symbol_t *
+find_symbol(list_t *symbols, char *name)
+{
+	unsigned int i;
+	for(i = 0; i < symbols->length; i += 1){
 		symbol_t *sym = symbols->items[i];
-		if (strcasecmp(sym->name, name) == 0) {
+		if(strcmp(sym->name, name) == 0)
 			return sym;
-		}
 	}
 	return NULL;
 }
 
-void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
+void
+resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors)
+{
+	int error;
+	char *symbol;
+	uint64_t result;
 	scas_log(L_DEBUG, "Resolving immediate values for area '%s' at %08X", area->name, area->final_address);
 	scas_log_indent += 1;
-	for (unsigned int i = 0; i < area->late_immediates->length; ++i) {
+	for(unsigned int i = 0; i < area->late_immediates->length; ++i){
 		late_immediate_t *imm = area->late_immediates->items[i];
 		imm->instruction_address += area->final_address;
 		imm->base_address += area->final_address;
@@ -46,12 +53,9 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 			.name = "$"
 		};
 		list_add(symbols, &sym_pc);
-		int error;
-		char *symbol;
-		uint64_t result = evaluate_expression(imm->expression, symbols, &error, &symbol);
-
+		result = evaluate_expression(imm->expression, symbols, &error, &symbol);
 		list_del(symbols, symbols->length - 1); // Remove $
-		if (error == EXPRESSION_BAD_SYMBOL) {
+		if(error == EXPRESSION_BAD_SYMBOL){
 			scas_log(L_ERROR, "Unable to find symbol for expression");
 			add_error_from_map(errors, ERROR_UNKNOWN_SYMBOL, area->source_map,
 					imm->instruction_address, symbol);
@@ -61,31 +65,29 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 					imm->instruction_address);
 			continue;
 		} else {
-			if (imm->type == IMM_TYPE_RELATIVE) {
+			if(imm->type == IMM_TYPE_RELATIVE)
 				result = result - imm->base_address;
-			}
 			scas_log(L_DEBUG, "Immediate value result: 0x%08X (width %d, base address 0x%08X)", result, imm->width, imm->base_address);
 			uint64_t mask = 1;
 			int shift = imm->width;
-			while (--shift) {
+			while(--shift != 0){
 				mask <<= 1;
 				mask |= 1;
 			}
-			if (imm->type == IMM_TYPE_RELATIVE) { // Signed
-				if ((result & (mask >> 1)) != result) {
-					if (!(result & (1 << imm->width)) || (result & ~mask) != ~mask) {
+			if(imm->type == IMM_TYPE_RELATIVE) { // Signed
+				if((result & (mask >> 1)) != result){
+					if(!(result & (1 << imm->width)) || (result & ~mask) != ~mask){
 						add_error_from_map(errors, ERROR_VALUE_TRUNCATED,
 								area->source_map, imm->instruction_address);
 					}
 				}
 			} else {
-				if ((result & mask) != result && ~result >> imm->width) {
+				if((result & mask) != result && ~result >> imm->width)
 					add_error_from_map(errors, ERROR_VALUE_TRUNCATED,
 							area->source_map, imm->instruction_address);
-				}
 			}
 			result = result & mask;
-			for (size_t j = 0; j < imm->width / 8; ++j) {
+			for(size_t j = 0; j < imm->width / 8; ++j){
 				area->data[imm->address + j] |= (result & 0xFF);
 				result >>= 8;
 			}
@@ -98,24 +100,23 @@ void resolve_immediate_values(list_t *symbols, area_t *area, list_t *errors) {
 void auto_relocate_area(area_t *area, area_t *runtime) {
 	scas_log(L_DEBUG, "Performing automatic relocation for %s", area->name);
 	uint8_t rst0x8 = 0xCF;
-	for (unsigned int i = 0; i < area->late_immediates->length; ++i) {
+	for(unsigned int i = 0; i < area->late_immediates->length; ++i){
 		late_immediate_t *imm = area->late_immediates->items[i];
-		if (imm->type != IMM_TYPE_RELATIVE) {
-			if (imm->base_address != imm->address) {
+		if(imm->type != IMM_TYPE_RELATIVE){
+			if(imm->base_address != imm->address){
 				/* Relocate this */
 				scas_log(L_DEBUG, "Adding relocation instruction for immediate at 0x%08X (inserting at 0x%08X)", imm->address, imm->instruction_address);
 				insert_in_area(area, &rst0x8, sizeof(uint8_t), imm->instruction_address);
 				++imm->address;
 				/* Move everything that comes after */
-				for (unsigned k = 0; k < area->symbols->length; ++k) {
+				for(unsigned k = 0; k < area->symbols->length; ++k){
 					symbol_t *sym = area->symbols->items[k];
-					if (sym->type == SYMBOL_LABEL && sym->value > imm->instruction_address) {
+					if(sym->type == SYMBOL_LABEL && sym->value > imm->instruction_address)
 						++sym->value;
-					}
 				}
-				for (unsigned int j = 0; j < area->late_immediates->length; ++j) {
+				for(unsigned int j = 0; j < area->late_immediates->length; ++j){
 					late_immediate_t *_imm = area->late_immediates->items[j];
-					if (_imm->base_address > imm->base_address) {
+					if(_imm->base_address > imm->base_address){
 						++_imm->base_address;
 						++_imm->instruction_address;
 						++_imm->address;
@@ -130,33 +131,62 @@ void auto_relocate_area(area_t *area, area_t *runtime) {
 	}
 }
 
-void gather_symbols(list_t *symbols, area_t *area, linker_settings_t *settings) {
-	for (unsigned int i = 0; i < area->symbols->length; ++i) {
+void area_gather_symbols(list_t *symbols, area_t *area, list_t *errors) {
+	for(unsigned int i = 0; i < area->symbols->length; ++i){
 		symbol_t *sym = area->symbols->items[i];
-		if (find_symbol(symbols, sym->name)) {
-			add_error_from_map(settings->errors, ERROR_DUPLICATE_SYMBOL,
+		if(find_symbol(symbols, sym->name))
+			add_error_from_map(errors, ERROR_DUPLICATE_SYMBOL,
 					area->source_map, sym->defined_address, sym->name);
-		} else {
+		else
 			list_add(symbols, sym);
-		}
 	}
 }
 
+list_t *
+symbols_gather(list_t *areas, list_t *errors)
+{
+	unsigned int i;
+	list_t *symbols = create_list();
+	if(symbols == NULL)
+		return NULL;
+	for(i = 0; i < areas->length; i += 1)
+		area_gather_symbols(symbols, areas->items[i], errors);
+	return symbols;
+}
+
 void move_origin(list_t *symbols) {
-	for (unsigned int i = 0; i < symbols->length; ++i) {
+	for(unsigned int i = 0; i < symbols->length; ++i){
 		symbol_t *sym = symbols->items[i];
 		sym->value += scas_runtime.options.origin;
 	}
 }
 
+area_t *
+areas_merge(list_t *areas, list_t *errors)
+{
+	unsigned int i;
+	list_t *symbols = symbols_gather(areas, errors); // TODO: Use a hash table
+	area_t *final = create_area("FINAL");
+	scas_log(L_INFO, "Assigning final address for all areas");
+	for(i = 0; i < areas->length; ++i){
+		area_t *area = areas->items[i];
+		scas_log(L_INFO, "Linking area %s", area->name);
+		if(scas_runtime.options.origin)
+			move_origin(symbols);
+		resolve_immediate_values(symbols, area, errors);
+		scas_log(L_DEBUG, "Writing final linked area to output file");
+		append_to_area(final, area->data, area->data_length);
+	}
+	list_free(symbols);
+	return final;
+}
+
 void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
-	list_t *symbols = create_list(); // TODO: Use a hash table
 
 	/* Create a new area for relocatable references */
-	area_t *runtime = NULL;
-	if (settings->automatic_relocation) {
+	if(settings->automatic_relocation){
 		const char *sym_name = "__scas_relocatable_data";
-		runtime = create_area("__scas_relocatable");
+		area_t *runtime = create_area("__scas_relocatable");
 		symbol_t *sym = malloc(sizeof(symbol_t));
 		sym->type = SYMBOL_LABEL;
 		sym->name = strdup(sym_name);
@@ -170,25 +200,20 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	}
 
 	object_t *merged = merge_objects(objects);
-	if (!merged) {
-		list_free(symbols);
+	if(merged == NULL){
 		return;
 	}
 
-	area_t *final = create_area("FINAL");
+	area_t *runtime = get_area_by_name(merged, "__scas_relocatable");
 
-	runtime = get_area_by_name(merged, "__scas_relocatable");
-
-	scas_log(L_INFO, "Assigning final address for all areas");
-	if (scas_runtime.options.remove_unused_functions) {
+	if(scas_runtime.options.remove_unused_functions)
 		remove_unused_functions(merged);
-	}
 	uint64_t address = 0;
-	for (unsigned int i= 0; i < merged->areas->length; ++i) {
+	for(unsigned int i= 0; i < merged->areas->length; ++i){
 		area_t *area = merged->areas->items[i];
 		relocate_area(area, address, false);
-		if (settings->automatic_relocation) {
-			if (area == runtime) {
+		if(settings->automatic_relocation){
+			if(area == runtime){
 				uint16_t null_ptr = 0;
 				append_to_area(area, (uint8_t *)&null_ptr, sizeof(uint16_t));
 			} else {
@@ -197,37 +222,23 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 		}
 		address += area->data_length;
 	}
-	for (unsigned int i = 0; i < merged->areas->length; ++i) {
-		area_t *area = merged->areas->items[i];
-		gather_symbols(symbols, area, settings);
-	}
-	for (unsigned int i = 0; i < merged->areas->length; ++i) {
-		area_t *area = merged->areas->items[i];
-		scas_log(L_INFO, "Linking area %s", area->name);
-		if (scas_runtime.options.origin) {
-			move_origin(symbols);
-		}
-		resolve_immediate_values(symbols, area, settings->errors);
-		scas_log(L_DEBUG, "Writing final linked area to output file");
-		append_to_area(final, area->data, area->data_length);
-	}
-	settings->write_output(output, final->data, (int)final->data_length);
-	scas_log(L_DEBUG, "Final binary written: %d bytes", ftell(output));
+	list_t *symbols = symbols_gather(merged->areas, settings->errors);
+	settings->write_output(output, merged, settings);
+	scas_log(L_INFO, "Final binary written: %d bytes", ftell(output));
 
-	if (scas_runtime.symbol_file) {
+	if(scas_runtime.symbol_file){
 		scas_log(L_DEBUG, "Generating symbol file '%s'", scas_runtime.symbol_file);
 		FILE *symfile = fopen(scas_runtime.symbol_file, "w");
-		for (unsigned int i = 0; i < symbols->length; i++) {
+		for(unsigned int i = 0; i < symbols->length; i++){
 			symbol_t *symbol = symbols->items[i];
-			if (symbol->type == SYMBOL_LABEL && symbol->exported && !strchr(symbol->name, '@')) {
+			if(symbol->type == SYMBOL_LABEL && symbol->exported && !strchr(symbol->name, '@'))
 				fprintf(symfile, ".equ %s 0x%lX\n", symbol->name, symbol->value);
-			}
 		}
 		fflush(symfile);
 		fclose(symfile);
 	}
 
-	object_free(merged);
-	area_free(final);
 	list_free(symbols);
+	object_free(merged);
 }
+

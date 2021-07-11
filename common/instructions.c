@@ -8,6 +8,9 @@
 #include "instructions.h"
 #include "readline.h"
 #include "stringop.h"
+#include "stack.h"
+#include "expression.h"
+#include "objects.h"
 #include "linker.h"
 #include "runtime.h"
 

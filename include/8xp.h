@@ -1,2 +1,2 @@
-int output_8xp(FILE *f, uint8_t *data, int data_length);
+int output_8xp(FILE *f, object_t *object, linker_settings_t *settings);
 

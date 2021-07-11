@@ -71,6 +71,7 @@ typedef struct {
 object_t *create_object();
 void object_free(object_t *object);
 area_t *create_area(const char *name);
+area_t *areas_merge(list_t *areas, list_t *errors);
 void merged_area_free(area_t *area);
 void area_free(area_t *area);
 metadata_t *get_area_metadata(area_t *area, const char *key);
