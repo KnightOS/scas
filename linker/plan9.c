@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <ctype.h>
 #include "list.h"
 #include "stack.h"
 #include "expression.h"
@@ -12,6 +13,8 @@
 #include "instructions.h"
 #include "runtime.h"
 #include "log.h"
+#include "errors.h"
+#include "merge.h"
 
 #define HDR_MAGIC	0x00008000		/* header expansion */
 
@@ -57,6 +60,16 @@ uint32_t get_magic(char* arch) {
 	}
 	return 1;
 }
+uint8_t get_symtype_from_area(area_t* area) {
+	if (strcmp(area->name, "_CODE") == 0) {
+		return 't';
+	} else if (strcmp(area->name, "_DATA") == 0) {
+		return 'd';
+	} else {
+		scas_log(L_ERROR, "unknown area type for plan9 %s", area->name);
+		return 0;
+	}
+}
 
 int output_plan9(FILE *f, object_t *object, linker_settings_t *settings) {
 	area_t* data = 0;
@@ -98,6 +111,7 @@ int output_plan9(FILE *f, object_t *object, linker_settings_t *settings) {
 	write_be32(f, entry);
 	write_be32(f, 0); // size of pc/sp offset table
 	write_be32(f, 0); // size of pc/line number table
+	// fat header
 	if (is64)
 		write_be64(f, entry);
 
@@ -106,32 +120,45 @@ int output_plan9(FILE *f, object_t *object, linker_settings_t *settings) {
 	// write the data (if there is any)
 	if (data != 0)
 		fwrite(data->data, 1, data->data_length, f);
-	// write the symbols
-	uint32_t symseclen = 0;
-	list_t* symbols = symbols_gather(object->areas, settings->errors);
-	for (unsigned int i = 0; i < symbols->length; i++){
-		symbol_t* s = symbols->items[i];
-		if (is64)
-			write_be64(f, s->value);
-		else
-			write_be32(f, s->value);
-		fputc('T' | 0x80, f); // TODO actual type not just text
-		int namelen = strlen(s->name) + 1;
-		fwrite(s->name, sizeof(char), namelen, f);
-		if (strcmp("start", s->name) == 0)
-			entry = s->value;
-		symseclen += 8 + 1 + namelen;
+
+	list_t *symbols = create_list();
+	char type;
+	for(unsigned int i = 0; i < object->areas->length; i += 1) {
+		area_t* area = object->areas->items[i];
+		type = get_symtype_from_area(area);
+		for(unsigned int i = 0; i < area->symbols->length; ++i){
+			symbol_t *s = area->symbols->items[i];
+			if(find_symbol(symbols, s->name))
+				add_error_from_map(settings->errors, ERROR_DUPLICATE_SYMBOL,
+								   area->source_map, s->defined_address, s->name);
+			else {
+				if (is64)
+					write_be64(f, s->value);
+				else
+					write_be32(f, s->value);
+				uint8_t type_toput = (s->exported ? toupper(type) : type) | 0x80;
+				fputc(type_toput, f);
+				int namelen = strlen(s->name) + 1;
+				fwrite(s->name, sizeof(char), namelen, f);
+				if (strcmp("start", s->name) == 0)
+					entry = s->value;
+				syms_len += 8 + 1 + namelen;
+			}
+		}
 	}
+
 	// write back into the header
+	// write the symbol table len
 	fseek(f, 4 * 4, SEEK_SET);
-	write_be32(f, symseclen);
+	write_be32(f, syms_len);
+	// entry point
 	fseek(f, 5 * 4, SEEK_SET);
 	write_be32(f, entry);
+	// fat entry point
 	if (is64) {
 		fseek(f, 8 * 4, SEEK_SET);
 		write_be64(f, entry);
 	}
-	fseek(f, 0, SEEK_END);
 
 	return 0;
 }

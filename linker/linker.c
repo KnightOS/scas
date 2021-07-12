@@ -224,6 +224,7 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	}
 	list_t *symbols = symbols_gather(merged->areas, settings->errors);
 	settings->write_output(output, merged, settings);
+	fseek(output, 0, SEEK_END);
 	scas_log(L_INFO, "Final binary written: %d bytes", ftell(output));
 
 	if(scas_runtime.symbol_file){
