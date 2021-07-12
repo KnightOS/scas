@@ -1244,7 +1244,7 @@ static int
 handle_isa(struct assembler_state *state, char **argv, int argc)
 {
 	if (argc == 0) {
-		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "org expects 1 argument");
+		ERROR(ERROR_INVALID_DIRECTIVE, state->column, "isa expects 1 argument");
 		return 1;
 	}
 	instruction_set_free(scas_runtime.set);
