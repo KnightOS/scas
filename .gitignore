@@ -1,5 +1,6 @@
 *.swp
 *.o
+*.6
 bin/
 *.rom
 test/

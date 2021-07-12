@@ -18,6 +18,7 @@
 #include "linker.h"
 #include "assembler.h"
 #include "8xp.h"
+#include "plan9.h"
 #include "bin.h"
 #include "merge.h"
 #include "runtime.h"
@@ -164,6 +165,8 @@ bool parse_flag(const char *flag) {
 			scas_runtime.options.output_format = output_bin;
 		} else if (strcmp(value, "8xp") == 0){
 			scas_runtime.options.output_format = output_8xp;
+		} else if (strcmp(value, "plan9") == 0){
+			scas_runtime.options.output_format = output_plan9;
 		} else {
 			scas_log(L_ERROR, "Unknown output format %s", value);
 			return false;

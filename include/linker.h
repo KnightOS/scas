@@ -9,4 +9,5 @@ struct linker_settings {
     format_writer write_output;
 };
 
+list_t *symbols_gather(list_t *areas, list_t *errors);
 void link_objects(FILE *output, list_t *objects, linker_settings_t *settings);
