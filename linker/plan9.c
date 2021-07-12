@@ -146,6 +146,10 @@ int output_plan9(FILE *f, object_t *object, linker_settings_t *settings) {
 			}
 		}
 	}
+	if (entry == 0){
+		scas_log(L_ERROR, "plan9 a.out format needs a `start` function for the entrypoint");
+		return 1;
+	}
 
 	// write back into the header
 	// write the symbol table len
