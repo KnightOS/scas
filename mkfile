@@ -47,13 +47,13 @@ arm64.c:V: arm64.h
 %.$O: %.c
 	pcc $prereq -I . -I include -B -c -o $target
 
-z80.h: generate_tables
+z80.h: generate_tables tables/z80.tab
 	./generate_tables z80 tables/z80.tab z80.c z80.h
 
-amd64.h: generate_tables
+amd64.h: generate_tables tables/amd64.tab
 	./generate_tables amd64 tables/amd64.tab amd64.c amd64.h
 
-arm64.h: generate_tables
+arm64.h: generate_tables tables/arm64.tab
 	./generate_tables arm64 tables/arm64.tab arm64.c arm64.h
 
 generate.$O: tables/generate.c
