@@ -200,9 +200,8 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 	}
 
 	object_t *merged = merge_objects(objects);
-	if(merged == NULL){
+	if(merged == NULL)
 		return;
-	}
 
 	area_t *runtime = get_area_by_name(merged, "__scas_relocatable");
 
@@ -223,7 +222,10 @@ void link_objects(FILE *output, list_t *objects, linker_settings_t *settings) {
 		address += area->data_length;
 	}
 	list_t *symbols = symbols_gather(merged->areas, settings->errors);
-	settings->write_output(output, merged, settings);
+	if(settings->write_output(output, merged, settings) != 0){
+		scas_log(L_ERROR, "Linker backend failed!");
+		return;
+	}
 	fseek(output, 0, SEEK_END);
 	scas_log(L_INFO, "Final binary written: %d bytes", ftell(output));
 
