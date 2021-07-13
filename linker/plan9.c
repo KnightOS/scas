@@ -52,23 +52,44 @@ void write_be64(FILE *f, uint64_t value) {
 
 // returns 1 on failure
 uint32_t get_magic(char* arch) {
-	if (strcmp(arch, "amd64")) {
+	if(strcmp(arch, "amd64") == 0)
 		return S_MAGIC;
-	}
-	if (strcmp(arch, "arm64")) {
+	if(strcmp(arch, "arm64") == 0)
 		return R_MAGIC;
-	}
+	scas_log(L_ERROR, "Unknown architecture: %s", arch);
 	return 1;
 }
+
+static uint32_t
+text_base(char *arch)
+{
+	if(strcmp(arch, "amd64") == 0)
+		return 0x200028;
+	if(strcmp(arch, "arm64") == 0)
+		return 0x10028;
+	scas_log(L_ERROR, "Unknown architecture: %s", arch);
+	return 1;
+}
+
+
+static uint32_t
+data_base(char *arch)
+{
+	if(strcmp(arch, "amd64") == 0)
+		return 0x400000;
+	if(strcmp(arch, "arm64") == 0)
+		return 0x20000;
+	scas_log(L_ERROR, "Unknown architecture: %s", arch);
+	return 1;
+}
+
 uint8_t get_symtype_from_area(area_t* area) {
-	if (strcmp(area->name, "_CODE") == 0) {
+	if (strcmp(area->name, "_CODE") == 0)
 		return 't';
-	} else if (strcmp(area->name, "_DATA") == 0) {
+	if (strcmp(area->name, "_DATA") == 0)
 		return 'd';
-	} else {
-		scas_log(L_ERROR, "unknown area type for plan9 %s", area->name);
-		return 0;
-	}
+	scas_log(L_ERROR, "unknown area type for plan9 %s", area->name);
+	return 0;
 }
 
 int output_plan9(FILE *f, object_t *object, linker_settings_t *settings) {
@@ -82,10 +103,10 @@ int output_plan9(FILE *f, object_t *object, linker_settings_t *settings) {
 		area_t* area = object->areas->items[i];
 		if (strcmp("_CODE", area->name) == 0) {
 			text = area;
-			relocate_area(text, 0x200028, true);
+			relocate_area(text, text_base(scas_runtime.set->arch), true);
 		} else if (strcmp("_DATA", area->name) == 0) {
 			data = area;
-			relocate_area(data, 0x400000, true);
+			relocate_area(data, data_base(scas_runtime.set->arch), true);
 		} else {
 			scas_log(L_ERROR, "unknown section name for plan9 a.out format: %s", area->name);
 			return 1;
@@ -97,9 +118,9 @@ int output_plan9(FILE *f, object_t *object, linker_settings_t *settings) {
 	}
 
 	// the header
-	uint32_t magic = get_magic(scas_runtime.arch);
-	bool is64 = (magic & HDR_MAGIC) >> 15 == 1;
+	uint32_t magic = get_magic(scas_runtime.set->arch);
 	if (magic == 1) return 1;
+	bool is64 = (magic & HDR_MAGIC) >> 15 == 1;
 	write_be32(f, magic);
 	write_be32(f, text->data_length);
 	if (data != 0)
