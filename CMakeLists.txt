@@ -132,7 +132,7 @@ if(SCAS_DOCUMENTATION)
 endif()
 
 INSTALL(
-    TARGETS scas scdump scwrap
+    TARGETS scas scdump scwrap generate_tables
     RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
 )
 
