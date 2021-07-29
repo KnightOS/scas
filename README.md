@@ -29,7 +29,7 @@ but will probably work with MinGW as well:
     make
     make install
 
-Don't forget to run the MSYS terminal as admin, or install under 
+Don't forget to run the MSYS terminal as admin, or install under
 MSYS2 binaries with `-DCMAKE_INSTALL_PREFIX=/mingw64`.
 
 Now read `man scas` to learn how to use it.
@@ -39,7 +39,7 @@ Now read `man scas` to learn how to use it.
 If you need help with KnightOS, want to keep up with progress, chat with
 developers, or ask any other questions about KnightOS, you can hang out in the
 IRC channel: #knightos on libera.chat
- 
+
 To report bugs, please create [a GitHub issue](https://github.com/KnightOS/KnightOS/issues/new) or contact us on IRC.
- 
+
 If you'd like to contribute to the project, please see the [contribution guidelines](http://www.knightos.org/contributing).
