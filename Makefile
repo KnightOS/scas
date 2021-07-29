@@ -1,4 +1,5 @@
 CFLAGS=-Iinclude/ -O2 -Ibin/ -Wall -Wextra -pedantic -std=c99 -D_XOPEN_SOURCE=700 -D_DEFAULT_SOURCE -g
+CC_NATIVE=$(CC)
 
 ASSEMBLER=assembler/privatize.c assembler/directives.c assembler/assembler.c
 COMMON=bin/z80.c common/functions.c common/hashtable.c common/expression.c common/list.c common/operators.c common/runtime.c common/stringop.c common/errors.c common/stack.c common/format.c common/instructions.c common/log.c common/match.c common/md5.c common/objects.c common/readline.c
@@ -57,7 +58,7 @@ bin/generated.h: bin/z80.c
 
 bin/generate_tables: tables/generate.c
 	mkdir -p bin/
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC_NATIVE) $(CFLAGS) $< -o $@
 
 $(SOURCES:.c=.o) scas.o: bin/z80.c bin/generated.h include/linker.h include/match.h include/format.h include/merge.h include/list.h include/assembler.h include/md5.h include/objects.h include/8xp.h include/stack.h include/bin.h include/directives.h include/errors.h include/instructions.h include/readline.h include/runtime.h include/stringop.h include/hashtable.h include/functions.h include/enums.h include/log.h include/expression.h include/privatize.h include/operators.h
 
