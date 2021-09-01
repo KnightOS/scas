@@ -1,46 +1,46 @@
 enum {
-    IMM_TYPE_ABSOLUTE = 0,
-    IMM_TYPE_RELATIVE = 1,
-    IMM_TYPE_RESTART = 2
+	IMM_TYPE_ABSOLUTE = 0,
+	IMM_TYPE_RELATIVE = 1,
+	IMM_TYPE_RESTART = 2
 };
 
 typedef struct {
-    char *arch;
-    list_t *instructions;
-    list_t *operand_groups;
+	char *arch;
+	list_t *instructions;
+	list_t *operand_groups;
 } instruction_set_t;
 
 typedef struct {
-    char *match;
-    uint64_t value;
-    size_t width;
-    list_t *immediate;
-    list_t *operands;
+	char *match;
+	uint64_t value;
+	size_t width;
+	list_t *immediate;
+	list_t *operands;
 } instruction_t;
 
 typedef struct {
-    char ref;
-    int width;
-    int shift;
-    int type;
+	char ref;
+	int width;
+	int shift;
+	int type;
 } immediate_t;
 
 typedef struct {
-    char *name;
-    list_t *operands;
+	char *name;
+	list_t *operands;
 } operand_group_t;
 
 typedef struct {
-    char *match;
-    size_t width;
-    uint64_t value;
+	char *match;
+	size_t width;
+	uint64_t value;
 } operand_t;
 
 typedef struct {
-    char key;
-    char *group;
-    size_t width;
-    size_t shift;
+	char key;
+	char *group;
+	size_t width;
+	size_t shift;
 } instruction_operand_t;
 
 instruction_set_t *load_instruction_set(FILE *file);
