@@ -1,7 +1,7 @@
 #include "stack.h"
 #include "stdlib.h"
 
-stack_type *create_stack() {
+stack_type *create_stack(void) {
 	stack_type *stack = malloc(sizeof *stack);
 
 	stack->capacity = STACK_GROWTH_RATE;

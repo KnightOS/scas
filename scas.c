@@ -25,7 +25,7 @@
 
 static char *out_name = NULL;
 
-void init_scas_runtime() {
+void init_scas_runtime(void) {
 	scas_runtime.arch = "z80";
 	scas_runtime.link = 1;
 	scas_runtime.macros = create_list();
@@ -83,7 +83,7 @@ static void runtime_open(char *name) {
 	}
 }
 
-void validate_scas_runtime() {
+void validate_scas_runtime(void) {
 	if (scas_runtime.input_files->length == 0) {
 		scas_log(L_ERROR, "No input files given");
 		exit(1);
@@ -134,15 +134,13 @@ bool parse_flag(const char *flag) {
 		name[value - flag] = '\0';
 		value++;
 	} else {
-		name = malloc(strlen(flag) + 1);
-		strcpy(name, flag);
+		name = strdup(flag);
 		value = "yes";
 	}
 
 	bool yes = !strcasecmp("yes", value);
-	if (!strcasecmp("no", value)) {
+	if (!strcasecmp("no", value))
 		yes = false;
-	}
 
 	if (strcmp("explicit-export", name) == 0) {
 		scas_runtime.options.explicit_export = yes;
@@ -313,7 +311,7 @@ void parse_arguments(int argc, char **argv) {
 	}
 }
 
-list_t *split_include_path() {
+list_t *split_include_path(void) {
 	list_t *list = create_list();
 	int i, j;
 	for (i = 0, j = 0; scas_runtime.include_path[i]; ++i) {

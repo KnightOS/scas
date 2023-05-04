@@ -19,7 +19,7 @@ struct {
 	int dump_machine_code;
 } runtime;
 
-void init_runtime() {
+void init_runtime(void) {
 	runtime.input_files = create_list();
 	runtime.area = NULL;
 	runtime.dump_code = 0;

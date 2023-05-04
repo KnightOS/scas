@@ -422,6 +422,7 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 		scas_log(L_DEBUG, "Matched string '%s' to instruction '%s'", line, match->instruction->match);
 		scas_log_indent += 1;
 		uint64_t instruction = match->instruction->value;
+		scas_log(L_DEBUG, "Instruction base: 0x%08X", instruction);
 		for (unsigned int i = 0; i < match->operands->length; ++i) {
 			operand_ref_t *ref = match->operands->items[i];
 			scas_log(L_DEBUG, "Using operand '%s'", ref->op->match);
@@ -472,23 +473,17 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 					list_add(state->current_area->late_immediates, late_imm);
 				} else {
 					free_expression(expression);
-					if (imm->type == IMM_TYPE_RELATIVE) {
+					if (imm->type == IMM_TYPE_RELATIVE)
 						result = result - ((state->PC + scas_runtime.options.origin)
 							+ (match->instruction->width / 8));
-					} else if (imm->type == IMM_TYPE_RESTART) {
-						if ((result & ~0x07) != result || result > 0x38) {
-							/* We get an ERROR_VALUE_TRUNCATED if we just let it proceed */
-						} else {
+					else if (imm->type == IMM_TYPE_RESTART)
+						if (!((result & ~0x07) != result || result > 0x38))
 							result >>= 3;
-						}
-					}
-					scas_log(L_DEBUG, "Resolved '%s' early with result 0x%08X", ref->value_provided, result);
 					uint64_t mask = 1;
 					int shift = imm->width;
-					while (--shift) {
-						mask <<= 1;
-						mask |= 1;
-					}
+					while (--shift)
+						mask = (mask << 1) | 1;
+					scas_log(L_DEBUG, "Resolved '%s' early with result 0x%08X, masked %d, width %d, shift %d", ref->value_provided, result, result & mask, imm->width, imm->shift);
 					if ((result & mask) != result && ~result >> imm->width) {
 						add_error(state->errors, ERROR_VALUE_TRUNCATED,
 							*(int*)stack_peek(state->line_number_stack),
@@ -498,12 +493,10 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 						int bits = imm->width;
 						while (bits > 0) {
 							bits -= 8;
-							if (bits < 0) {
-								bits = 0;
-							}
-							instruction |= (result & 0xFF) << (match->instruction->width - imm->shift - imm->width) << bits;
+							instruction |= (result & 0xFF) << (match->instruction->width - imm->shift - imm->width + bits);
 							result >>= 8;
 						}
+						scas_log(L_DEBUG, "Injected immediate, insn result: 0x%08X", instruction);
 					}
 				}
 			}

@@ -14,7 +14,7 @@
 
 #define SCASOBJ_VERSION 2
 
-object_t *create_object() {
+object_t *create_object(void) {
 	object_t *o = malloc(sizeof(object_t));
 	o->areas = create_list();
 	o->exports = create_list();

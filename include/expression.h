@@ -40,7 +40,7 @@ typedef struct {
 // Otherwise the parser may parse e.g. '>>' as '>' '>'.
 tokenized_expression_t *parse_expression(const char *str);
 void free_expression(tokenized_expression_t *expression);
-void initialize_expressions();
+void initialize_expressions(void);
 void print_tokenized_expression(FILE *f, tokenized_expression_t *expression);
 uint64_t evaluate_expression(tokenized_expression_t *expression, list_t
         *symbols, int *error, char **symbol);

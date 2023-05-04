@@ -68,7 +68,7 @@ typedef struct {
     bool merged;
 } object_t;
 
-object_t *create_object();
+object_t *create_object(void);
 void object_free(object_t *object);
 area_t *create_area(const char *name);
 area_t *areas_merge(list_t *areas, list_t *errors);

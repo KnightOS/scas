@@ -77,14 +77,14 @@ static uintmax_t get_value(struct format_spec spec, uintmax_t (*getarg)(size_t))
 	return 0;
 }
 
-static void putstr(void (*putc)(char), const char *str) {
+static void putstr(void (*putchar)(char), char *str) {
 	while (*str) {
-		putc(*str);
+		putchar(*str);
 		++str;
 	}
 }
 
-static void handle_spec(void (*putc)(char), uintmax_t (*getarg)(size_t), const char **f) {
+static void handle_spec(void (*putchar)(char), uintmax_t (*getarg)(size_t), const char **f) {
 	struct format_spec spec = {
 		.base = 10,
 		.width = 0,
@@ -123,16 +123,16 @@ static void handle_spec(void (*putc)(char), uintmax_t (*getarg)(size_t), const c
 		case 'c':
 		{
 			char c = getarg(sizeof(int));
-			putc(c);
+			putchar(c);
 			return;
 		}
 		case 's':
 		{
 			char *s = (char *)getarg(sizeof(char *));
 			if (!s) {
-				putstr(putc, "(nil)");
+				putstr(putchar, "(nil)");
 			} else {
-				putstr(putc, s);
+				putstr(putchar, s);
 			}
 			return;
 		}
@@ -142,7 +142,7 @@ static void handle_spec(void (*putc)(char), uintmax_t (*getarg)(size_t), const c
 			++*f;
 			break;
 		case '%':
-			putc('%');
+			putchar('%');
 			return;
 		default:
 			if (isdigit(**f)) {
@@ -171,7 +171,7 @@ static void handle_spec(void (*putc)(char), uintmax_t (*getarg)(size_t), const c
 			}
 		}
 		if (spec.type == T_intptr && value == 0) {
-			putstr(putc, "(nil)");
+			putstr(putchar, "(nil)");
 			return;
 		} else {
 			do {
@@ -184,7 +184,7 @@ static void handle_spec(void (*putc)(char), uintmax_t (*getarg)(size_t), const c
 			} while (value);
 		}
 		if (!(spec.flags & S_unsigned) && (intmax_t)val < 0) {
-			putc('-');
+			putchar('-');
 		}
 		if (spec.flags & S_prefix) {
 			if (spec.base == 16 && val != 0) {
@@ -197,22 +197,22 @@ static void handle_spec(void (*putc)(char), uintmax_t (*getarg)(size_t), const c
 		}
 		if (i < spec.width) {
 			for (int j = 0; j < spec.width - i; ++j) {
-				putc('0');
+				putchar('0');
 			}
 		}
 		for (--i; i >= 0; --i) {
-			putc(buffer[i]);
+			putchar(buffer[i]);
 		}
 	}
 }
 
-void format(void (*putc)(char), uintmax_t (*getarg)(size_t size), const char *fmt) {
+void format(void (*putchar)(char), uintmax_t (*getarg)(size_t size), const char *fmt) {
 	while (*fmt) {
 		if (*fmt == '%') {
-			handle_spec(putc, getarg, &fmt);
+			handle_spec(putchar, getarg, &fmt);
 			++fmt;
 		} else {
-			putc(*fmt);
+			putchar(*fmt);
 			++fmt;
 		}
 	}

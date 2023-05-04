@@ -1,4 +1,5 @@
 CFLAGS=-Iinclude/ -O2 -Ibin/ -Wall -Wextra -pedantic -std=c99 -D_XOPEN_SOURCE=700 -D_DEFAULT_SOURCE -g
+SO_EXT=so
 
 ASSEMBLER=assembler/privatize.c assembler/directives.c assembler/assembler.c
 COMMON=bin/amd64.c bin/z80.c bin/arm64.c common/functions.c common/hashtable.c common/expression.c common/list.c common/operators.c common/runtime.c common/stringop.c common/errors.c common/stack.c common/format.c common/instructions.c common/log.c common/match.c common/md5.c common/objects.c common/readline.c
@@ -19,16 +20,19 @@ install: all
 	mkdir -p $(BINDIR) $(INCDIR)/scas/ $(LIBDIR)/ $(DATADIR)
 	cp bin/scas bin/scwrap bin/scdump $(BINDIR)
 	cp include/* $(INCDIR)/scas/
-	cp bin/scas.a $(LIBDIR)/scas.a
 	cp tables/amd64.tab tables/z80.tab tables/arm64.tab $(DATADIR)
 
 install_man: bin/scas.1 bin/scdump.1 bin/scwrap.1
 	mkdir -p $(MANDIR)/man1/
 	cp $^ $(MANDIR)/man1/
 
-install_lib: bin/libscas.so
+install_lib_static: bin/scas.a
 	mkdir -p $(LIBDIR)/
-	cp $^ $(LIBDIR)
+	cp $^ $(LIBDIR)/libscas.a
+
+install_lib_shared: bin/libscas.$(SO_EXT)
+	mkdir -p $(LIBDIR)/
+	cp $^ $(LIBDIR)/
 
 uninstall:
 	$(RM) $(BINDIR)/scas $(BINDIR)/scdump $(BINDIR)/scwrap -v
@@ -41,7 +45,7 @@ uninstall:
 bin/scas.a: $(SOURCES:.c=.o)
 	$(AR) $(ARFLAGS) $@ $^
 
-bin/libscas.so: bin/scas.a
+bin/libscas.$(SO_EXT): bin/scas.a
 	$(CC) $(LDFLAGS) -shared $^ -o $@
 
 bin/scas: scas.o bin/scas.a

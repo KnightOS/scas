@@ -15,7 +15,7 @@ struct {
 	char *prefix;
 } runtime;
 
-void init_runtime() {
+void init_runtime(void) {
 	runtime.input_file = NULL;
 	runtime.output_file = NULL;
 	runtime.prefix = NULL;

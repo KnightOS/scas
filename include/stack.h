@@ -4,7 +4,7 @@ typedef struct {
 	void **items;
 } stack_type;
 
-stack_type *create_stack();
+stack_type *create_stack(void);
 void stack_free(stack_type *stack);
 void stack_push(stack_type *stack, void *item);
 void *stack_pop(stack_type *stack);
