@@ -1,6 +1,7 @@
 # scas
 
-[![builds.sr.ht status](https://builds.sr.ht/~maxleiter/scas/commits.svg)](https://builds.sr.ht/~maxleiter/scas/commits?)
+[![builds.sr.ht
+status](https://builds.sr.ht/~pixelherodev/scas/commits.svg)](https://builds.sr.ht/~pixelherodev/scas/commits?)
 
 
 Assembler and linker for z80.
@@ -12,25 +13,8 @@ We're finally just about done! All that's needed is a bit more testing before
 
 ## Compiling from Source
 
-Compiling under UNIX and Cygwin environments:
-
-    mkdir build
-    cd build
-    cmake -DCMAKE_BUILD_TYPE=Release ..
-    make
-    sudo make install
-
-Compiling on windows is recommended with [MSYS2](https://msys2.github.io/),
-but will probably work with MinGW as well:
-
-    mkdir build
-    cd build
-    cmake -G 'MSYS Makefiles' -DCMAKE_BUILD_TYPE=Release ..
-    make
-    make install
-
-Don't forget to run the MSYS terminal as admin, or install under 
-MSYS2 binaries with `-DCMAKE_INSTALL_PREFIX=/mingw64`.
+On a UNIX environment, a standard `make && make install` should suffice to
+build the software. If on Windows, we recommend setting up a UNIX environment.
 
 Now read `man scas` to learn how to use it.
 
