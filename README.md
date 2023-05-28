@@ -1,7 +1,6 @@
 # scas
 
-[![builds.sr.ht
-status](https://builds.sr.ht/~pixelherodev/scas/commits.svg)](https://builds.sr.ht/~pixelherodev/scas/commits?)
+[![builds.sr.ht status](https://builds.sr.ht/~pixelherodev/scas/commits.svg)](https://builds.sr.ht/~pixelherodev/scas/commits?)
 
 Assembler and linker for z80.
 
