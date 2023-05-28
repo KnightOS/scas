@@ -1,7 +1,10 @@
+environment:
+  DEBUGINFOD_URLS: https://debuginfod.archlinux.org
 image: archlinux
 packages:
   - make
   - patchrom
+  - debuginfod
   - genkfs
   - mktiupgrade
   - valgrind
