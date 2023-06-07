@@ -86,7 +86,11 @@ char *code_strchr(const char *str, char delimiter) {
 	int in_string = 0, in_character = 0, in_paren = 0;
 	int i = 0;
 	while (str[i] != '\0') {
-		if (str[i] == '"' && !in_character) {
+		if(str[i] == '\\'){
+			// skip the escape
+			i++;
+			continue;
+		} else if (str[i] == '"' && !in_character) {
 			in_string = !in_string;
 		} else if (str[i] == '\'' && !in_string) {
 			in_character = !in_character;
