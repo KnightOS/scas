@@ -622,6 +622,7 @@ object_t *assemble(FILE *file, const char *file_name, assembler_settings_t *sett
 	int(*const nolist_line_ops[])(struct assembler_state *, char **) = {
 		try_empty_line,
 		try_parse_inside_macro,
+		try_split_line,
 		try_handle_directive,
 	};
 
