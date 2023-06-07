@@ -39,7 +39,7 @@ char *strip_comments(char *str) {
 		} else if (str[i] == '\'' && !in_string) {
 			in_character = !in_character;
 		} else if (!in_character && !in_string) {
-			if (str[i] == ';' || str[i] == '#') {
+			if (str[i] == ';' || (str[i] == '#' && !(str[i+1] >= 'a' && str[i+1] <= 'z'))) {
 				str[i] = '\0';
 				break;
 			}
