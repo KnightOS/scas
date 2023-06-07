@@ -211,7 +211,7 @@ expression_token_t *parse_digit(const char **string) {
 	/* Character literals */
 	if ((*string)[0] == '\'') {
 		if (strlen(*string) >= 3) {
-			char *end = strchr(*string + 1, '\''); // Note: this doesn't work with '\'' etc
+			char *end = strrchr(*string, '\'');
 			if (end) {
 				char *temp = malloc(end - *string + 1);
 				strncpy(temp, *string, end - *string);
