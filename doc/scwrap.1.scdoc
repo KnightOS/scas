@@ -1,31 +1,25 @@
-/////
-vim:set ts=4 sw=4 tw=82 noet:
-/////
-scwrap (1)
-==========
+SCWRAP(1)
 
-Name
-----
-scwrap - Wrap binary files in scas object files
+# NAME
 
-Synopsis
---------
-'scwrap' _INPUT_ _OUTPUT_ _PREFIX_
+scwrap - Wrap binary files in _scas_(1) object files
 
-Description
------------
+# SYNOPSIS
+
+*scwrap* _INPUT_ _OUTPUT_ _PREFIX_
+
+# DESCRIPTION
 
 Wraps binary files into scas object files that can be statically linked with. Use
 _INPUT_ as the file you wish to wrap, _OUTPUT_ as the object file you want to save
 the wrapped object into, and _PREFIX_ as the prefix for the symbols generated. In
 this object will be two symbols:
 
-* pass:[_]PREFIXpass:[_start] - the start of the binary data
-* pass:[_]PREFIXpass:[_end] - the end of the binary data
+- \_PREFIX_start - the start of the binary data
+- \_PREFIX_end - the end of the binary data
 
-Authors
--------
+# AUTHORS
 
 Maintained by Drew DeVault <sir@cmpwn.com>, who is assisted by other open
 source contributors. For more information about scas development, see
-<https://github.com/KnightOS/scas>.
+https://github.com/KnightOS/scas.
