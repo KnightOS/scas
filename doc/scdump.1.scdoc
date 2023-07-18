@@ -1,0 +1,40 @@
+SCDUMP(1)
+
+# NAME
+
+scdump - Dump _scas_(1) object files
+
+# SYNOPSIS
+
+*scdump* [options] _FILE(s)_
+
+# DESCRIPTION
+
+Prints information about scas objects to stdout.
+
+# OPTIONS
+
+*-a, --area* <area>
+	Dumps only _area_ and omits others.
+
+*-c, --code*
+	Dumps source code entries.
+
+*-p, --private-symbols*
+	Dumps private symbols defined by this object.
+
+*-r, --references*
+	Dumps unresolved symbol references.
+
+*-s, --symbols*
+	Dumps public symbols defined by this object.
+
+*-x, --machine-code*
+	Dumps machine code to stdout. Note that it does this in raw binary form and
+	you should probably be careful using this in a terminal.
+
+# AUTHORS
+
+Maintained by Drew DeVault <sir@cmpwn.com>, who is assisted by other open
+source contributors. For more information about scas development, see
+https://github.com/KnightOS/scas.
