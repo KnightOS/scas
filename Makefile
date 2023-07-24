@@ -38,7 +38,11 @@ install_lib_shared: bin/libscas.$(SO_EXT)
 uninstall:
 	$(RM) $(BINDIR)/scas $(BINDIR)/scdump $(BINDIR)/scwrap -v
 	$(RM) $(INCDIR)/scas/ -rv
-	$(RM) $(LIBDIR)/scas.a
+	$(RM) $(LIBDIR)/libscas.a
+	$(RM) $(LIBDIR)/libscas.so
+	$(RM) $(DATADIR)/amd64.tab
+	$(RM) $(DATADIR)/arm64.tab
+	$(RM) $(DATADIR)/z80.tab
 	$(RM) $(MANDIR)/man1/scas.1
 	$(RM) $(MANDIR)/man1/scdump.1
 	$(RM) $(MANDIR)/man1/scwrap.1
