@@ -1,15 +1,29 @@
-</$objtype/mkfile
+COMMON=`{cd scas/common; walk -f | sed 's/\.c/.'^$O^'/g'} z80.$O arm64.$O amd64.$O
+ASSEMBLER=`{cd scas/assembler ; walk -f | sed 's/\.c/.'^$O^'/g'}
+LINKER=`{cd scas/linker ; walk -f | sed 's/\.c/.'^$O^'/g'}
 
-COMMON=`{walk -f common | sed 's/\.c/.'^$O^'/g'} z80.$O arm64.$O amd64.$O
-ASSEMBLER=`{walk -f assembler | sed 's/\.c/.'^$O^'/g'}
-LINKER=`{walk -f linker | sed 's/\.c/.'^$O^'/g'}
-CFLAGS=-I . -I include -I /sys/include/npe
-BIN=/$objtype/bin/knightos
+TARG=$TARG scas scdump scwrap tablegen
 
-TARG=scas scdump scwrap
-OFILES=$COMMON
+%.$O: scas/common/%.c
+	$CC $CFLAGS $prereq
 
-$O.scas: $ASSEMBLER $LINKER
+%.$O: scas/linker/%.c
+	$CC $CFLAGS $prereq
+
+%.$O: scas/assembler/%.c
+	$CC $CFLAGS $prereq
+
+%.$O: scas/%.c
+	$CC $CFLAGS $prereq
+
+$O.scas: $ASSEMBLER $LINKER $COMMON scas.$O
+	$LD -o $target $LDFLAGS $prereq 
+
+$O.scwrap: $COMMON scwrap.$O
+	$LD -o $target $LDFLAGS $prereq 
+
+$O.scdump: $COMMON scdump.$O
+	$LD -o $target $LDFLAGS $prereq 
 
 /$objtype/lib/knightos/libscas.a$O: libscas.a$O
 	mkdir -p /$objtype/lib/knightos
@@ -22,34 +36,23 @@ libscas.a$O: $COMMON
 	mkdir -p `{basename -d $target}
 	cp $prereq $target
 
-common/instructions.$O: z80.h amd64.h arm64.h
+instructions.$O: z80.h amd64.h arm64.h
+	$CC $CFLAGS scas/common/instructions.c
 
-%.$O: %.c
-	$CC $CFLAGS $prereq  -B -c -o $target
+z80.c z80.h: $O.tablegen scas/tables/z80.tab
+	./$O.tablegen z80 scas/tables/z80.tab z80.c z80.h
 
-z80.c z80.h: generate_tables tables/z80.tab
-	./generate_tables z80 tables/z80.tab z80.c z80.h
+amd64.c amd64.h: $O.tablegen scas/tables/amd64.tab
+	./$O.tablegen amd64 scas/tables/amd64.tab amd64.c amd64.h
 
-amd64.c amd64.h: generate_tables tables/amd64.tab
-	./generate_tables amd64 tables/amd64.tab amd64.c amd64.h
+arm64.c arm64.h: $O.tablegen scas/tables/arm64.tab
+	./$O.tablegen arm64 scas/tables/arm64.tab arm64.c arm64.h
 
-arm64.c arm64.h: generate_tables tables/arm64.tab
-	./generate_tables arm64 tables/arm64.tab arm64.c arm64.h
-
-generate.$O: tables/generate.c
+tablegen.$O: scas/tables/generate.c
 	pcc $prereq -B -c -o $target
 
-generate_tables: generate.$O
+$O.tablegen: tablegen.$O
 	pcc $prereq -o $target
 
-< /sys/src/cmd/mkmany 
+CLEANFILES=$CLEANFILES scas/assembler/*.[$OS] scas/common/*.[$OS] scas/linker/*.[$OS] scas/*.[$OS] z80.c z80.h amd64.c amd64.h arm64.c arm64.h
 
-%.$O: %.c
-	$CC $CFLAGS -o $target $prereq
-
-clean:V:
-	rm -f generate_tables z80.c z80.h amd64.c amd64.h arm64.c arm64.h assembler/*.[$OS] common/*.[$OS] linker/*.[$OS] *.[$OS] *.a[$OS] y.tab.? lex.yy.c y.debug y.output [$OS].??* $TARG $CLEANFILES
-
-install:V: /$objtype/lib/knightos/libscas.a$O
-
-all:V: libscas.a$O
