@@ -56,3 +56,4 @@ $O.tablegen: tablegen.$O
 
 CLEANFILES=$CLEANFILES scas/assembler/*.[$OS] scas/common/*.[$OS] scas/linker/*.[$OS] scas/*.[$OS] z80.c z80.h amd64.c amd64.h arm64.c arm64.h
 
+install:V: /$objtype/lib/knightos/libscas.a$O
