@@ -493,6 +493,8 @@ int try_match_instruction(struct assembler_state *state, char **_line) {
 						int bits = imm->width;
 						while (bits > 0) {
 							bits -= 8;
+							if(bits < 0)
+								bits = 0;
 							instruction |= (result & 0xFF) << (match->instruction->width - imm->shift - imm->width + bits);
 							result >>= 8;
 						}
