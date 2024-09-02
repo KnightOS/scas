@@ -86,7 +86,7 @@ char *code_strchr(const char *str, char delimiter) {
 	int in_string = 0, in_character = 0, in_paren = 0;
 	int i = 0;
 	while (str[i] != '\0') {
-		if(str[i] == '\\'){
+		if((in_string || in_character) && str[i] == '\\'){
 			// skip the escape
 			i++;
 			continue;
