@@ -1383,6 +1383,29 @@ static int directive_compare(const void *_a, const void *_b) {
 	return strcasecmp(a->match, b->match);
 }
 
+void*
+bsearch2(const void* key, const void* base, u32int nmemb, u32int size,
+		int (*compar)(const void*, const void*))
+{
+	long i, bot, top, new;
+	void *p;
+
+	bot = 0;
+	top = bot + nmemb - 1;
+	while(bot <= top){
+		new = (top + bot)/2;
+		p = (char *)base+new*size;
+		i = (*compar)(key, p);
+		if(i == 0)
+			return p;
+		if(i > 0)
+			bot = new + 1;
+		else
+			top = new - 1;
+	}
+	return 0;
+}
+
 static struct directive nop = { "!", handle_nop, 0 };
 struct directive *find_directive(struct directive dirs[], int l, char *line) {
 	if (line[1] == '!') {
@@ -1397,7 +1420,7 @@ struct directive *find_directive(struct directive dirs[], int l, char *line) {
 	char b = line[whitespace];
 	line[whitespace] = '\0';
 	struct directive d = { .match=line };
-	struct directive *res = bsearch(&d, dirs, l, sizeof(struct directive), directive_compare);
+	struct directive *res = bsearch2(&d, dirs, l, sizeof(struct directive), directive_compare);
 	line[whitespace] = b;
 	return res;
 }
