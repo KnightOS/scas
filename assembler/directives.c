@@ -1384,7 +1384,7 @@ static int directive_compare(const void *_a, const void *_b) {
 }
 
 void*
-bsearch2(const void* key, const void* base, u32int nmemb, u32int size,
+bsearch2(const void* key, const void* base, uint32_t nmemb, uint32_t size,
 		int (*compar)(const void*, const void*))
 {
 	long i, bot, top, new;
