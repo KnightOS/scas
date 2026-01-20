@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <strings.h>
 #include "log.h"
 #include "list.h"
 #include "stack.h"

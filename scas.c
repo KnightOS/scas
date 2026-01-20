@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <strings.h>
 #define _BSD_EXTENSION
 #include <ctype.h>
 
