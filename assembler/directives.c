@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <strings.h>
 #include "list.h"
 #include "stack.h"
 #include "instructions.h"

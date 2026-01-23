@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <strings.h>
 
 #include "list.h"
 #include "stack.h"
