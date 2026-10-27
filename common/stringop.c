@@ -31,7 +31,7 @@ char *strip_whitespace(char *_str, int *trimmed_start) {
 }
 
 char *strip_comments(char *str) {
-	int in_string = 0, in_character = 0;
+	int in_string = 0, in_character = 0, seen_code = 0;
 	int i = 0;
 	while (str[i] != '\0') {
 		if (str[i] == '"' && !in_character) {
@@ -39,10 +39,13 @@ char *strip_comments(char *str) {
 		} else if (str[i] == '\'' && !in_string) {
 			in_character = !in_character;
 		} else if (!in_character && !in_string) {
-			if (str[i] == ';' || (str[i] == '#' && !(str[i+1] >= 'a' && str[i+1] <= 'z'))) {
+			if (str[i] == ';' || (str[i] == '#' && !seen_code && !(str[i+1] >= 'a' && str[i+1] <= 'z'))) {
 				str[i] = '\0';
 				break;
 			}
+		}
+		if (str[i] != ' ' && str[i] != '\t') {
+			seen_code = 1;
 		}
 		++i;
 	}
